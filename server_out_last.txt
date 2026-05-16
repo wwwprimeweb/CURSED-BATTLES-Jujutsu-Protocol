@@ -1,0 +1,153 @@
+CURSED BATTLES listening on http://localhost:3000
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] New player created: id=p1, x=1604, y=1100, alive=true, hp=920
+[DIAG] handleClientInput: player=p1, seq=30, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=60, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=90, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=120, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=150, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=210, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=240, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=270, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=300, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=330, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=360, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=390, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=420, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] FIRST DAMAGE on p1: kind=hazard, amount=0.5333333333333333, hp=920->919.4666666666667, fromX=1237, fromY=333, source=none, sourceKind=N/A
+[DIAG] handleClientInput: player=p1, seq=450, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=480, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=510, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=540, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=570, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=600, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=630, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=660, keys.up=false, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=690, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=720, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=750, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=780, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=810, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=840, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=870, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=900, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=930, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=960, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=990, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1020, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1050, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1080, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1110, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1140, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1170, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1200, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1230, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1260, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1290, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1320, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1350, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1380, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1410, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1440, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1470, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1500, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1530, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1560, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1590, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1620, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1650, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1680, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1710, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1740, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1770, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1800, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1830, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1860, keys.up=true, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1890, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1920, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1950, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1980, keys.up=true, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2010, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2040, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2070, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2100, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2130, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2160, keys.up=false, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2190, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2220, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2250, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2280, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2310, keys.up=true, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2340, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2370, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2400, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2430, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2460, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2490, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2520, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2550, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2580, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2610, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2640, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2670, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2700, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=2730, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2760, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2790, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2820, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2850, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2880, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2910, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2940, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=2970, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3000, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3030, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3060, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3090, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3120, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3150, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3180, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3210, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3240, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3270, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3300, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3330, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3360, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3390, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3420, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3450, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3480, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3510, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3540, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3570, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3600, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3630, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3660, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3690, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3720, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] First snapshot to p1: you.x=1620, you.y=1112, you.alive=true, delta.players=1, you.id=p1, playerId=p1
+[DIAG] First snapshot to p1: you.x=1620, you.y=1112, you.alive=true, delta.players=0, you.id=p1, playerId=p1
+[DIAG] handleClientInput: player=p1, seq=3750, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3780, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3810, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3840, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3870, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3900, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3930, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=3960, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=3990, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=4020, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p1: kind=enemyMelee, amount=22, hp=920->898, fromX=1615.1509216294962, fromY=1221.852256827219, source=e45, sourceKind=enemy
+[DIAG] handleClientInput: player=p1, seq=4050, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."

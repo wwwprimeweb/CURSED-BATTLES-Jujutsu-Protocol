@@ -1,0 +1,20 @@
+{
+  "name": "cursed-battles",
+  "version": "1.0.0",
+  "description": "Authoritative multiplayer web roguelike arena survival",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "echo \"No automated tests yet\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.20.1"
+  }
+}

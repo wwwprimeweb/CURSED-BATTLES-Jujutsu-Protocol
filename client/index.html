@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cursed Battles</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+
+    <div id="menu-bg"></div>
+
+    <main id="app">
+      <canvas id="game-canvas" width="1280" height="720"></canvas>
+
+      <section id="start-screen" class="visible">
+        <div class="menu-shell">
+          <div class="menu-top">
+            <div class="logo-section">
+              <h1 class="logo-title">CURSED BATTLES</h1>
+              <p class="logo-sub">Jujutsu Protocol</p>
+            </div>
+
+            <div class="join-section">
+              <label for="nick-input">IDENTIFICA&Ccedil;&Atilde;O</label>
+              <input id="nick-input" maxlength="20" placeholder="Digite seu nick" autocomplete="off" />
+              <button id="play-btn" type="button">
+                <span class="btn-text">▶ ENTRAR</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="menu-bottom">
+            <h2 class="section-title">SELE&Ccedil;&Atilde;O DE PERSONAGENS</h2>
+            <div class="character-grid">
+              <button class="character-card selected" data-character="gojo" aria-pressed="true">
+                <div class="char-icon" data-src="/assets/gojo-icon.png"></div>
+                <span class="char-name">Satoru Gojo</span>
+              </button>
+
+              <button class="character-card" data-character="sukuna" aria-pressed="false">
+                <div class="char-icon" data-src="/assets/sukuna-icon.png"></div>
+                <span class="char-name">Ryomen Sukuna</span>
+              </button>
+
+              <button class="character-card" data-character="yuta" aria-pressed="false">
+                <div class="char-icon" data-src="/assets/yuta-icon.png"></div>
+                <span class="char-name">Yuta Okkotsu</span>
+              </button>
+
+              <button class="character-card" data-character="yuji" aria-pressed="false">
+                <div class="char-icon" data-src="/assets/yuji-icon.png"></div>
+                <span class="char-name">Yuji Itadori</span>
+              </button>
+
+              <button class="character-card" data-character="megumi" aria-pressed="false">
+                <div class="char-icon" data-src="/assets/megumi-icon.png"></div>
+                <span class="char-name">Megumi Fushiguro</span>
+              </button>
+
+              <button class="character-card" data-character="hakari" aria-pressed="false">
+                <div class="char-icon" data-src="/assets/hakari-icon.png"></div>
+                <span class="char-name">Kinji Hakari</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="hud-layer">
+        <div id="match-timer"></div>
+        <div id="center-alerts"></div>
+        <div id="boss-bar" class="hidden"></div>
+        <div id="hud-main">
+          <div id="bars"></div>
+        </div>
+        <div id="skill-dock">
+          <div id="m1-indicator"></div>
+          <div id="cooldowns"></div>
+        </div>
+        <div id="minimap"></div>
+        <div id="top-right"></div>
+        <div id="upgrade-overlay" class="hidden"></div>
+        <div id="gameover-overlay" class="hidden">
+          <h2 class="go-title">DERROTADO</h2>
+          <p class="go-sub">Reiniciando partida...</p>
+        </div>
+        <div id="spectate-overlay" class="hidden">
+          <span id="spectate-text">Spectating...</span>
+          <span class="spectate-hint">[ ] para trocar</span>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

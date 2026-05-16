@@ -1,0 +1,2036 @@
+CURSED BATTLES listening on http://localhost:3000
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] New player created: id=p1, x=1782, y=1299, alive=true, hp=920
+[DIAG] handleClientInput: player=p1, seq=30, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=60, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=90, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=120, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=150, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=210, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=240, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=270, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=330, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=360, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] FIRST DAMAGE on p1: kind=enemyMelee, amount=18, hp=920->902, fromX=993.666439443242, fromY=1378.006084226095, source=e9, sourceKind=enemy
+[DIAG] handleClientInput: player=p1, seq=390, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=420, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=450, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=480, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=510, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=540, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=570, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=600, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=630, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=660, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=690, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=720, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=750, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=780, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=810, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p1, seq=30, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=60, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=90, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=120, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=150, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=210, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=270, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p1: you.x=1565, you.y=1448, you.alive=true, delta.players=1, you.id=p1, playerId=p1
+[DIAG] First snapshot to p1: you.x=1565, you.y=1448, you.alive=true, delta.players=0, you.id=p1, playerId=p1
+[DIAG] handleClientInput: player=p1, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=330, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=360, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=390, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=420, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=450, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p1: kind=enemyMelee, amount=18, hp=920->902, fromX=1740.4453030568266, fromY=1000.1553593893644, source=e17, sourceKind=enemy
+[DIAG] handleClientInput: player=p1, seq=480, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=510, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=540, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=570, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=600, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p1: you.x=189, you.y=182, you.alive=true, delta.players=1, you.id=p1, playerId=p1
+[DIAG] handleClientInput: player=p1, seq=630, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=660, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p1: kind=enemyMelee, amount=22, hp=920->898, fromX=170.75190308290226, fromY=302.65123853716375, source=e25, sourceKind=enemy
+[DIAG] handleClientInput: player=p1, seq=690, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=720, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=750, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=780, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=810, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=840, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=870, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=900, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=930, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=960, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=990, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p1, seq=1020, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1050, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1080, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1110, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1140, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1170, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1200, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p1: you.x=3401, you.y=220, you.alive=true, delta.players=1, you.id=p1, playerId=p1
+[DIAG] FIRST DAMAGE on p1: kind=enemyMelee, amount=18, hp=920->902, fromX=3435.9421928514575, fromY=278.7546502020791, source=e37, sourceKind=enemy
+[DIAG] handleClientInput: player=p1, seq=1230, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1260, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1290, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1320, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1350, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1380, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1410, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1440, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1470, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1500, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p1, seq=1530, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p1: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] New player created: id=p2, x=3416, y=185, alive=true, hp=920
+[DIAG] handleClientInput: player=p2, seq=30, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=60, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=90, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] FIRST DAMAGE on p2: kind=enemyMelee, amount=22, hp=920->898, fromX=3253.382630645004, fromY=516.1615361956019, source=e42, sourceKind=enemy
+[DIAG] handleClientInput: player=p2, seq=120, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=150, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=180, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=210, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=270, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=300, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=330, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=360, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=390, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=420, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=450, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=480, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=510, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=540, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p2, seq=30, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=60, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=90, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=120, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=150, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=210, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=270, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=330, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=360, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p2: you.x=3381, you.y=2405, you.alive=true, delta.players=1, you.id=p2, playerId=p2
+[DIAG] First snapshot to p2: you.x=3381, you.y=2405, you.alive=true, delta.players=0, you.id=p2, playerId=p2
+[DIAG] handleClientInput: player=p2, seq=390, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=420, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=450, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=480, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=510, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=540, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=570, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=600, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=630, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=660, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=690, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=720, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=750, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=780, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=810, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=840, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] FIRST DAMAGE on p2: kind=enemyMelee, amount=18, hp=920->902, fromX=2382.182209741736, fromY=1610.9292344253977, source=e65, sourceKind=enemy
+[DIAG] handleClientInput: player=p2, seq=870, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=900, keys.up=false, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=930, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=960, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=990, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1020, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1050, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1080, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1110, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1140, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=1170, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=1200, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1230, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1260, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1290, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1320, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1350, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=1380, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=1410, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=1440, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p2, seq=1470, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1500, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1530, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1560, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1590, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1620, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1650, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1680, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1710, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1740, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1770, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1800, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1830, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1860, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p2, seq=1890, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p2: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] New player created: id=p3, x=3413, y=2418, alive=true, hp=920
+[DIAG] handleClientInput: player=p3, seq=30, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=60, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=90, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=120, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=150, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p3: kind=enemyMelee, amount=18, hp=920->902, fromX=3232.289507745407, fromY=2348.6456580049694, source=e88, sourceKind=enemy
+[DIAG] handleClientInput: player=p3, seq=180, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=210, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=270, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=300, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=330, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=360, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=390, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=420, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=450, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=480, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=510, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=540, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=570, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=600, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=630, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=660, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=690, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=720, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=750, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=780, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=810, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=840, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=870, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=900, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=930, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=960, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=990, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=1020, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=1050, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=1080, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=1110, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=1140, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=1170, keys.up=true, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=1200, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p3, seq=1230, keys.up=true, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p3, seq=1260, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p3: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] New player created: id=p4, x=1985, y=1477, alive=true, hp=920
+[DIAG] handleClientInput: player=p4, seq=30, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=60, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] FIRST DAMAGE on p4: kind=hazard, amount=0.5666666666666667, hp=920->919.4333333333333, fromX=2130, fromY=1227, source=none, sourceKind=N/A
+[DIAG] handleClientInput: player=p4, seq=90, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=120, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=150, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=180, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=210, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=240, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=270, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=300, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=330, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=360, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=390, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=420, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=450, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=480, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=510, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=540, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=570, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=600, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=630, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=660, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=690, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=720, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=750, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=780, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=810, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=840, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=870, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=900, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=930, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=960, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=990, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1020, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p4, seq=30, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=60, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=90, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=120, keys.up=false, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=150, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=210, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=270, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=330, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=360, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=390, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=1580, you.y=1454, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] handleClientInput: player=p4, seq=420, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=450, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=480, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=510, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=540, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=570, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=600, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=630, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=660, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=690, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=720, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=750, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=780, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1283.543508449101, fromY=1416.8187401607295, source=e136, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=810, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=840, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=870, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=900, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=930, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=960, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=990, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1020, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1050, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1080, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1110, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1140, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1170, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1200, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1230, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1260, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1290, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1320, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1350, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1380, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1410, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1440, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1470, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1500, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1530, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1560, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1590, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1620, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1650, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1680, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1710, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1740, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1770, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1800, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1830, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1860, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1890, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1920, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1950, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1980, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2010, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2040, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=1982, you.y=1499, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1982, you.y=1499, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] handleClientInput: player=p4, seq=2070, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2100, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2130, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2160, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1971.7246809160438, fromY=1524.012048213063, source=e161, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=2190, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2220, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2250, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2280, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2310, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2340, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2370, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2400, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2430, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2460, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2490, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2520, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2550, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2580, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2610, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2640, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2670, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2700, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2730, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2760, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2790, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p4, seq=30, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=60, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=90, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=120, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=150, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=210, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=270, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=330, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=360, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=390, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=420, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=450, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p4, seq=30, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=60, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=90, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=1562, you.y=1470, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] handleClientInput: player=p4, seq=120, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=150, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=180, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=210, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=240, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=270, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=300, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=330, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=360, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=390, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=420, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=450, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=480, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=510, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=540, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=570, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=600, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] FIRST DAMAGE on p4: kind=hazard, amount=0.5333333333333333, hp=920->919.4666666666667, fromX=2376, fromY=1936, source=none, sourceKind=N/A
+[DIAG] handleClientInput: player=p4, seq=630, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=660, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=690, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=720, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=750, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=780, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=810, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=840, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=870, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=900, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=930, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=960, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=990, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1020, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1050, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1080, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1110, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1140, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1170, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1200, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1230, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1260, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1290, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1320, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1350, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1380, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1410, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1440, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1470, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1500, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1530, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1560, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1590, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1620, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1650, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1680, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1710, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1740, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1770, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1800, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1830, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=180, you.y=215, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=180, you.y=215, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] handleClientInput: player=p4, seq=1860, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1890, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1920, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1950, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1980, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2010, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2040, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2070, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2100, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2130, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2160, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2190, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2220, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2250, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2280, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2310, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2340, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2370, keys.up=true, keys.down=false, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2400, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2430, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=22, hp=920->898, fromX=2231.2420643294467, fromY=390.8211557796624, source=e196, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=2460, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2490, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2520, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2550, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2580, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2610, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2640, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2670, keys.up=false, keys.down=true, keys.left=true, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2700, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2730, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=2760, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2790, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2820, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2850, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2880, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2910, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2940, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2970, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=3000, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=3030, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3060, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3090, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=3120, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3150, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3180, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3210, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3240, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3270, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3300, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3330, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3360, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3390, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3420, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3450, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=3480, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p4, seq=30, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=60, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=90, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=120, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=1990, you.y=1476, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1990, you.y=1476, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=2047.0748124258623, fromY=1507.6455586742143, source=e216, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=3419, you.y=2391, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=3351.2932928123805, fromY=2398.87919144639, source=e224, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=3404, you.y=195, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=3417.47984861481, fromY=261.1738022908959, source=e230, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=150, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=180, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=210, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=240, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=270, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=330, keys.up=false, keys.down=true, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=360, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=390, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=420, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=450, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=480, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=510, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=540, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=570, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=600, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=630, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=660, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=690, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=720, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=750, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=780, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=810, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=840, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=870, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=900, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=930, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=960, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=990, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1020, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1050, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1080, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1110, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1140, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1170, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1200, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1230, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1260, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1290, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1320, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1350, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] broadcastSnapshots SKIP p4: socket=false, readyState=N/A
+[DIAG] addPlayer called: name="Gabe", sessionToken="e91d42ea..."
+[DIAG] handleClientInput: player=p4, seq=30, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=60, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=90, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=120, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=150, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=180, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=210, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=240, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=270, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=300, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=1564, you.y=1469, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1564, you.y=1469, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=22, hp=920->898, fromX=1530.9150027771236, fromY=1539.886931800828, source=e252, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1977, you.y=1475, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1911.2851765748653, fromY=1461.8374869309741, source=e260, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=3390, you.y=2417, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=22, hp=920->898, fromX=3398.571721875536, fromY=2338.1519008298865, source=e269, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=330, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=360, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=390, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=420, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=450, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=480, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=510, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=190, you.y=2384, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=190, you.y=2384, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] handleClientInput: player=p4, seq=540, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=570, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=600, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=630, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=660, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=690, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=720, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=257.1043856430394, fromY=2398.8903162302818, source=e281, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1963, you.y=1498, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1963, you.y=1498, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1975.3296223698217, fromY=1434.0494291516582, source=e282, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=750, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=780, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=810, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] First snapshot to p4: you.x=1788, you.y=1314, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1826.9397501035273, fromY=1257.8289075720033, source=e289, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1809, you.y=1305, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1809, you.y=1305, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1845.3607147135754, fromY=1251.2741884105596, source=e297, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1636, you.y=1122, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1636, you.y=1122, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1696.6899978358065, fromY=1151.7918288203823, source=e303, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1626, you.y=1130, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1684.4627962143104, fromY=1094.6604841229882, source=e311, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1976, you.y=1467, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1976, you.y=1467, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=1956.7498625554706, fromY=1531.1071555395663, source=e317, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=1978, you.y=1491, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=1978, you.y=1491, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=18, hp=920->902, fromX=2035.0925231322908, fromY=1457.9966057549902, source=e324, sourceKind=enemy
+[DIAG] First snapshot to p4: you.x=3402, you.y=212, you.alive=true, delta.players=1, you.id=p4, playerId=p4
+[DIAG] First snapshot to p4: you.x=3402, you.y=212, you.alive=true, delta.players=0, you.id=p4, playerId=p4
+[DIAG] FIRST DAMAGE on p4: kind=enemyMelee, amount=22, hp=920->898, fromX=3479.2914526538684, fromY=228.15045279334578, source=e332, sourceKind=enemy
+[DIAG] handleClientInput: player=p4, seq=840, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=870, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=900, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=930, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=960, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=990, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1020, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1050, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1080, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1110, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1140, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1170, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1200, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1230, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1260, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1290, keys.up=false, keys.down=true, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1320, keys.up=true, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1350, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1380, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1410, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1440, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1470, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1500, keys.up=true, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1530, keys.up=true, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1560, keys.up=true, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1590, keys.up=true, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1620, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1650, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1680, keys.up=false, keys.down=false, keys.left=false, keys.right=true
+[DIAG] handleClientInput: player=p4, seq=1710, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1740, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1770, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1800, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1830, keys.up=false, keys.down=false, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1860, keys.up=false, keys.down=true, keys.left=true, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1890, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1920, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1950, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=1980, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2010, keys.up=false, keys.down=false, keys.left=false, keys.right=false
+[DIAG] handleClientInput: player=p4, seq=2040, keys.up=false, keys.down=false, keys.left=false, keys.right=false

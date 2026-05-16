@@ -1,0 +1,1273 @@
+import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
+import { YutaVisualSystem } from "../animations/yutaVisualSystem.js";
+import { DomainVisualSystem } from "../animations/domainVisualSystem.js";
+import { drawM1Punch } from "../animations/gojoEffects.js";
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function worldToScreen(camera, canvas, x, y) {
+  const zoom = camera.zoom || 1;
+  return {
+    x: (x - camera.x) * zoom + canvas.clientWidth * 0.5,
+    y: (y - camera.y) * zoom + canvas.clientHeight * 0.5,
+  };
+}
+
+export class Renderer {
+  constructor(canvas, particleSystem) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.particles = particleSystem;
+    this.gojoVisual = new GojoVisualSystem();
+    this.yutaVisual = new YutaVisualSystem();
+    this.domainVisual = new DomainVisualSystem();
+    this.map = null;
+    this.camera = {
+      x: 0,
+      y: 0,
+      zoom: 1,
+    };
+    this.zoomTween = {
+      startZoom: 1,
+      endZoom: 1,
+      startTime: 0,
+      duration: 0,
+    };
+    this.zoomSeq = null;
+    this.zoomSeqIndex = 0;
+    this.zoomSeqTime = 0;
+
+    this.domainOverlayAlpha = 0;
+    this.activeDomainOwnerIds = new Set();
+    this.playerFacing = new Map();
+    this.dashVisuals = new Map();
+    this.dashTweens = new Map();
+    this.markers = [];
+    this.redExplosions = [];
+    this.purpleCharges = new Map();
+    this.purpleExplosions = [];
+    this.interpolationRef = null;
+    this.hollowPurpleImg = new Image();
+    this.hollowPurpleImg.src = "/assets/habilit%20hollow%20purple";
+
+    this.resize();
+    window.addEventListener("resize", () => this.resize());
+  }
+
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(window.innerWidth);
+    const h = Math.floor(window.innerHeight);
+    this.canvas.width = Math.max(800, Math.floor(w * dpr));
+    this.canvas.height = Math.max(450, Math.floor(h * dpr));
+    this.canvas.style.width = `${w}px`;
+    this.canvas.style.height = `${h}px`;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  setMap(map) {
+    this.map = map;
+    this.camera.x = map.width * 0.5;
+    this.camera.y = map.height * 0.5;
+  }
+
+  updateCamera(targetX, targetY) {
+    if (!this.map) {
+      return;
+    }
+
+    const now = performance.now();
+    const elapsed = now - this.zoomTween.startTime;
+    if (elapsed < this.zoomTween.duration) {
+      const t = elapsed / this.zoomTween.duration;
+      this.camera.zoom = this.zoomTween.startZoom + (this.zoomTween.endZoom - this.zoomTween.startZoom) * t;
+    } else {
+      this.camera.zoom = this.zoomTween.endZoom;
+      this.advanceZoomSeq();
+    }
+
+    this.camera.x += (targetX - this.camera.x) * 0.12;
+    this.camera.y += (targetY - this.camera.y) * 0.12;
+
+    const halfW = (this.canvas.clientWidth * 0.5) / this.camera.zoom;
+    const halfH = (this.canvas.clientHeight * 0.5) / this.camera.zoom;
+    this.camera.x = clamp(this.camera.x, halfW, this.map.width - halfW);
+    this.camera.y = clamp(this.camera.y, halfH, this.map.height - halfH);
+  }
+
+  startZoom(targetZoom, duration) {
+    this.zoomTween.startZoom = this.camera.zoom;
+    this.zoomTween.endZoom = targetZoom;
+    this.zoomTween.startTime = performance.now();
+    this.zoomTween.duration = duration;
+  }
+
+  startZoomSeq(steps) {
+    this.zoomSeq = steps;
+    this.zoomSeqIndex = 0;
+    this.zoomSeqTime = performance.now();
+    this.startZoom(steps[0].target, steps[0].duration);
+  }
+
+  advanceZoomSeq() {
+    if (!this.zoomSeq || this.zoomSeqIndex >= this.zoomSeq.length) return;
+    const step = this.zoomSeq[this.zoomSeqIndex];
+    if (performance.now() - this.zoomSeqTime >= step.duration + step.pause) {
+      this.zoomSeqIndex++;
+      if (this.zoomSeqIndex < this.zoomSeq.length) {
+        const next = this.zoomSeq[this.zoomSeqIndex];
+        this.zoomSeqTime = performance.now();
+        this.startZoom(next.target, next.duration);
+      }
+    }
+  }
+
+  clear() {
+    const ctx = this.ctx;
+    const w = this.canvas.clientWidth;
+    const h = this.canvas.clientHeight;
+
+    const bg = ctx.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, "#080b13");
+    bg.addColorStop(0.55, "#101827");
+    bg.addColorStop(1, "#1a2535");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  addMarker({ x, y, radius = 60, color = "rgba(255,136,170,0.4)", ttl = 0.8 }) {
+    this.markers.push({ x, y, radius, color, ttl, life: ttl });
+  }
+
+  addRedExplosion({ x, y, radius = 110, ttl = 0.5 }) {
+    this.redExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
+  }
+
+  startPurpleCharge(ev) {
+    this.purpleCharges.set(ev.ownerId, {
+      x: ev.x,
+      y: ev.y,
+      startTime: performance.now(),
+      duration: 3.5,
+    });
+  }
+
+  triggerPurpleExplosion(ev) {
+    this.purpleCharges.delete(ev.ownerId);
+    this.purpleExplosions.push({
+      x: ev.x,
+      y: ev.y,
+      startTime: performance.now(),
+      duration: 0.7,
+      seed: Math.random() * 100,
+    });
+  }
+
+  renderPurpleCharges(ctx, camera) {
+    const now = performance.now();
+    const time = now * 0.001;
+    const z = this.camera.zoom || 1;
+    this.purpleCharges.forEach((charge) => {
+      const progress = Math.min(1, (now - charge.startTime) / (charge.duration * 1000));
+      const easeScale = 1 - Math.pow(1 - progress, 2);
+      const imgScale = 0.15 + easeScale * 0.95;
+      const baseSize = 240 * z;
+      const imgSize = baseSize * imgScale;
+      const pulse = 1 + Math.sin(time * 3 + charge.x) * 0.04;
+      const p = worldToScreen(camera, this.canvas, charge.x, charge.y);
+
+      ctx.save();
+
+      ctx.shadowColor = "#9040dd";
+      ctx.shadowBlur = 30 + easeScale * 60;
+      ctx.globalAlpha = 0.4 + easeScale * 0.6;
+
+      const auraGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, imgSize * 2);
+      auraGrad.addColorStop(0, `rgba(200,130,255,${0.15 * easeScale})`);
+      auraGrad.addColorStop(0.5, `rgba(120,50,200,${0.06 * easeScale})`);
+      auraGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, imgSize * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (this.hollowPurpleImg.complete && this.hollowPurpleImg.naturalWidth > 0) {
+        ctx.drawImage(this.hollowPurpleImg, p.x - imgSize / 2, p.y - imgSize / 2, imgSize * pulse, imgSize * pulse);
+      } else {
+        ctx.shadowBlur = 20 + easeScale * 40;
+        const fallbackGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, imgSize * 0.5);
+        fallbackGrad.addColorStop(0, `rgba(255,255,255,${0.6 * easeScale})`);
+        fallbackGrad.addColorStop(0.3, `rgba(200,130,255,${0.5 * easeScale})`);
+        fallbackGrad.addColorStop(0.7, `rgba(120,40,200,${0.3 * easeScale})`);
+        fallbackGrad.addColorStop(1, `rgba(60,10,150,0)`);
+        ctx.fillStyle = fallbackGrad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, imgSize * 0.5 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    });
+  }
+
+  renderPurpleExplosions(ctx, camera) {
+    const now = performance.now();
+    const z = this.camera.zoom || 1;
+    for (let i = this.purpleExplosions.length - 1; i >= 0; i--) {
+      const exp = this.purpleExplosions[i];
+      const t = Math.min(1, (now - exp.startTime) / (exp.duration * 1000));
+      const alpha = 1 - t;
+
+      if (alpha <= 0) {
+        this.purpleExplosions.splice(i, 1);
+        continue;
+      }
+
+      if (t < 0.05) {
+        this.particles.spawnBurst({ x: exp.x, y: exp.y, color: "#ffffff", count: 30, speed: 600, life: 0.5, size: 5 });
+        this.particles.spawnBurst({ x: exp.x, y: exp.y, color: "#c080ff", count: 40, speed: 450, life: 0.7, size: 4 });
+        this.particles.spawnBurst({ x: exp.x, y: exp.y, color: "#8030cc", count: 25, speed: 300, life: 0.9, size: 3 });
+      }
+
+      const p = worldToScreen(camera, this.canvas, exp.x, exp.y);
+      const waveRadius = (40 + t * 900) * z;
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, alpha * 1.3);
+
+      ctx.shadowColor = "#9040dd";
+      ctx.shadowBlur = 100 * alpha * z;
+
+      const flashGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 800 * t * z);
+      flashGrad.addColorStop(0, `rgba(255,255,255,${alpha * 0.8})`);
+      flashGrad.addColorStop(0.1, `rgba(250,220,255,${alpha * 0.5})`);
+      flashGrad.addColorStop(0.3, `rgba(200,140,255,${alpha * 0.2})`);
+      flashGrad.addColorStop(0.6, `rgba(120,50,220,${alpha * 0.1})`);
+      flashGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = flashGrad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 800 * t * z, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 80 * alpha * z;
+      ctx.strokeStyle = `rgba(255,200,255,${alpha})`;
+      ctx.lineWidth = (16 - t * 12) * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, waveRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.shadowBlur = 60 * alpha * z;
+      ctx.strokeStyle = `rgba(200,130,255,${alpha * 0.6})`;
+      ctx.lineWidth = (8 - t * 6) * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, waveRadius * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.shadowBlur = 100 * alpha * z;
+      ctx.fillStyle = "#b060ff";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 160 * (1 - t * 0.5) * z, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+  }
+
+  onDomainStart(ev) {
+    this.domainVisual.onDomainStart(ev);
+    this.startZoomSeq([
+      { target: 1.4, duration: 300, pause: 500 },
+      { target: 1.2, duration: 300, pause: 0 },
+    ]);
+  }
+
+  onDomainCollapse(ev) {
+    this.domainVisual.onDomainCollapse(ev);
+    this.zoomSeq = null;
+    this.startZoom(1, 400);
+  }
+
+  getVisualForPlayer(character) {
+    if (character === "yuta") return this.yutaVisual;
+    return this.gojoVisual;
+  }
+
+  triggerDash(playerId, ev, startX, startY) {
+    this.dashVisuals.set(playerId, performance.now() + 220);
+    this.dashTweens.set(playerId, {
+      startX: startX,
+      startY: startY,
+      endX: ev.x,
+      endY: ev.y,
+      startTime: performance.now(),
+      duration: 200,
+    });
+  }
+
+  updateEffects(dt) {
+    this.gojoVisual.update(dt);
+    this.yutaVisual.update(dt);
+    this.domainVisual.update(dt);
+    const now = performance.now();
+    this.dashVisuals.forEach((expiry, id) => {
+      if (now > expiry) this.dashVisuals.delete(id);
+    });
+    this.dashTweens.forEach((tw, id) => {
+      if (now > tw.startTime + tw.duration) {
+        this.dashTweens.delete(id);
+        const entry = this.interpolationRef?.players.get(id);
+        if (entry) {
+          entry.x = tw.endX;
+          entry.y = tw.endY;
+          entry.tx = tw.endX;
+          entry.ty = tw.endY;
+        }
+      }
+    });
+    this.purpleCharges.forEach((charge, id) => {
+      if (now > charge.startTime + charge.duration * 1000) this.purpleCharges.delete(id);
+    });
+    for (let i = this.markers.length - 1; i >= 0; i -= 1) {
+      const m = this.markers[i];
+      m.life -= dt;
+      if (m.life <= 0) {
+        this.markers.splice(i, 1);
+      }
+    }
+    for (let i = this.redExplosions.length - 1; i >= 0; i -= 1) {
+      const e = this.redExplosions[i];
+      e.life -= dt;
+      if (e.life <= 0) {
+        this.redExplosions.splice(i, 1);
+      }
+    }
+  }
+
+  drawMarkers() {
+    const ctx = this.ctx;
+    const z = this.camera.zoom || 1;
+    for (let i = 0; i < this.markers.length; i += 1) {
+      const marker = this.markers[i];
+      const p = worldToScreen(this.camera, this.canvas, marker.x, marker.y);
+      const t = marker.life / marker.ttl;
+      ctx.save();
+      ctx.strokeStyle = marker.color;
+      ctx.lineWidth = (2 + (1 - t) * 2) * z;
+      ctx.globalAlpha = Math.max(0.08, t);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, marker.radius * (0.92 + (1 - t) * 0.15) * z, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  drawRedExplosions() {
+    const ctx = this.ctx;
+    const now = Date.now();
+    for (let i = 0; i < this.redExplosions.length; i += 1) {
+      const e = this.redExplosions[i];
+      const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
+      const t = e.life / e.ttl;
+      const s = e.seed;
+      const z = this.camera.zoom || 1;
+
+      ctx.save();
+
+      const coreSize = e.radius * 0.25 * (1 - t * 0.5) * z;
+      const coreGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreSize);
+      coreGrad.addColorStop(0, `rgba(255,255,255,${t * 0.95})`);
+      coreGrad.addColorStop(0.3, `rgba(255,200,200,${t * 0.6})`);
+      coreGrad.addColorStop(0.7, `rgba(255,50,80,${t * 0.3})`);
+      coreGrad.addColorStop(1, "rgba(255,0,50,0)");
+      ctx.shadowColor = "#ff2040";
+      ctx.shadowBlur = 40 * t * z;
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, coreSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      const shockwaveRadius = e.radius * (0.3 + (1 - t) * 0.7) * z;
+      ctx.strokeStyle = `rgba(255,80,110,${t * 0.4})`;
+      ctx.lineWidth = 3 * t * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, shockwaveRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255,200,220,${t * 0.2})`;
+      ctx.lineWidth = 1.5 * t * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, shockwaveRadius * 1.15, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const fragCount = 12 + Math.floor(t * 8);
+      for (let f = 0; f < fragCount; f++) {
+        const angle = (f / fragCount) * Math.PI * 2 + Math.sin(s + f * 1.7) * 0.3 + (1 - t) * 0.5;
+        const fragDist = e.radius * (0.2 + (1 - t) * 0.8) * (0.6 + Math.sin(s + f * 2.3) * 0.4) * z;
+        const fx = p.x + Math.cos(angle) * fragDist;
+        const fy = p.y + Math.sin(angle) * fragDist;
+        const fragSize = 4 * (0.3 + t * 0.7) * (0.5 + Math.sin(s + f * 1.1) * 0.5) * z;
+        const fragAngle = angle + t * 2 + f;
+        const darkVal = Math.floor(20 + (1 - t) * 40);
+        ctx.fillStyle = `rgba(${200 - (1 - t) * 150},${darkVal},${darkVal * 0.5},${t * 0.8})`;
+        ctx.save();
+        ctx.translate(fx, fy);
+        ctx.rotate(fragAngle);
+        ctx.fillRect(-fragSize * 0.5, -fragSize * 0.5, fragSize, fragSize);
+        ctx.restore();
+        const rimX = fx + Math.cos(angle) * fragSize * 0.3;
+        const rimY = fy + Math.sin(angle) * fragSize * 0.3;
+        ctx.strokeStyle = `rgba(255,100,130,${t * 0.5})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(rimX - fragSize * 0.2, rimY - fragSize * 0.2);
+        ctx.lineTo(rimX + fragSize * 0.2, rimY + fragSize * 0.2);
+        ctx.stroke();
+      }
+
+      const lineCount = 8 + Math.floor(t * 6);
+      for (let l = 0; l < lineCount; l++) {
+        const angle = (l / lineCount) * Math.PI * 2 + (1 - t) * 0.8 + Math.sin(s + l * 1.3) * 0.2;
+        const len = e.radius * (0.4 + (1 - t) * 0.8) * (0.7 + Math.sin(s + l * 2.1) * 0.3) * z;
+        const lx = Math.cos(angle) * len;
+        const ly = Math.sin(angle) * len;
+        ctx.strokeStyle = `rgba(255,255,255,${t * 0.3 * (1 - l / lineCount)})`;
+      ctx.lineWidth = 1.5 * t * z;
+        ctx.beginPath();
+        ctx.moveTo(p.x + lx * 0.1, p.y + ly * 0.1);
+        ctx.lineTo(p.x + lx, p.y + ly);
+        ctx.stroke();
+      }
+
+      for (let l = 0; l < 5; l++) {
+        const angle = (l / 5) * Math.PI * 2 + (1 - t) * 1.2 + Math.sin(s + l * 1.7) * 0.3;
+        const len = e.radius * (0.3 + (1 - t) * 0.6) * (0.5 + Math.sin(s + l * 2.5) * 0.5) * z;
+        const lx = Math.cos(angle) * len;
+        const ly = Math.sin(angle) * len;
+        ctx.strokeStyle = `rgba(0,0,0,${t * 0.4})`;
+        ctx.lineWidth = 2 * t * z;
+        ctx.beginPath();
+        ctx.moveTo(p.x + lx * 0.2, p.y + ly * 0.2);
+        ctx.lineTo(p.x + lx, p.y + ly);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  drawGrid() {
+    const ctx = this.ctx;
+    const cell = 70;
+    const zoom = this.camera.zoom || 1;
+    const cellScreen = cell * zoom;
+    const w = this.canvas.clientWidth;
+    const h = this.canvas.clientHeight;
+    const offsetX = -((this.camera.x - w * 0.5 / zoom) % cell) * zoom;
+    const offsetY = -((this.camera.y - h * 0.5 / zoom) % cell) * zoom;
+
+    ctx.strokeStyle = "rgba(120,150,210,0.06)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = offsetX; x < w; x += cellScreen) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+    }
+    for (let y = offsetY; y < h; y += cellScreen) {
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+    }
+    ctx.stroke();
+  }
+
+  drawWorld() {
+    if (!this.map) {
+      return;
+    }
+
+    const ctx = this.ctx;
+    const w = this.canvas.clientWidth;
+    const h = this.canvas.clientHeight;
+
+    this.drawGrid();
+
+    this.map.disputeZones.forEach((zone) => {
+      const p = worldToScreen(this.camera, this.canvas, zone.x, zone.y);
+      ctx.strokeStyle = "rgba(95,148,255,0.2)";
+      ctx.fillStyle = "rgba(50,80,140,0.08)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, zone.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    this.map.hazards.forEach((hazard) => {
+      const p = worldToScreen(this.camera, this.canvas, hazard.x, hazard.y);
+      const pulse = 0.7 + Math.sin(Date.now() * 0.005 + hazard.x) * 0.15;
+      ctx.fillStyle = `rgba(220,58,72,${0.12 * pulse})`;
+      ctx.strokeStyle = "rgba(255,98,116,0.34)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, hazard.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    this.map.obstacles.forEach((obs) => {
+      const p = worldToScreen(this.camera, this.canvas, obs.x, obs.y);
+      ctx.fillStyle = "rgba(20,26,38,0.95)";
+      ctx.strokeStyle = "rgba(115,140,185,0.25)";
+      ctx.lineWidth = 2;
+      ctx.fillRect(p.x, p.y, obs.w, obs.h);
+      ctx.strokeRect(p.x + 0.5, p.y + 0.5, obs.w - 1, obs.h - 1);
+    });
+
+    const topLeft = worldToScreen(this.camera, this.canvas, 0, 0);
+    ctx.strokeStyle = "rgba(170,200,255,0.2)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(topLeft.x, topLeft.y, this.map.width, this.map.height);
+
+    if (w && h) {
+      ctx.fillStyle = "rgba(0,0,0,0.07)";
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
+
+  drawDomains(domains, youId, you) {
+    const ctx = this.ctx;
+    const now = Date.now();
+    let insideDomain = false;
+    const activeOwnerIds = new Set();
+    const z = this.camera.zoom || 1;
+
+    domains.forEach((entry) => {
+      const d = entry.raw;
+      const ownerId = d.ownerId;
+      activeOwnerIds.add(ownerId);
+
+      const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
+      const isMine = ownerId === youId;
+
+      const targetR = d.radius;
+      const currentR = this.domainVisual.getCurrentRadius(ownerId, targetR);
+      const expandProgress = this.domainVisual.getExpandProgress(ownerId);
+      const expandAlpha = Math.min(1, expandProgress * 1.5);
+      const vz = currentR * z;
+
+      if (currentR < 2) return;
+
+      const bg = this.domainVisual.getBackground(ownerId);
+      const overlay = this.domainVisual.getOverlay(ownerId);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
+      ctx.clip();
+
+      if (bg) {
+        const aspect = bg.width / bg.height;
+        let dw = vz * 2;
+        let dh = dw / aspect;
+        if (dh < vz * 2) {
+          dh = vz * 2;
+          dw = dh * aspect;
+        }
+        ctx.drawImage(bg, p.x - dw / 2, p.y - dh / 2, dw, dh);
+      } else {
+        const skyGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, vz);
+        skyGrad.addColorStop(0, isMine ? "rgba(10,20,50,0.95)" : "rgba(30,10,50,0.95)");
+        skyGrad.addColorStop(0.5, isMine ? "rgba(5,15,40,0.92)" : "rgba(20,5,40,0.92)");
+        skyGrad.addColorStop(1, "rgba(0,0,0,0.98)");
+        ctx.fillStyle = skyGrad;
+        ctx.fill();
+
+        const innerR = vz * 0.95;
+        for (let i = 0; i < 80; i++) {
+          const seed = i * 137.508;
+          const angle = (seed % 360) * Math.PI / 180;
+          const dist = ((seed * 7919) % innerR);
+          const starX = p.x + Math.cos(angle) * dist;
+          const starY = p.y + Math.sin(angle) * dist;
+          const starSize = 0.5 + (seed % 3) * 0.5;
+          const twinkle = 0.5 + Math.sin(now * 0.003 + seed) * 0.5;
+          const alpha = twinkle * (0.6 + (seed % 40) * 0.01);
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (let i = 0; i < 5; i++) {
+          const a = now * 0.0003 + i * (Math.PI * 2 / 5);
+          const nebulaR = innerR * (0.3 + i * 0.12);
+          const nx = p.x + Math.cos(a) * nebulaR * 0.5;
+          const ny = p.y + Math.sin(a) * nebulaR * 0.5;
+          const ng = ctx.createRadialGradient(nx, ny, 0, nx, ny, nebulaR);
+          ng.addColorStop(0, isMine ? "rgba(80,160,255,0.04)" : "rgba(180,80,255,0.04)");
+          ng.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = ng;
+          ctx.beginPath();
+          ctx.arc(nx, ny, nebulaR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      if (overlay) {
+        ctx.drawImage(overlay, p.x - vz, p.y - vz, vz * 2, vz * 2);
+      }
+
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = expandAlpha;
+      ctx.shadowColor = isMine ? "#88ccff" : "#cc80ff";
+      ctx.shadowBlur = 30 * expandAlpha * z;
+      ctx.strokeStyle = isMine ? "rgba(180,220,255,0.95)" : "rgba(220,180,255,0.95)";
+      ctx.lineWidth = 4 * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = isMine ? "rgba(255,255,255,0.5)" : "rgba(255,220,255,0.5)";
+      ctx.lineWidth = 1.5 * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, vz - 3 * z, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (d.barrierMaxHp > 0) {
+        const barrierPct = d.barrierHp / d.barrierMaxHp;
+        if (barrierPct < 1) {
+          this.drawDomainCracks(ctx, p.x, p.y, vz, barrierPct, isMine);
+        }
+      }
+
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2 + now * 0.001;
+        const rx = p.x + Math.cos(a) * vz;
+        const ry = p.y + Math.sin(a) * vz;
+        ctx.fillStyle = isMine ? "rgba(220,240,255,0.8)" : "rgba(240,200,255,0.8)";
+        ctx.beginPath();
+        ctx.arc(rx, ry, 3 * z, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      if (you) {
+        const dx = you.x - entry.x;
+        const dy = you.y - entry.y;
+        if (dx * dx + dy * dy <= d.radius * d.radius) {
+          insideDomain = true;
+        }
+      }
+    });
+
+    this.domainVisual.renderShards(ctx, this.camera, this.canvas);
+
+    this.domainVisual.cleanupExpanding(activeOwnerIds);
+
+    this.domainOverlayAlpha += ((insideDomain ? 1 : 0) - this.domainOverlayAlpha) * 0.08;
+    if (this.domainOverlayAlpha > 0.01) {
+      ctx.fillStyle = `rgba(5,10,30,${0.12 * this.domainOverlayAlpha})`;
+      ctx.fillRect(0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
+    }
+  }
+
+  drawDomainCracks(ctx, cx, cy, radius, hpPct, isMine) {
+    const z = this.camera.zoom || 1;
+    const crackCount = Math.floor((1 - hpPct) * 12) + 2;
+    const color = isMine ? "rgba(255,255,255,0.4)" : "rgba(255,200,220,0.4)";
+    const inner = radius * 0.92;
+    const outer = radius * 1.02;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = (1.5 + (1 - hpPct) * 2) * z;
+
+    for (let i = 0; i < crackCount; i++) {
+      const seed = i * 47.11;
+      const angle = ((seed * 137.5) % 360) * Math.PI / 180;
+      const segments = 3 + Math.floor((1 - hpPct) * 4);
+      let lastX = cx + Math.cos(angle) * (inner + Math.random() * (outer - inner));
+      let lastY = cy + Math.sin(angle) * (inner + Math.random() * (outer - inner));
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      for (let j = 0; j < segments; j++) {
+        const spread = 0.3 + (1 - hpPct) * 0.5;
+        const aOff = (Math.random() - 0.5) * spread;
+        const rOff = (j / segments) * (radius * 0.15 * (1 - hpPct));
+        const nx = cx + Math.cos(angle + aOff) * (inner + (outer - inner) * ((j + 1) / segments) + rOff);
+        const ny = cy + Math.sin(angle + aOff) * (inner + (outer - inner) * ((j + 1) / segments) + rOff);
+        ctx.lineTo(nx, ny);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawProjectiles(projectiles) {
+    const ctx = this.ctx;
+    const now = Date.now();
+    projectiles.forEach((entry) => {
+      const p = entry.raw;
+      const screen = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
+
+      if (p.type === "purple") {
+        const sphereR = Math.max(10, p.width * 0.55);
+        const px = screen.x;
+        const py = screen.y;
+        const pulse = 1 + Math.sin(now * 0.003) * 0.03;
+
+        ctx.save();
+
+        ctx.shadowColor = "#9040dd";
+        ctx.shadowBlur = 65;
+        const bgGrad = ctx.createRadialGradient(px, py, 0, px, py, sphereR * pulse * 2);
+        bgGrad.addColorStop(0, "rgba(255,255,255,0.15)");
+        bgGrad.addColorStop(0.15, "rgba(220,180,255,0.12)");
+        bgGrad.addColorStop(0.4, "rgba(150,80,240,0.08)");
+        bgGrad.addColorStop(0.7, "rgba(100,40,200,0.04)");
+        bgGrad.addColorStop(1, "rgba(60,10,150,0)");
+        ctx.fillStyle = bgGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, sphereR * pulse * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        const smokeGrad = ctx.createRadialGradient(px, py, 0, px, py, sphereR * pulse * 1.6);
+        smokeGrad.addColorStop(0, "rgba(255,235,255,0.5)");
+        smokeGrad.addColorStop(0.12, "rgba(230,200,255,0.35)");
+        smokeGrad.addColorStop(0.3, "rgba(180,130,255,0.25)");
+        smokeGrad.addColorStop(0.55, "rgba(130,70,230,0.15)");
+        smokeGrad.addColorStop(0.8, "rgba(90,40,190,0.06)");
+        smokeGrad.addColorStop(1, "rgba(60,15,150,0)");
+        ctx.fillStyle = smokeGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, sphereR * pulse * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        const innerGrad = ctx.createRadialGradient(px, py, 0, px, py, sphereR * pulse);
+        innerGrad.addColorStop(0, "rgba(255,255,255,0.7)");
+        innerGrad.addColorStop(0.2, "rgba(240,220,255,0.35)");
+        innerGrad.addColorStop(0.5, "rgba(200,160,255,0.12)");
+        innerGrad.addColorStop(1, "rgba(160,100,240,0)");
+        ctx.fillStyle = innerGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, sphereR * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 50;
+        const spriteSize = sphereR * 2.3 * pulse;
+        if (this.hollowPurpleImg.complete && this.hollowPurpleImg.naturalWidth > 0) {
+          ctx.shadowColor = "#9040dd";
+          ctx.drawImage(this.hollowPurpleImg, px - spriteSize / 2, py - spriteSize / 2, spriteSize, spriteSize);
+        } else {
+          ctx.shadowBlur = 30;
+          const fallbackGrad = ctx.createRadialGradient(px, py, 0, px, py, spriteSize * 0.5);
+          fallbackGrad.addColorStop(0, "rgba(255,255,255,0.7)");
+          fallbackGrad.addColorStop(0.3, "rgba(200,130,255,0.5)");
+          fallbackGrad.addColorStop(0.7, "rgba(120,40,200,0.2)");
+          fallbackGrad.addColorStop(1, "rgba(60,10,150,0)");
+          ctx.fillStyle = fallbackGrad;
+          ctx.beginPath();
+          ctx.arc(px, py, spriteSize * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        for (let vein = 0; vein < 5; vein++) {
+          const vAngle = (vein / 5) * Math.PI * 2 + now * 0.001;
+          const dots = 8 + (vein * 3) % 4;
+          for (let d = 0; d < dots; d++) {
+            const t = (d + 1) / (dots + 1);
+            const spread = 0.3 + Math.sin(vein * 2.7 + d * 1.3) * 0.2;
+            const a = vAngle + Math.sin(t * 6 + vein * 4 + now * 0.002) * spread;
+            const dist = sphereR * (0.15 + t * 0.75);
+            const dx = px + Math.cos(a) * dist;
+            const dy = py + Math.sin(a) * dist;
+            const sz = 1 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.003) * 0.8 + 0.8;
+            const alpha = 0.3 + Math.sin(vein * 2.1 + d * 1.1 + now * 0.002) * 0.15 + 0.2;
+            ctx.fillStyle = `rgba(230,210,255,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(dx, dy, sz, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < 40; i++) {
+          const angle = i * 2.399 + Math.sin(now * 0.002 + i * 0.5) * 0.2;
+          const dist = sphereR * (0.1 + (Math.sin(i * 3.7 + now * 0.001) * 0.5 + 0.5) * 0.8);
+          const sx = px + Math.cos(angle) * dist;
+          const sy = py + Math.sin(angle) * dist;
+          const sz = 0.5 + Math.sin(i * 1.9 + now * 0.004) * 0.4 + 0.5;
+          const alpha = 0.2 + Math.sin(i * 2.3 + now * 0.003) * 0.1 + 0.15;
+          ctx.fillStyle = `rgba(255,245,255,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sz, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2 + now * 0.002;
+          const dist = sphereR * (0.85 + Math.sin(now * 0.003 + i * 1.3) * 0.1);
+          const ex = px + Math.cos(angle) * dist;
+          const ey = py + Math.sin(angle) * dist;
+          const arcAngle = angle + Math.PI * 0.5;
+          const arcLen = sphereR * (0.15 + Math.sin(now * 0.004 + i * 0.7) * 0.08 + 0.1);
+          for (let s = 0; s < 3; s++) {
+            const st = (s + 1) / 4;
+            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.005 + i + s) * 3;
+            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.005 + i + s) * 3;
+            const alpha = (0.3 - st * 0.15) * (0.6 + Math.sin(now * 0.006 + i * 1.1) * 0.2);
+            ctx.fillStyle = `rgba(200,160,255,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(ax, ay, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+        return;
+      }
+
+      const prev = worldToScreen(this.camera, this.canvas, p.prevX, p.prevY);
+      ctx.save();
+
+      if (p.type === "blue") {
+        const orbR = Math.max(10, p.radius);
+        const coreGrad = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, orbR * 2.5);
+        coreGrad.addColorStop(0, "rgba(255,255,255,1)");
+        coreGrad.addColorStop(0.15, "rgba(220,240,255,1)");
+        coreGrad.addColorStop(0.4, "rgba(100,190,255,0.95)");
+        coreGrad.addColorStop(0.7, "rgba(40,120,255,0.6)");
+        coreGrad.addColorStop(1, "rgba(0,50,200,0)");
+        ctx.shadowColor = "#4488ff";
+        ctx.shadowBlur = 50;
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, orbR * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, orbR * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = "#88ccff";
+        ctx.shadowBlur = 25;
+        ctx.strokeStyle = "rgba(200,235,255,0.8)";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, orbR * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(180,220,255,0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, orbR * 1.1, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(140,200,255,0.3)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, orbR * 1.6, 0, Math.PI * 2);
+        ctx.stroke();
+        const electricTime = now * 0.005;
+        ctx.shadowBlur = 0;
+        for (let i = 0; i < 4; i++) {
+          const baseAngle = (i / 4) * Math.PI * 2 + electricTime * 0.4 + i * 0.7;
+          const arcLen = orbR * (2.5 + Math.sin(electricTime * 2 + i) * 1.2);
+          const segments = 6 + Math.floor(Math.abs(Math.sin(electricTime + i * 1.3)) * 4);
+          ctx.strokeStyle = `rgba(180,230,255,${0.35 + Math.sin(electricTime * 1.5 + i * 2) * 0.15})`;
+          ctx.lineWidth = 2 + Math.sin(electricTime + i) * 1;
+          ctx.beginPath();
+          let lx = screen.x + Math.cos(baseAngle) * orbR * 0.6;
+          let ly = screen.y + Math.sin(baseAngle) * orbR * 0.6;
+          ctx.moveTo(lx, ly);
+          for (let s = 1; s <= segments; s++) {
+            const t = s / segments;
+            const a = baseAngle + Math.sin(t * 8 + electricTime * 3 + i) * 0.8;
+            const dist = orbR * 0.6 + t * arcLen;
+            lx = screen.x + Math.cos(a) * dist;
+            ly = screen.y + Math.sin(a) * dist;
+            ctx.lineTo(lx, ly);
+          }
+          ctx.stroke();
+        }
+        ctx.shadowColor = "#4499ff";
+        ctx.shadowBlur = 12;
+        for (let i = 0; i < 12; i++) {
+          const angle = now * 0.006 + i * (Math.PI * 2 / 12) + Math.sin(now * 0.004 + i) * 0.3;
+          const dist = orbR * (1.3 + Math.sin(now * 0.007 + i * 1.5) * 0.6);
+          const px = screen.x + Math.cos(angle) * dist;
+          const py = screen.y + Math.sin(angle) * dist;
+          const sz = 0.5 + Math.abs(Math.sin(now * 0.009 + i * 0.7)) * 0.7;
+          ctx.fillStyle = `rgba(200,240,255,${0.4 + Math.sin(now * 0.005 + i) * 0.2})`;
+          ctx.beginPath();
+          ctx.arc(px, py, sz, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2 + now * 0.004 + Math.sin(now * 0.003 + i) * 0.2;
+          const dist = orbR * (1.8 + Math.sin(now * 0.006 + i * 1.1) * 0.5);
+          const px = screen.x + Math.cos(angle) * dist;
+          const py = screen.y + Math.sin(angle) * dist;
+          const sz = 0.3 + Math.sin(now * 0.008 + i * 2) * 0.3;
+          ctx.fillStyle = `rgba(180,220,255,0.3)`;
+          ctx.beginPath();
+          ctx.arc(px, py, sz, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (p.type === "red") {
+        const r = Math.max(8, p.radius);
+        const px = screen.x;
+        const py = screen.y;
+        const pulse = 1 + Math.sin(now * 0.004 + 1) * 0.04;
+
+        const dx = screen.x - prev.x;
+        const dy = screen.y - prev.y;
+        const trailLen = Math.sqrt(dx * dx + dy * dy);
+        if (trailLen > 5) {
+          const trailDirX = dx / trailLen;
+          const trailDirY = dy / trailLen;
+          const extend = Math.min(40, trailLen * 2);
+          for (let i = 0; i < 6; i++) {
+            const t = (i + 1) / 7;
+            const tx = px - trailDirX * extend * t;
+            const ty = py - trailDirY * extend * t;
+            const flicker = 0.6 + Math.sin(now * 0.015 + i * 2.5 + t * 5) * 0.3;
+            const sz = r * 0.6 * (1 - t * 0.6) * flicker;
+            const alpha = (0.35 - t * 0.22) * flicker;
+            ctx.fillStyle = `rgba(255,100,130,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(tx, ty, sz, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.save();
+        ctx.shadowColor = "#ff2040";
+        ctx.shadowBlur = 70;
+        const bgGrad = ctx.createRadialGradient(px, py, 0, px, py, r * pulse * 2.2);
+        bgGrad.addColorStop(0, "rgba(255,255,255,0.12)");
+        bgGrad.addColorStop(0.12, "rgba(255,180,180,0.1)");
+        bgGrad.addColorStop(0.35, "rgba(255,80,100,0.08)");
+        bgGrad.addColorStop(0.6, "rgba(220,30,60,0.04)");
+        bgGrad.addColorStop(1, "rgba(150,0,30,0)");
+        ctx.fillStyle = bgGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, r * pulse * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        const smokeGrad = ctx.createRadialGradient(px, py, 0, px, py, r * pulse * 1.7);
+        smokeGrad.addColorStop(0, "rgba(255,235,235,0.45)");
+        smokeGrad.addColorStop(0.1, "rgba(255,200,200,0.3)");
+        smokeGrad.addColorStop(0.25, "rgba(255,130,150,0.22)");
+        smokeGrad.addColorStop(0.5, "rgba(235,70,100,0.12)");
+        smokeGrad.addColorStop(0.75, "rgba(200,30,60,0.05)");
+        smokeGrad.addColorStop(1, "rgba(140,10,40,0)");
+        ctx.fillStyle = smokeGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, r * pulse * 1.7, 0, Math.PI * 2);
+        ctx.fill();
+
+        const innerGrad = ctx.createRadialGradient(px, py, 0, px, py, r * pulse * 1.1);
+        innerGrad.addColorStop(0, "rgba(255,255,255,0.5)");
+        innerGrad.addColorStop(0.15, "rgba(255,220,220,0.3)");
+        innerGrad.addColorStop(0.4, "rgba(255,160,180,0.12)");
+        innerGrad.addColorStop(0.7, "rgba(255,100,130,0.05)");
+        innerGrad.addColorStop(1, "rgba(220,60,90,0)");
+        ctx.fillStyle = innerGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, r * pulse * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let vein = 0; vein < 6; vein++) {
+          const vAngle = (vein / 6) * Math.PI * 2 + now * 0.0015 + vein * 0.3;
+          const dots = 6 + (vein * 3) % 5;
+          for (let d = 0; d < dots; d++) {
+            const t = (d + 1) / (dots + 1);
+            const spread = 0.35 + Math.sin(vein * 2.7 + d * 1.3) * 0.25;
+            const a = vAngle + Math.sin(t * 7 + vein * 4 + now * 0.003) * spread;
+            const dist = r * (0.1 + t * 0.8);
+            const dx2 = px + Math.cos(a) * dist;
+            const dy2 = py + Math.sin(a) * dist;
+            const sz = 1.2 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.004) * 1 + 1;
+            const alpha = 0.35 + Math.sin(vein * 2.1 + d * 1.1 + now * 0.003) * 0.2 + 0.25;
+            ctx.fillStyle = `rgba(255,210,220,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(dx2, dy2, sz, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < 50; i++) {
+          const angle = i * 2.399 + Math.sin(now * 0.003 + i * 0.5) * 0.3;
+          const dist = r * (0.05 + (Math.sin(i * 3.7 + now * 0.002) * 0.5 + 0.5) * 0.85);
+          const sx = px + Math.cos(angle) * dist;
+          const sy = py + Math.sin(angle) * dist;
+          const sz = 0.6 + Math.sin(i * 1.9 + now * 0.005) * 0.5 + 0.6;
+          const alpha = 0.25 + Math.sin(i * 2.3 + now * 0.004) * 0.15 + 0.2;
+          ctx.fillStyle = `rgba(255,245,245,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sz, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (let i = 0; i < 15; i++) {
+          const angle = now * 0.005 + i * (Math.PI * 2 / 15) + Math.sin(now * 0.003 + i * 0.6) * 0.5;
+          const dist = r * (0.6 + Math.sin(now * 0.006 + i * 1.1) * 0.5 + 0.5);
+          const sx2 = px + Math.cos(angle) * dist;
+          const sy2 = py + Math.sin(angle) * dist;
+          const sz = 1.5 + Math.abs(Math.sin(now * 0.008 + i * 0.7)) * 2.5;
+          const alpha = 0.4 + Math.sin(now * 0.005 + i * 1.2) * 0.3;
+          ctx.fillStyle = `rgba(255,180,200,${alpha})`;
+          ctx.beginPath();
+          ctx.arc(sx2, sy2, sz, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2 + now * 0.003;
+          const dist = r * (0.88 + Math.sin(now * 0.004 + i * 1.3) * 0.12);
+          const ex = px + Math.cos(angle) * dist;
+          const ey = py + Math.sin(angle) * dist;
+          const arcAngle = angle + Math.PI * 0.5;
+          const arcLen = r * (0.15 + Math.sin(now * 0.005 + i * 0.7) * 0.1 + 0.12);
+          for (let s = 0; s < 3; s++) {
+            const st = (s + 1) / 4;
+            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.006 + i + s) * 4;
+            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.006 + i + s) * 4;
+            const alpha = (0.3 - st * 0.15) * (0.6 + Math.sin(now * 0.007 + i * 1.1) * 0.3);
+            ctx.fillStyle = `rgba(255,170,190,${alpha})`;
+            ctx.beginPath();
+            ctx.arc(ax, ay, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+      } else {
+        ctx.strokeStyle = "rgba(255,165,92,0.45)";
+        ctx.lineWidth = Math.max(2, p.radius * 0.45);
+        ctx.beginPath();
+        ctx.moveTo(prev.x, prev.y);
+        ctx.lineTo(screen.x, screen.y);
+        ctx.stroke();
+        ctx.fillStyle = "#ffbe73";
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, Math.max(3, p.radius), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    });
+  }
+
+  drawEnemies(enemies) {
+    const ctx = this.ctx;
+    enemies.forEach((entry) => {
+      const e = entry.raw;
+      const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
+      const radius = e.type === "boss" ? 34 : e.type === "elite" ? 24 : 18;
+      const frozen = Boolean(e.frozen);
+
+      ctx.save();
+      ctx.fillStyle = frozen
+        ? "#d3e6ff"
+        : e.type === "boss"
+          ? "#9b2e4f"
+          : e.type === "elite"
+            ? "#5b335f"
+            : e.type === "caster"
+              ? "#573d66"
+              : "#3a4159";
+      ctx.strokeStyle = frozen ? "rgba(246,253,255,0.92)" : "rgba(242,156,177,0.58)";
+      if (frozen) {
+        ctx.shadowColor = "rgba(227,244,255,0.85)";
+        ctx.shadowBlur = 16;
+      }
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      if (frozen) {
+        const pulse = 0.75 + Math.sin(Date.now() * 0.01 + radius) * 0.15;
+        ctx.strokeStyle = "rgba(243,252,255,0.75)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius + 4 + pulse * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
+      ctx.fillStyle = "rgba(14,18,27,0.8)";
+      ctx.fillRect(p.x - radius, p.y - radius - 10, radius * 2, 4);
+      ctx.fillStyle = "#ff6e8f";
+      ctx.fillRect(p.x - radius, p.y - radius - 10, radius * 2 * hpPct, 4);
+      ctx.restore();
+    });
+  }
+
+  drawPlayers(players, youId) {
+    const ctx = this.ctx;
+    const now = performance.now();
+    players.forEach((entry) => {
+      const p = entry.raw;
+      const isYou = p.id === youId;
+      const radius = 22;
+      const state = p.animState || "idle";
+      const chara = p.character || "gojo";
+      const visual = this.getVisualForPlayer(chara);
+
+      const tween = this.dashTweens.get(p.id);
+      let rx = entry.x;
+      let ry = entry.y;
+      if (tween) {
+        const t = Math.min(1, (now - tween.startTime) / tween.duration);
+        const ease = 1 - Math.pow(1 - t, 3);
+        rx = tween.startX + (tween.endX - tween.startX) * ease;
+        ry = tween.startY + (tween.endY - tween.startY) * ease;
+      }
+
+      const pos = worldToScreen(this.camera, this.canvas, rx, ry);
+
+      ctx.save();
+      if (!p.alive) {
+        ctx.globalAlpha = 0.35;
+      }
+
+      const sprite = visual.yutaSprite || visual.gojoSprite;
+      const spriteLoaded = sprite ? sprite.isLoaded : false;
+
+      if (spriteLoaded) {
+        let facing = this.playerFacing.get(p.id) || 1;
+        const pvx = p.vx || 0;
+        if (Math.abs(pvx) > 1) {
+          facing = pvx < 0 ? -1 : 1;
+          this.playerFacing.set(p.id, facing);
+        }
+        const finalState = this.dashVisuals.has(p.id) ? "dash" : state;
+        sprite.render(ctx, pos.x, pos.y, finalState, facing, 1.0);
+      } else {
+        ctx.fillStyle = isYou ? "#111b2a" : "#231523";
+        ctx.strokeStyle = isYou ? "#87d0ff" : "#ff96bd";
+        ctx.shadowColor = isYou ? "rgba(134,208,255,0.65)" : "rgba(255,124,174,0.52)";
+        ctx.shadowBlur = isYou ? 16 : 10;
+        ctx.lineWidth = isYou ? 2.8 : 2.2;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = isYou ? "rgba(226,246,255,0.8)" : "rgba(255,230,241,0.74)";
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius * 0.65, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = isYou ? "rgba(234,250,255,0.95)" : "rgba(255,236,244,0.9)";
+        ctx.fillRect(pos.x - 7, pos.y - 3, 14, 2.2);
+      }
+
+      const nameY = spriteLoaded ? pos.y - 75 : pos.y - radius - 10;
+      ctx.fillStyle = "#dce9ff";
+      ctx.font = "600 14px Rajdhani";
+      ctx.textAlign = "center";
+      ctx.fillText(p.name || (chara === "yuta" ? "Yuta" : "Gojo"), pos.x, nameY);
+
+      const hpPct = p.maxHp > 0 ? p.hp / p.maxHp : 0;
+      const hpY = spriteLoaded ? pos.y + 75 : pos.y + radius + 7;
+      ctx.fillStyle = "rgba(0,0,0,0.42)";
+      ctx.fillRect(pos.x - 22, hpY, 44, 4);
+      ctx.fillStyle = "#ff5d7f";
+      ctx.fillRect(pos.x - 22, hpY, 44 * hpPct, 4);
+
+      ctx.restore();
+    });
+  }
+
+  drawM1PunchEffects() {
+    const ctx = this.ctx;
+    for (let i = 0; i < this.gojoVisual.m1Slashes.length; i++) {
+      const slash = this.gojoVisual.m1Slashes[i];
+      if (slash.life <= 0) continue;
+      const pos = worldToScreen(this.camera, this.canvas, slash.worldX, slash.worldY);
+      const progress = 1 - slash.life / 0.3;
+      drawM1Punch(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, this.gojoVisual.time);
+    }
+    for (let i = 0; i < this.yutaVisual.effects.katanaSlashes.length; i++) {
+      const slash = this.yutaVisual.effects.katanaSlashes[i];
+      if (slash.life <= 0 || slash.type !== "m1") continue;
+      const pos = worldToScreen(this.camera, this.canvas, slash.x, slash.y);
+      const progress = 1 - slash.life / 0.3;
+      const { drawM1Slash } = require("../animations/yutaEffects.js");
+      drawM1Slash(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.combo || 1);
+    }
+  }
+
+  drawMinimap(players, enemies, youId) {
+    if (!this.map) {
+      return;
+    }
+
+    const ctx = this.ctx;
+    const w = 170;
+    const h = 118;
+    const x = this.canvas.clientWidth - w - 16;
+    const y = this.canvas.clientHeight - h - 16;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(8,12,20,0.72)";
+    ctx.strokeStyle = "rgba(141,168,219,0.26)";
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+
+    const sx = w / this.map.width;
+    const sy = h / this.map.height;
+
+    this.map.obstacles.forEach((obs) => {
+      ctx.fillStyle = "rgba(98,113,146,0.28)";
+      ctx.fillRect(x + obs.x * sx, y + obs.y * sy, obs.w * sx, obs.h * sy);
+    });
+
+    enemies.forEach((entry) => {
+      const e = entry.raw;
+      ctx.fillStyle = e.type === "boss" ? "#ff5e85" : "#d07ca0";
+      ctx.fillRect(x + e.x * sx - 1, y + e.y * sy - 1, 3, 3);
+    });
+
+    players.forEach((entry) => {
+      const p = entry.raw;
+      ctx.fillStyle = p.id === youId ? "#8fd4ff" : "#ffd0dc";
+      ctx.beginPath();
+      ctx.arc(x + entry.x * sx, y + entry.y * sy, p.id === youId ? 2.8 : 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.restore();
+  }
+
+  render({ interpolation, youId, you }) {
+    this.interpolationRef = interpolation || this.interpolationRef;
+    if (typeof window._diagRender === 'undefined') {
+      window._diagRender = 0;
+    }
+    this.clear();
+    this.drawWorld();
+
+    if (interpolation) {
+      if (window._diagRender < 30) {
+        const youEntry = interpolation.players.get(youId);
+        console.log(`[DIAG] render #${window._diagRender}: camera=(${this.camera.x.toFixed(0)},${this.camera.y.toFixed(0)}), players=${interpolation.players.size}, you=${youEntry ? 'present' : 'ABSENT'}, youId=${youId}`);
+        window._diagRender++;
+      }
+      this.domainVisual.updatePlayers(interpolation.players);
+      this.ctx.save();
+      this.drawDomain

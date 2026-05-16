@@ -1,0 +1,80 @@
+"use strict";
+
+const GOJO = {
+  m1: {
+    name: "Cursed Jab Combo",
+    damage: 22,
+    range: 85,
+    cooldown: 0.3,
+    startup: 0.08,
+    active: 0.1,
+    recovery: 0.12,
+  },
+  passive: {
+    radius: 110,
+    projectileSlow: 0.35,
+    dashSlow: 0.2,
+  },
+  blue: {
+    energy: 35,
+    cooldown: 10,
+    speed: 180,
+    lifetime: 3.5,
+    pullRadius: 140,
+    tickDamage: 6,
+    tickRate: 0.25,
+    radius: 32,
+    startup: 0.1,
+    pullStrength: 170,
+  },
+  red: {
+    energy: 45,
+    cooldown: 14,
+    speed: 700,
+    damage: 95,
+    radius: 34,
+    knockback: 1120,
+    lifetime: 0.8,
+    startup: 0.12,
+    explosionRadius: 112,
+  },
+  collapse: {
+    damage: 700,
+    radius: 300,
+    delay: 3.5,
+    knockback: 230,
+  },
+  purple: {
+    energy: 80,
+    cooldown: 24,
+    damage: 320,
+    width: 116,
+    length: 1800,
+    speed: 900,
+    charge: 0.55,
+  },
+  teleport: {
+    energy: 45,
+    cooldown: 12,
+    distance: 320,
+    startup: 0.06,
+    recovery: 0.1,
+  },
+  domain: {
+    energyInitial: 80,
+    startup: 0.95,
+    drainPerSecond: 5,
+    freezeDps: 12,
+    freezePersistSec: 4,
+    radius: 420,
+    slowEnemy: 0.4,
+    slowProjectile: 0.6,
+    cooldown: 70,
+    conflictExtraDrain: 5,
+    collapseStun: 0.75,
+  },
+};
+
+module.exports = {
+  GOJO,
+};
