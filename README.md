@@ -1,4 +1,6 @@
-# CURSED BATTLES (MVP Foundation)
+# CURSED BATTLES - Jujutsu Protocol (MVP Foundation)
+
+CURSED BATTLES - Jogo de browser multiplayer onde feiticeiros enfrentam maldições em batalhas rápidas e intensas.
 
 Authoritative multiplayer web arena survival built with Node.js + Express + WebSocket + HTML5 Canvas 2D.
 
