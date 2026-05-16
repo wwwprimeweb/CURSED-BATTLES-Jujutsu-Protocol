@@ -221,6 +221,96 @@ const UPGRADE_POOL = [
       player.modifiers.sustainOnKill += 18;
     },
   },
+  {
+    id: "rika_damage",
+    name: "Presenca Monstruosa",
+    description: "+15% dano da Rika",
+    rarity: "rare",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.rikaDamageMul *= 1.15;
+    },
+  },
+  {
+    id: "rika_cooldown",
+    name: "Vinculo Acelerado",
+    description: "-15% cooldown da Rika",
+    rarity: "uncommon",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.rikaCooldownMul *= 0.85;
+    },
+  },
+  {
+    id: "dashSlash_damage",
+    name: "Corte Preciso",
+    description: "+20% dano do Dash Slash",
+    rarity: "rare",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.dashSlashDamageMul *= 1.2;
+    },
+  },
+  {
+    id: "dashSlash_range",
+    name: "Investida Fantasma",
+    description: "+15% alcance do Dash Slash",
+    rarity: "uncommon",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.dashSlashRangeMul *= 1.15;
+    },
+  },
+  {
+    id: "fullRika_duration",
+    name: "Ligacao Eterna",
+    description: "+25% duracao da Rika",
+    rarity: "epic",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.fullRikaDurationMul *= 1.25;
+    },
+  },
+  {
+    id: "fullRika_power",
+    name: "Furia Contida",
+    description: "+15% dano dos ataques da Rika",
+    rarity: "epic",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.fullRikaPowerMul *= 1.15;
+    },
+  },
+  {
+    id: "pureLove_damage",
+    name: "Amor Puro",
+    description: "+20% dano do Pure Love",
+    rarity: "epic",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.pureLoveDamageMul *= 1.2;
+    },
+  },
+  {
+    id: "pureLove_radius",
+    name: "Explosao do Afeto",
+    description: "+15% raio do Pure Love",
+    rarity: "rare",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.pureLoveRadiusMul *= 1.15;
+    },
+  },
+  {
+    id: "domainKatana_damage",
+    name: "Laminas Infinitas",
+    description: "+20% dano das katanas do dominio",
+    rarity: "epic",
+    maxStacks: 2,
+    apply(player) {
+      player.modifiers.domainKatanaDamageMul *= 1.2;
+    },
+  },
 ];
 
 const RARITY_WEIGHT = {

@@ -1456,7 +1456,7 @@ class GameServer {
     let factor = this.domainSystem.getEnemySlowAt(enemy.x, enemy.y, enemy.id);
 
     this.players.forEach((player) => {
-      if (!player.alive) {
+      if (!player.alive || player.character !== "gojo") {
         return;
       }
       const d = distance(player.x, player.y, enemy.x, enemy.y);
@@ -1470,7 +1470,10 @@ class GameServer {
   getPassiveProjectileFactor(projectile) {
     let factor = 1;
     this.players.forEach((player) => {
-      if (!player.alive || player.id === projectile.ownerId) {
+      if (!player.alive || player.id === projectile.ownerId || player.character !== "gojo") {
+        return;
+      }
+      if (this.domainSystem.hasActiveDomain(player.id)) {
         return;
       }
       const d = distance(player.x, player.y, projectile.x, projectile.y);
@@ -1505,9 +1508,10 @@ class GameServer {
           return;
         }
         const attackType = Math.random() < 0.4 ? "slam" : Math.random() < 0.6 ? "grab" : "swipe";
-        const damage = attackType === "slam" ? YUTA.fullRika.slamDamage
+        const baseDamage = attackType === "slam" ? YUTA.fullRika.slamDamage
           : attackType === "grab" ? YUTA.fullRika.grabDamage
           : YUTA.fullRika.swipeDamage;
+        const damage = baseDamage * owner.modifiers.fullRikaPowerMul;
         const knockback = attackType === "slam" ? YUTA.fullRika.slamKnockback
           : attackType === "grab" ? YUTA.fullRika.grabThrow
           : YUTA.fullRika.swipeKnockback;
@@ -1558,7 +1562,8 @@ class GameServer {
 
   tryCastRika(player) {
     const kit = this.getKit(player);
-    if (!this.canUseSkill(player, kit.rika.energy, "q", kit.rika.cooldown)) {
+    const cooldown = kit.rika.cooldown * player.modifiers.rikaCooldownMul;
+    if (!this.canUseSkill(player, kit.rika.energy, "q", cooldown)) {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
@@ -1574,6 +1579,7 @@ class GameServer {
   fireRika(player, cast) {
     const kit = this.getKit(player);
     const aim = normalize(cast.dirX, cast.dirY);
+    const damage = kit.rika.damage * player.modifiers.rikaDamageMul;
 
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
@@ -1585,7 +1591,7 @@ class GameServer {
         this.combat.applyDamage({
           target: enemy,
           source: player,
-          amount: kit.rika.damage,
+          amount: damage,
           kind: "rika",
           knockback: kit.rika.knockback,
           fromX: player.x,
@@ -1605,7 +1611,7 @@ class GameServer {
         this.combat.applyDamage({
           target,
           source: player,
-          amount: kit.rika.damage,
+          amount: damage,
           kind: "rika",
           knockback: kit.rika.knockback,
           fromX: player.x,
@@ -1646,9 +1652,8 @@ class GameServer {
     const kit = this.getKit(player);
     const dirX = cast.dirX;
     const dirY = cast.dirY;
-    const dist = kit.dashSlash.distance;
-    const destX = player.x + dirX * dist;
-    const destY = player.y + dirY * dist;
+    const dist = kit.dashSlash.distance * player.modifiers.dashSlashRangeMul;
+    const damage = kit.dashSlash.damage * player.modifiers.dashSlashDamageMul;
 
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
@@ -1656,11 +1661,11 @@ class GameServer {
       const dotForward = dirX * toTarget.x + dirY * toTarget.y;
       if (dotForward < 0.3) return;
       const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d <= kit.dashSlash.distance + enemy.radius) {
+      if (d <= dist + enemy.radius) {
         this.combat.applyDamage({
           target: enemy,
           source: player,
-          amount: kit.dashSlash.damage,
+          amount: damage,
           kind: "dashSlash",
           knockback: 120,
           fromX: player.x,
@@ -1676,11 +1681,11 @@ class GameServer {
       const dotForward = dirX * toTarget.x + dirY * toTarget.y;
       if (dotForward < 0.3) return;
       const d = distance(player.x, player.y, target.x, target.y);
-      if (d <= kit.dashSlash.distance + target.radius) {
+      if (d <= dist + target.radius) {
         this.combat.applyDamage({
           target,
           source: player,
-          amount: kit.dashSlash.damage,
+          amount: damage,
           kind: "dashSlash",
           knockback: 120,
           fromX: player.x,
@@ -1717,11 +1722,12 @@ class GameServer {
 
   fireFullRika(player) {
     const kit = this.getKit(player);
+    const duration = kit.fullRika.duration * player.modifiers.fullRikaDurationMul;
     this.rikas.set(player.id, {
       x: player.x,
       y: player.y,
       ownerId: player.id,
-      timer: kit.fullRika.duration,
+      timer: duration,
       attackTimer: 0.5,
     });
     this.emitEventNear(player.x, player.y, {
@@ -1729,7 +1735,7 @@ class GameServer {
       x: player.x,
       y: player.y,
       playerId: player.id,
-      duration: kit.fullRika.duration,
+      duration,
     });
   }
 
@@ -1747,16 +1753,18 @@ class GameServer {
 
   firePureLove(player) {
     const kit = this.getKit(player);
+    const radius = kit.pureLove.radius * player.modifiers.pureLoveRadiusMul;
+    const damage = kit.pureLove.damage * player.modifiers.pureLoveDamageMul;
 
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
       const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d <= kit.pureLove.radius + enemy.radius) {
-        const falloff = Math.max(0.3, 1 - (d - enemy.radius) / kit.pureLove.radius);
+      if (d <= radius + enemy.radius) {
+        const falloff = Math.max(0.3, 1 - (d - enemy.radius) / radius);
         this.combat.applyDamage({
           target: enemy,
           source: player,
-          amount: Math.round(kit.pureLove.damage * falloff),
+          amount: Math.round(damage * falloff),
           kind: "pureLove",
           knockback: kit.pureLove.knockback * falloff,
           fromX: player.x,
@@ -1769,12 +1777,12 @@ class GameServer {
       if (target.id === player.id || !target.alive) return;
       if (!this.config.match.friendlyFire) return;
       const d = distance(player.x, player.y, target.x, target.y);
-      if (d <= kit.pureLove.radius + target.radius) {
-        const falloff = Math.max(0.3, 1 - (d - target.radius) / kit.pureLove.radius);
+      if (d <= radius + target.radius) {
+        const falloff = Math.max(0.3, 1 - (d - target.radius) / radius);
         this.combat.applyDamage({
           target,
           source: player,
-          amount: Math.round(kit.pureLove.damage * falloff),
+          amount: Math.round(damage * falloff),
           kind: "pureLove",
           knockback: kit.pureLove.knockback * falloff,
           fromX: player.x,
@@ -1788,7 +1796,7 @@ class GameServer {
       x: player.x,
       y: player.y,
       playerId: player.id,
-      radius: kit.pureLove.radius,
+      radius,
     });
   }
 
@@ -2012,6 +2020,7 @@ class GameServer {
         deaths: player.deaths,
         animState: player.animState,
         invuln: player.invulnTimer > 0,
+        rikaActive: this.rikas.has(player.id),
       });
     });
 

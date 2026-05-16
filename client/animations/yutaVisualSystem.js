@@ -66,53 +66,55 @@ export class YutaVisualSystem {
     this.domainKatanas.set(Date.now(), { x, y, life: 0.8 });
   }
 
-  renderPlayers(ctx, camera, players, youId) {
-    this.yutaSprite.update(1 / 60);
+  renderPlayer(ctx, camera, entry, isYou, facing, state) {
+    const p = entry.raw;
+    const pos = {
+      x: p.x - camera.x + ctx.canvas.width * 0.5,
+      y: p.y - camera.y + ctx.canvas.height * 0.5,
+    };
+    const animState = state || p.animState || "idle";
 
-    const entries = players instanceof Map ? Array.from(players.values()) : Array.isArray(players) ? players : [];
-
-    for (const entry of entries) {
-      if (!entry || !entry.raw) continue;
-      const p = entry.raw;
-      const pos = {
-        x: p.x - camera.x + ctx.canvas.width * 0.5,
-        y: p.y - camera.y + ctx.canvas.height * 0.5,
-      };
-      const facing = p.facing || 1;
-      const animState = p.animState || "idle";
-
-      if (animState === "dodge" && p.dodgeStartTime) {
-        const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
-        const dodgeProgress = Math.min(1, dodgeAge / 0.2);
-        drawDodgeEffect(ctx, pos.x, pos.y, facing, dodgeProgress);
-      }
-
-      if (animState === "hit" && p.hitTime) {
-        const hitAge = (Date.now() - p.hitTime) / 1000;
-        const flashIntensity = Math.max(0, 1 - hitAge / 0.15);
-        drawHitReaction(ctx, pos.x, pos.y, facing, flashIntensity);
-      }
-
-      if (animState === "death" && p.deathTime) {
-        this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, 1.0);
-        continue;
-      }
-
-      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, 1.0);
-
-      if (!p.alive) continue;
-
-      ctx.fillStyle = "#ffe0f0";
-      ctx.font = "600 14px Rajdhani";
-      ctx.textAlign = "center";
-      ctx.fillText(p.name || "Yuta", pos.x, pos.y - 50);
-
-      const hpPct = p.maxHp > 0 ? p.hp / p.maxHp : 0;
-      ctx.fillStyle = "rgba(0,0,0,0.42)";
-      ctx.fillRect(pos.x - 22, pos.y + 30, 44, 4);
-      ctx.fillStyle = "#ff5d7f";
-      ctx.fillRect(pos.x - 22, pos.y + 30, 44 * hpPct, 4);
+    if (animState === "dodge" && p.dodgeStartTime) {
+      const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
+      const dodgeProgress = Math.min(1, dodgeAge / 0.2);
+      drawDodgeEffect(ctx, pos.x, pos.y, facing, dodgeProgress);
     }
+
+    if (animState === "hit" && p.hitTime) {
+      const hitAge = (Date.now() - p.hitTime) / 1000;
+      const flashIntensity = Math.max(0, 1 - hitAge / 0.15);
+      drawHitReaction(ctx, pos.x, pos.y, facing, flashIntensity);
+    }
+
+    if (animState === "death" && p.deathTime) {
+      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, 1.0);
+      return;
+    }
+
+    this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, 1.0);
+
+    if (p.rikaActive && this.yutaSprite.rikaSprite) {
+      const rikaX = pos.x - 35 + Math.sin(this.time * 3) * 8;
+      const rikaY = pos.y - 5;
+      this.yutaSprite.renderRika(ctx, rikaX, rikaY, facing * -1);
+    }
+
+    if (!p.alive) return;
+
+    ctx.fillStyle = "#ffe0f0";
+    ctx.font = "600 14px Rajdhani";
+    ctx.textAlign = "center";
+    ctx.fillText(p.name || "Yuta", pos.x, pos.y - 50);
+
+    const hpPct = p.maxHp > 0 ? p.hp / p.maxHp : 0;
+    ctx.fillStyle = "rgba(0,0,0,0.42)";
+    ctx.fillRect(pos.x - 22, pos.y + 30, 44, 4);
+    ctx.fillStyle = "#ff5d7f";
+    ctx.fillRect(pos.x - 22, pos.y + 30, 44 * hpPct, 4);
+  }
+
+  renderEffects(ctx, camera) {
+    this.effects.render(ctx, camera);
 
     this.hitFlashes.forEach((flash) => {
       ctx.save();
@@ -123,10 +125,6 @@ export class YutaVisualSystem {
       ctx.fill();
       ctx.restore();
     });
-  }
-
-  renderEffects(ctx, camera) {
-    this.effects.render(ctx, camera);
 
     this.domainKatanas.forEach((dk) => {
       const pos = {

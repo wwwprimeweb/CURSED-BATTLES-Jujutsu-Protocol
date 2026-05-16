@@ -1120,8 +1120,6 @@ export class Renderer {
     players.forEach((entry) => {
       const p = entry.raw;
       const isYou = p.id === youId;
-      const radius = 22;
-      const state = p.animState || "idle";
       const chara = p.character || "gojo";
       const visual = this.getVisualForPlayer(chara);
 
@@ -1137,56 +1135,21 @@ export class Renderer {
 
       const pos = worldToScreen(this.camera, this.canvas, rx, ry);
 
+      let facing = this.playerFacing.get(p.id) || 1;
+      const pvx = p.vx || 0;
+      if (Math.abs(pvx) > 1) {
+        facing = pvx < 0 ? -1 : 1;
+        this.playerFacing.set(p.id, facing);
+      }
+
+      const dashState = this.dashVisuals.has(p.id) ? "dash" : null;
+
       ctx.save();
       if (!p.alive) {
         ctx.globalAlpha = 0.35;
       }
 
-      const sprite = visual.yutaSprite || visual.gojoSprite;
-      const spriteLoaded = sprite ? sprite.isLoaded : false;
-
-      if (spriteLoaded) {
-        let facing = this.playerFacing.get(p.id) || 1;
-        const pvx = p.vx || 0;
-        if (Math.abs(pvx) > 1) {
-          facing = pvx < 0 ? -1 : 1;
-          this.playerFacing.set(p.id, facing);
-        }
-        const finalState = this.dashVisuals.has(p.id) ? "dash" : state;
-        sprite.render(ctx, pos.x, pos.y, finalState, facing, 1.0);
-      } else {
-        ctx.fillStyle = isYou ? "#111b2a" : "#231523";
-        ctx.strokeStyle = isYou ? "#87d0ff" : "#ff96bd";
-        ctx.shadowColor = isYou ? "rgba(134,208,255,0.65)" : "rgba(255,124,174,0.52)";
-        ctx.shadowBlur = isYou ? 16 : 10;
-        ctx.lineWidth = isYou ? 2.8 : 2.2;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.strokeStyle = isYou ? "rgba(226,246,255,0.8)" : "rgba(255,230,241,0.74)";
-        ctx.lineWidth = 1.25;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, radius * 0.65, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.fillStyle = isYou ? "rgba(234,250,255,0.95)" : "rgba(255,236,244,0.9)";
-        ctx.fillRect(pos.x - 7, pos.y - 3, 14, 2.2);
-      }
-
-      const nameY = spriteLoaded ? pos.y - 75 : pos.y - radius - 10;
-      ctx.fillStyle = "#dce9ff";
-      ctx.font = "600 14px Rajdhani";
-      ctx.textAlign = "center";
-      ctx.fillText(p.name || (chara === "yuta" ? "Yuta" : "Gojo"), pos.x, nameY);
-
-      const hpPct = p.maxHp > 0 ? p.hp / p.maxHp : 0;
-      const hpY = spriteLoaded ? pos.y + 75 : pos.y + radius + 7;
-      ctx.fillStyle = "rgba(0,0,0,0.42)";
-      ctx.fillRect(pos.x - 22, hpY, 44, 4);
-      ctx.fillStyle = "#ff5d7f";
-      ctx.fillRect(pos.x - 22, hpY, 44 * hpPct, 4);
+      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState);
 
       ctx.restore();
     });
@@ -1200,14 +1163,6 @@ export class Renderer {
       const pos = worldToScreen(this.camera, this.canvas, slash.worldX, slash.worldY);
       const progress = 1 - slash.life / 0.3;
       drawM1Punch(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, this.gojoVisual.time);
-    }
-    for (let i = 0; i < this.yutaVisual.effects.katanaSlashes.length; i++) {
-      const slash = this.yutaVisual.effects.katanaSlashes[i];
-      if (slash.life <= 0 || slash.type !== "m1") continue;
-      const pos = worldToScreen(this.camera, this.canvas, slash.x, slash.y);
-      const progress = 1 - slash.life / 0.3;
-      const { drawM1Slash } = require("../animations/yutaEffects.js");
-      drawM1Slash(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.combo || 1);
     }
   }
 
@@ -1270,4 +1225,19 @@ export class Renderer {
       }
       this.domainVisual.updatePlayers(interpolation.players);
       this.ctx.save();
-      this.drawDomain
+      this.drawDomains(interpolation.domains, youId, you);
+      this.ctx.restore();
+      this.drawMarkers();
+      this.drawRedExplosions();
+      this.drawProjectiles(interpolation.projectiles);
+      this.renderPurpleCharges(this.ctx, this.camera);
+      this.renderPurpleExplosions(this.ctx, this.camera);
+      this.drawEnemies(interpolation.enemies);
+      this.drawPlayers(interpolation.players, youId);
+      this.gojoVisual.renderEffects(this.ctx, this.camera);
+      this.yutaVisual.renderEffects(this.ctx, this.camera);
+      this.drawM1PunchEffects();
+      this.particles.render(this.ctx, this.camera);
+    }
+  }
+}

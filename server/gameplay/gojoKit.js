@@ -12,7 +12,7 @@ const GOJO = {
   },
   passive: {
     radius: 110,
-    projectileSlow: 0.35,
+    projectileSlow: 0.75,
     dashSlow: 0.2,
   },
   blue: {

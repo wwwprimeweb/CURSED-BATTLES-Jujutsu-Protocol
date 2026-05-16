@@ -1,12 +1,17 @@
 "use strict";
 
 const { GOJO } = require("../gameplay/gojoKit");
+const { CHARACTER_REGISTRY } = require("../gameplay/characterRegistry");
 const { distance } = require("../utils/math");
 
 class DomainSystem {
   constructor(server) {
     this.server = server;
     this.domains = new Map();
+  }
+
+  getDomainKit(player) {
+    return CHARACTER_REGISTRY[player.character]?.domain || GOJO.domain;
   }
 
   activateDomain(player) {
@@ -17,18 +22,20 @@ class DomainSystem {
       return false;
     }
 
-    const radius = GOJO.domain.radius * player.modifiers.domainRadiusMul;
-    const drain = GOJO.domain.drainPerSecond * player.modifiers.domainDrainMul;
-    const slowEnemy = GOJO.domain.slowEnemy * player.modifiers.domainSlowMul;
-    const slowProjectile = GOJO.domain.slowProjectile * player.modifiers.domainSlowMul;
+    const kit = this.getDomainKit(player);
+    const radius = kit.radius * player.modifiers.domainRadiusMul;
+    const drain = kit.drainPerSecond * player.modifiers.domainDrainMul;
+    const slowEnemy = kit.slowEnemy * player.modifiers.domainSlowMul;
+    const slowProjectile = kit.slowProjectile * player.modifiers.domainSlowMul;
 
     const domain = {
       id: `d_${player.id}`,
       ownerId: player.id,
+      character: player.character || "gojo",
       x: player.x,
       y: player.y,
       radius,
-      energy: GOJO.domain.energyInitial,
+      energy: kit.energyInitial,
       drain,
       slowEnemy,
       slowProjectile,
@@ -49,8 +56,17 @@ class DomainSystem {
     return true;
   }
 
+  getKitByDomain(domain) {
+    const kit = CHARACTER_REGISTRY[domain.character];
+    return kit ? kit.domain : GOJO.domain;
+  }
+
   isSkillLocked() {
     return this.domains.size > 0;
+  }
+
+  hasActiveDomain(playerId) {
+    return this.domains.has(playerId);
   }
 
   update(dt) {
@@ -79,12 +95,14 @@ class DomainSystem {
         if (d <= a.radius + b.radius) {
           a.conflict = true;
           b.conflict = true;
-          a.energy -= GOJO.domain.conflictExtraDrain * dt;
-          b.energy -= GOJO.domain.conflictExtraDrain * dt;
+          const kitA = this.getKitByDomain(a);
+          const kitB = this.getKitByDomain(b);
+          a.energy -= kitA.conflictExtraDrain * dt;
+          b.energy -= kitB.conflictExtraDrain * dt;
           const ownerA = this.server.players.get(a.ownerId);
           const ownerB = this.server.players.get(b.ownerId);
-          if (ownerA) ownerA.energy -= GOJO.domain.conflictExtraDrain * 2 * dt;
-          if (ownerB) ownerB.energy -= GOJO.domain.conflictExtraDrain * 2 * dt;
+          if (ownerA) ownerA.energy -= kitA.conflictExtraDrain * 2 * dt;
+          if (ownerB) ownerB.energy -= kitB.conflictExtraDrain * 2 * dt;
           const powerA = a.energy * (ownerA ? ownerA.modifiers.domainPowerMul : 1);
           const powerB = b.energy * (ownerB ? ownerB.modifiers.domainPowerMul : 1);
           if (powerA > powerB) {
@@ -123,7 +141,7 @@ class DomainSystem {
           this.server.combat.applyDamage({
             target: targetPlayer,
             source: owner,
-            amount: GOJO.domain.freezeDps * 0.6 * dt,
+            amount: this.getKitByDomain(domain).freezeDps * 0.6 * dt,
             kind: "domainFreeze",
             fromX: domain.x,
             fromY: domain.y,
@@ -182,12 +200,13 @@ class DomainSystem {
         return;
       }
 
-      enemy.freezeTimer = Math.max(enemy.freezeTimer, GOJO.domain.freezePersistSec);
+      const kit = this.getKitByDomain(sourceDomain);
+      enemy.freezeTimer = Math.max(enemy.freezeTimer, kit.freezePersistSec);
       const owner = this.server.players.get(sourceDomain.ownerId) || null;
       this.server.combat.applyDamage({
         target: enemy,
         source: owner,
-        amount: GOJO.domain.freezeDps * dt,
+        amount: kit.freezeDps * dt,
         kind: "domainFreeze",
         fromX: sourceDomain.x,
         fromY: sourceDomain.y,
@@ -232,8 +251,9 @@ class DomainSystem {
 
     const owner = this.server.players.get(ownerId);
     if (owner && byConflict) {
-      owner.stunTimer = Math.max(owner.stunTimer, GOJO.domain.collapseStun);
-      owner.cooldowns.f = Math.max(owner.cooldowns.f, GOJO.domain.cooldown * 0.5);
+      const kit = this.getKitByDomain(domain);
+      owner.stunTimer = Math.max(owner.stunTimer, kit.collapseStun);
+      owner.cooldowns.f = Math.max(owner.cooldowns.f, kit.cooldown * 0.5);
     }
 
     this.server.emitEventAll({

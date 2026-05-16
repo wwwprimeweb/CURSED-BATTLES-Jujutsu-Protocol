@@ -1,11 +1,25 @@
-const SKILLS = [
-  { key: "q", hotkey: "Q", icon: "Az", name: "Azul", cost: 35, baseCooldown: 10, tag: "controle" },
-  { key: "e", hotkey: "E", icon: "Vm", name: "Vermelho", cost: 45, baseCooldown: 14, tag: "burst" },
-  { key: "r", hotkey: "R", icon: "Pr", name: "Purple", cost: 80, baseCooldown: 24, tag: "beam" },
-  { key: "space", hotkey: "Space", icon: "Tp", name: "Teleporte", cost: 45, baseCooldown: 12, tag: "mobilidade" },
-  { key: "f", hotkey: "F", icon: "Dm", name: "Dominio", cost: 80, baseCooldown: 70, tag: "dominio" },
-  { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
-];
+const CHARACTER_SKILLS = {
+  gojo: [
+    { key: "q", hotkey: "Q", icon: "Az", name: "Azul", cost: 35, baseCooldown: 10, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Vm", name: "Vermelho", cost: 45, baseCooldown: 14, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Pr", name: "Purple", cost: 80, baseCooldown: 24, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Tp", name: "Teleporte", cost: 45, baseCooldown: 12, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Dominio", cost: 80, baseCooldown: 70, tag: "dominio" },
+    { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
+  ],
+  yuta: [
+    { key: "q", hotkey: "Q", icon: "Rk", name: "Rika", cost: 40, baseCooldown: 12, tag: "area" },
+    { key: "e", hotkey: "E", icon: "Ds", name: "Dash Slash", cost: 20, baseCooldown: 4, tag: "mobilidade" },
+    { key: "r", hotkey: "R", icon: "Fr", name: "Full Rika", cost: 55, baseCooldown: 35, tag: "invocacao" },
+    { key: "space", hotkey: "Space", icon: "Dm", name: "Mutual Love", cost: 80, baseCooldown: 75, tag: "dominio" },
+    { key: "f", hotkey: "F", icon: "Pl", name: "Pure Love", cost: 90, baseCooldown: 45, tag: "ultimate" },
+    { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
+  ],
+};
+
+function getSkills(character) {
+  return CHARACTER_SKILLS[character] || CHARACTER_SKILLS.gojo;
+}
 
 const RARITY_LABELS = {
   common: "comum",
@@ -108,8 +122,8 @@ function createBarsHtml(stats, flags) {
   `;
 }
 
-function createSkillHtml(cooldowns, energy) {
-  return SKILLS.map((skill) => {
+function createSkillHtml(cooldowns, energy, skills) {
+  return skills.map((skill) => {
     const value = Math.max(0, cooldowns[skill.key] || 0);
     const ratio = skill.baseCooldown > 0 ? clamp(value / skill.baseCooldown, 0, 1) : 0;
     const ready = value <= 0.01;
@@ -190,8 +204,10 @@ export class Hud {
     const energyPercent = pct(you.energy, you.maxEnergy);
     const now = performance.now();
 
+    const chara = you.character || "gojo";
+    const skills = getSkills(chara);
     this.barsEl.innerHTML = createBarsHtml(you, { tookDamage });
-    this.cooldownsEl.innerHTML = createSkillHtml(you.cooldowns || {}, you.energy || 0);
+    this.cooldownsEl.innerHTML = createSkillHtml(you.cooldowns || {}, you.energy || 0, skills);
     this.m1El.innerHTML = `
       <div class="m1-chip ${energyDrop ? "is-active" : ""}">
         <span>M1</span>

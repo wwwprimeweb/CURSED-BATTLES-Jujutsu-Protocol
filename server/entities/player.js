@@ -122,6 +122,15 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
       domainSlowMul: 1,
       domainDurationMul: 1,
       domainPowerMul: 1,
+      rikaDamageMul: 1,
+      rikaCooldownMul: 1,
+      dashSlashDamageMul: 1,
+      dashSlashRangeMul: 1,
+      fullRikaDurationMul: 1,
+      fullRikaPowerMul: 1,
+      pureLoveDamageMul: 1,
+      pureLoveRadiusMul: 1,
+      domainKatanaDamageMul: 1,
     },
   };
 }

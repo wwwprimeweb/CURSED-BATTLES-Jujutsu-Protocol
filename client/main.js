@@ -239,6 +239,26 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#bfe3ff", count: 9, speed: 130, life: 0.14, size: 1.9 });
     } else if (ev.type === "teleportEnd") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f1fbff", count: 12, speed: 165, life: 0.16, size: 2.1 });
+    } else if (ev.type === "rika") {
+      renderer.yutaVisual.triggerRika(ev.x, ev.y, ev.dirX, ev.dirY);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 20, speed: 250, life: 0.4, size: 3 });
+      audio.play("skillRed");
+    } else if (ev.type === "dashSlash") {
+      renderer.yutaVisual.triggerDashSlash(ev.x, ev.y, ev.dirX, ev.dirY);
+      particles.spawnLine({ x: ev.x, y: ev.y, dirX: ev.dirX, dirY: ev.dirY, color: "#ff99cc", count: 8, life: 0.3 });
+      audio.play("skillBlue");
+    } else if (ev.type === "fullRika") {
+      renderer.yutaVisual.triggerFullRika(ev.x, ev.y, ev.duration || 20);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc3388", count: 30, speed: 300, life: 0.6, size: 4 });
+      audio.play("skillPurple");
+    } else if (ev.type === "rikaAttack") {
+      renderer.yutaVisual.effects.addRikaAttack(ev.x, ev.y);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 180, life: 0.3, size: 2.5 });
+    } else if (ev.type === "pureLove") {
+      renderer.yutaVisual.triggerPureLove(ev.x, ev.y, ev.radius || 260);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 40, speed: 400, life: 0.8, size: 5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 30, speed: 300, life: 0.6, size: 3.5 });
+      audio.play("skillPurple");
     } else if (ev.type === "domainStart") {
       renderer.onDomainStart(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d6ebff", count: 28, speed: 320, life: 0.45, size: 3.1 });
