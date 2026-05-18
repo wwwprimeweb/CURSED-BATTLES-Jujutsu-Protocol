@@ -72,17 +72,18 @@ export class ParticleSystem {
   }
 
   render(ctx, camera) {
+    const zoom = camera.zoom || 1;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < this.active.length; i += 1) {
       const p = this.active[i];
       const t = p.life / p.maxLife;
-      const sx = p.x - camera.x + ctx.canvas.width * 0.5;
-      const sy = p.y - camera.y + ctx.canvas.height * 0.5;
+      const sx = (p.x - camera.x) * zoom + ctx.canvas.width * 0.5;
+      const sy = (p.y - camera.y) * zoom + ctx.canvas.height * 0.5;
       ctx.fillStyle = p.color;
       ctx.globalAlpha = Math.max(0.08, t);
       ctx.beginPath();
-      ctx.arc(sx, sy, p.size * t, 0, Math.PI * 2);
+      ctx.arc(sx, sy, p.size * t * zoom, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();

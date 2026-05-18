@@ -7,7 +7,16 @@ class CombatSystem {
     this.server = server;
   }
 
-  applyDamage({ target, amount, source, kind = "generic", knockback = 0, fromX, fromY }) {
+  applyDamage({
+    target,
+    amount,
+    source,
+    kind = "generic",
+    knockback = 0,
+    knockbackDistanceCap = 170,
+    fromX,
+    fromY,
+  }) {
     if (!target || !target.alive || amount <= 0) {
       return false;
     }
@@ -39,7 +48,8 @@ class CombatSystem {
       const n = normalize(target.x - fromX, target.y - fromY);
       target.vx += n.x * knockback;
       target.vy += n.y * knockback;
-      const knockbackDistance = Math.min(170, knockback * 0.16);
+      const cap = Number.isFinite(knockbackDistanceCap) ? Math.max(0, knockbackDistanceCap) : 170;
+      const knockbackDistance = Math.min(cap, knockback * 0.16);
       if (knockbackDistance > 0) {
         this.server.moveEntityWithCollisions(target, n.x * knockbackDistance, n.y * knockbackDistance, true);
       }

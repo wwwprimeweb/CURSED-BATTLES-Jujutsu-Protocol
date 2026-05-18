@@ -83,33 +83,44 @@ class EnemySystem {
 
       enemy.targetId = target.id;
 
+      const barrierContext = this.getDomainBarrierContext(enemy, target);
+      const isTargetProtected = Boolean(barrierContext);
+
+      const targetPoint = isTargetProtected
+        ? { x: barrierContext.chaseX, y: barrierContext.chaseY, radius: 0 }
+        : target;
+
       if (enemy.windupTimer > 0) {
         if (enemy.windupTimer <= 0.02) {
-          this.executeAttack(enemy, target);
+          this.executeAttack(enemy, target, barrierContext);
         }
         return;
       }
 
-      const dist = distance(enemy.x, enemy.y, target.x, target.y);
-      const canAttack = dist <= enemy.attackRange + target.radius;
+      const dist = distance(enemy.x, enemy.y, targetPoint.x, targetPoint.y);
+      const canAttackTarget = !isTargetProtected && dist <= enemy.attackRange + target.radius;
+      const canAttackBarrier = isTargetProtected && barrierContext.distToBarrier <= enemy.attackRange + 8;
+      const canAttack = canAttackTarget || canAttackBarrier;
 
       if (enemy.type === "caster") {
-        this.updateCaster(enemy, target, dist, dt);
+        this.updateCaster(enemy, targetPoint, dist, dt, isTargetProtected);
       } else if (enemy.type === "boss") {
-        this.updateBoss(enemy, target, dist, dt);
+        this.updateBoss(enemy, targetPoint, dist, dt, isTargetProtected);
       } else {
-        this.updateMelee(enemy, target, dist, dt);
+        this.updateMelee(enemy, targetPoint, dist, dt, isTargetProtected);
       }
 
       if (canAttack && enemy.attackCooldown <= 0) {
         enemy.windupTimer = enemy.attackWindup;
         enemy.state = "windup";
+        const telegraphX = canAttackBarrier ? barrierContext.hitX : enemy.x;
+        const telegraphY = canAttackBarrier ? barrierContext.hitY : enemy.y;
         this.server.emitEventNear(enemy.x, enemy.y, {
           type: "telegraph",
-          x: enemy.x,
-          y: enemy.y,
+          x: telegraphX,
+          y: telegraphY,
           radius: enemy.attackRange,
-          style: enemy.type,
+          style: canAttackBarrier ? "barrier" : enemy.type,
         });
       }
 
@@ -117,10 +128,18 @@ class EnemySystem {
     });
   }
 
-  updateMelee(enemy, target, dist) {
+  updateMelee(enemy, target, dist, _dt, pressuringBarrier = false) {
     const dir = normalize(target.x - enemy.x, target.y - enemy.y);
     const slowFactor = this.server.getEnemySlowFactor(enemy);
     const speed = enemy.speed * slowFactor;
+
+    if (pressuringBarrier && dist <= Math.max(10, enemy.attackRange * 0.55)) {
+      enemy.vx = 0;
+      enemy.vy = 0;
+      enemy.state = "pressureBarrier";
+      return;
+    }
+
     enemy.vx = dir.x * speed;
     enemy.vy = dir.y * speed;
 
@@ -128,13 +147,21 @@ class EnemySystem {
       enemy.vx *= 1.35;
       enemy.vy *= 1.35;
     }
-    enemy.state = "chase";
+    enemy.state = pressuringBarrier ? "pressureBarrier" : "chase";
   }
 
-  updateCaster(enemy, target, dist) {
+  updateCaster(enemy, target, dist, _dt, pressuringBarrier = false) {
     const dir = normalize(target.x - enemy.x, target.y - enemy.y);
     const slowFactor = this.server.getEnemySlowFactor(enemy);
     const desired = 280;
+
+    if (pressuringBarrier && dist <= enemy.attackRange * 0.85) {
+      enemy.vx = 0;
+      enemy.vy = 0;
+      enemy.state = "pressureBarrier";
+      return;
+    }
+
     if (dist > desired + 40) {
       enemy.vx = dir.x * enemy.speed * slowFactor;
       enemy.vy = dir.y * enemy.speed * slowFactor;
@@ -145,15 +172,16 @@ class EnemySystem {
       enemy.vx = 0;
       enemy.vy = 0;
     }
-    enemy.state = "kite";
+    enemy.state = pressuringBarrier ? "pressureBarrier" : "kite";
   }
 
-  updateBoss(enemy, target, dist) {
+  updateBoss(enemy, target, dist, _dt, pressuringBarrier = false) {
     const dir = normalize(target.x - enemy.x, target.y - enemy.y);
     const slowFactor = this.server.getEnemySlowFactor(enemy);
     const speed = enemy.speed * slowFactor;
 
-    if (dist > 180) {
+    const desired = pressuringBarrier ? Math.max(24, enemy.attackRange * 0.45) : 180;
+    if (dist > desired) {
       enemy.vx = dir.x * speed;
       enemy.vy = dir.y * speed;
     } else {
@@ -171,15 +199,64 @@ class EnemySystem {
       }
       enemy.attackCooldown = 2.5;
     }
-    enemy.state = "boss";
+    enemy.state = pressuringBarrier ? "pressureBarrier" : "boss";
   }
 
-  executeAttack(enemy, target) {
+  getDomainBarrierContext(enemy, target) {
+    if (!target || typeof this.server.findFirstDomainBarrierIntersection !== "function") {
+      return null;
+    }
+
+    const hit = this.server.findFirstDomainBarrierIntersection(enemy.x, enemy.y, target.x, target.y);
+    if (!hit || !hit.domain) {
+      return null;
+    }
+
+    let dir = normalize(hit.x - enemy.x, hit.y - enemy.y);
+    if (dir.len <= 0.0001) {
+      dir = normalize(hit.x - hit.domain.x, hit.y - hit.domain.y);
+    }
+
+    const standOff = Math.max(6, Math.min(22, enemy.attackRange * 0.4));
+    const chaseX = hit.x - dir.x * standOff;
+    const chaseY = hit.y - dir.y * standOff;
+
+    return {
+      domain: hit.domain,
+      hitX: hit.x,
+      hitY: hit.y,
+      chaseX,
+      chaseY,
+      distToBarrier: distance(enemy.x, enemy.y, hit.x, hit.y),
+    };
+  }
+
+  getBarrierAttackDamage(enemy) {
+    const base = Math.max(4, enemy.damage * 0.48);
+    if (enemy.type === "boss") {
+      return base * 1.65;
+    }
+    if (enemy.type === "elite") {
+      return base * 1.3;
+    }
+    if (enemy.type === "caster") {
+      return base * 0.85;
+    }
+    return base;
+  }
+
+  executeAttack(enemy, target, barrierContext = null) {
     enemy.windupTimer = 0;
     enemy.attackCooldown = enemy.attackCooldownBase;
 
+    if ((!target || !target.alive) && !barrierContext) {
+      return;
+    }
+
     if (enemy.type === "caster") {
-      const dir = normalize(target.x - enemy.x, target.y - enemy.y);
+      const aimX = barrierContext ? barrierContext.hitX : target.x;
+      const aimY = barrierContext ? barrierContext.hitY : target.y;
+      const dir = normalize(aimX - enemy.x, aimY - enemy.y);
       this.server.spawnEnemyProjectile({
         type: "enemy_orb",
         x: enemy.x + dir.x * (enemy.radius + 6),
@@ -195,6 +272,22 @@ class EnemySystem {
         type: "enemyCast",
         x: enemy.x,
         y: enemy.y,
+      });
+      return;
+    }
+
+    if (barrierContext && barrierContext.domain) {
+      this.server.domainSystem.damageBarrier(
+        barrierContext.domain.ownerId,
+        this.getBarrierAttackDamage(enemy)
+      );
+      this.server.emitEventNear(barrierContext.hitX, barrierContext.hitY, {
+        type: "domainBarrierHit",
+        x: barrierContext.hitX,
+        y: barrierContext.hitY,
+        ownerId: barrierContext.domain.ownerId,
+        projectileType: enemy.type === "boss" ? "bossMelee" : "enemyMelee",
+        attackerKind: "enemy",
       });
       return;
     }

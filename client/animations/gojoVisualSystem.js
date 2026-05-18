@@ -70,47 +70,58 @@ export class GojoVisualSystem {
     this.effects.addDomain(x, y, radius, ownerId, myId);
   }
 
-  renderPlayer(ctx, camera, entry, isYou, facing, state) {
+  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY) {
     const p = entry.raw;
+    const worldX = Number.isFinite(renderX) ? renderX : p.x;
+    const worldY = Number.isFinite(renderY) ? renderY : p.y;
+    const zoom = camera.zoom || 1;
     const pos = {
-      x: p.x - camera.x + ctx.canvas.width * 0.5,
-      y: p.y - camera.y + ctx.canvas.height * 0.5,
+      x: (worldX - camera.x) * zoom + ctx.canvas.width * 0.5,
+      y: (worldY - camera.y) * zoom + ctx.canvas.height * 0.5,
     };
     const animState = state || p.animState || "idle";
+    const spriteScale = zoom;
 
     if (animState === "dodge" && p.dodgeStartTime) {
       const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
       const dodgeProgress = Math.min(1, dodgeAge / 0.2);
-      drawDodgeEffect(ctx, pos.x, pos.y, facing, dodgeProgress);
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.scale(zoom, zoom);
+      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress);
+      ctx.restore();
     }
 
     if (animState === "hit" && p.hitTime) {
       const hitAge = (Date.now() - p.hitTime) / 1000;
       const flashIntensity = Math.max(0, 1 - hitAge / 0.15);
-      drawHitReaction(ctx, pos.x, pos.y, facing, flashIntensity);
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.scale(zoom, zoom);
+      drawHitReaction(ctx, 0, 0, facing, flashIntensity);
+      ctx.restore();
     }
 
     if (animState === "death" && p.deathTime) {
       const deathAge = (Date.now() - p.deathTime) / 1000;
       const progress = Math.min(1, deathAge / 1.5);
-      drawDeathPose(ctx, pos.x, pos.y, progress, this.time);
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.scale(spriteScale, spriteScale);
+      drawDeathPose(ctx, 0, 0, progress, this.time);
+      ctx.restore();
       return;
     }
 
-    this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, 1.0);
+    this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
 
     if (!p.alive) return;
 
-    ctx.fillStyle = "#dce9ff";
-    ctx.font = "600 14px Rajdhani";
-    ctx.textAlign = "center";
-    ctx.fillText(p.name || "Gojo", pos.x, pos.y - 50);
+     ctx.fillStyle = "#dce9ff";
+     ctx.font = "600 14px Rajdhani";
+     ctx.textAlign = "center";
+     ctx.fillText(p.name || "Gojo", pos.x, pos.y - 70);
 
-    const hpPct = p.maxHp > 0 ? p.hp / p.maxHp : 0;
-    ctx.fillStyle = "rgba(0,0,0,0.42)";
-    ctx.fillRect(pos.x - 22, pos.y + 30, 44, 4);
-    ctx.fillStyle = "#ff5d7f";
-    ctx.fillRect(pos.x - 22, pos.y + 30, 44 * hpPct, 4);
   }
 
   renderEffects(ctx, camera) {

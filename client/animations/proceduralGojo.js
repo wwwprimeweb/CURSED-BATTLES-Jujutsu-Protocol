@@ -98,7 +98,7 @@ export class ProceduralGojo {
     const walkCycle = state === "walk" ? Math.sin(t * 7) : 0;
     const runCycle = state === "run" ? Math.sin(t * 12) : 0;
     const lean = state === "run" ? -12 : state === "walk" ? -5 : 0;
-    const bobY = state === "walk" ? Math.abs(walkCycle) * 3 : state === "run" ? Math.abs(runCycle) * 5 : breathe;
+    const bobY = state === "walk" ? Math.abs(walkCycle) * 2.4 : state === "run" ? Math.abs(runCycle) * 4 : breathe;
     const speedTrail = state === "run" ? Math.abs(runCycle) * 12 : 0;
 
     ctx.save();
@@ -394,6 +394,8 @@ export class GojoSkillEffects {
     this.teleports = [];
     this.domains = [];
     this.afterimages = [];
+    this.blueImg = new Image();
+    this.blueImg.src = "/assets/habilit/blue.png";
   }
 
   addBlue(x, y, vx, vy) {
@@ -580,33 +582,18 @@ export class GojoSkillEffects {
       ctx.save();
       ctx.globalAlpha = t;
       if (p.type === "blue") {
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, p.radius);
-        grad.addColorStop(0, "rgba(180,220,255,1)");
-        grad.addColorStop(0.3, "rgba(80,160,255,0.9)");
-        grad.addColorStop(0.7, "rgba(40,100,200,0.5)");
-        grad.addColorStop(1, "rgba(20,60,180,0)");
-        ctx.fillStyle = grad;
-        ctx.shadowColor = C.blueGlow;
-        ctx.shadowBlur = 25;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(200,230,255,0.8)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, p.radius * 0.4, 0, Math.PI * 2);
-        ctx.stroke();
-        const t2 = Date.now() * 0.003;
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2 + t2;
-          const rx = s.x + Math.cos(angle) * p.radius * 1.4;
-          const ry = s.y + Math.sin(angle) * p.radius * 1.4;
-          ctx.strokeStyle = `rgba(100,180,255,${0.3 * t})`;
-          ctx.lineWidth = 1;
+        const size = p.radius * 2 * 1.4;
+        if (this.blueImg.complete && this.blueImg.naturalWidth > 0) {
+          ctx.shadowColor = C.blueGlow;
+          ctx.shadowBlur = 25;
+          ctx.drawImage(this.blueImg, s.x - size / 2, s.y - size / 2, size, size);
+        } else {
+          ctx.fillStyle = "#4cb4ff";
+          ctx.shadowColor = C.blueGlow;
+          ctx.shadowBlur = 25;
           ctx.beginPath();
-          ctx.moveTo(rx + Math.cos(angle) * 20, ry + Math.sin(angle) * 20);
-          ctx.lineTo(rx, ry);
-          ctx.stroke();
+          ctx.arc(s.x, s.y, p.radius * 1.4, 0, Math.PI * 2);
+          ctx.fill();
         }
       } else if (p.type === "red") {
         const angle = Math.atan2(p.vy, p.vx);

@@ -9,6 +9,22 @@ const BASE_STATS = {
     maxHp: 880, maxEnergy: 150, energyRegen: 15, moveSpeed: 178,
     armor: 0, ccResist: 0.5, dodgeCooldown: 1.0, dodgeDistance: 85, radius: 38,
   },
+  sukuna: {
+    maxHp: 1100, maxEnergy: 120, energyRegen: 12, moveSpeed: 168,
+    armor: 5, ccResist: 0.6, dodgeCooldown: 1.2, dodgeDistance: 90, radius: 40,
+  },
+  yuji: {
+    maxHp: 1000, maxEnergy: 130, energyRegen: 13, moveSpeed: 180,
+    armor: 3, ccResist: 0.4, dodgeCooldown: 0.9, dodgeDistance: 100, radius: 36,
+  },
+  megumi: {
+    maxHp: 850, maxEnergy: 160, energyRegen: 16, moveSpeed: 175,
+    armor: 0, ccResist: 0.5, dodgeCooldown: 1.0, dodgeDistance: 90, radius: 36,
+  },
+  hakari: {
+    maxHp: 950, maxEnergy: 170, energyRegen: 20, moveSpeed: 170,
+    armor: 0, ccResist: 0.3, dodgeCooldown: 0.8, dodgeDistance: 95, radius: 38,
+  },
 };
 
 function resolveBaseStats(character) {
@@ -48,6 +64,8 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
     comboResetTimer: 0,
     m1Timer: 0,
     cast: null,
+    skillLock: false,
+    domainExhaustionTimer: 0,
     cooldowns: {
       q: 0,
       e: 0,
@@ -138,4 +156,5 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
 module.exports = {
   BASE_STATS,
   createPlayer,
+  resolveBaseStats,
 };

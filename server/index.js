@@ -10,6 +10,17 @@ const config = require("./config");
 const { GameServer } = require("./world/gameServer");
 const { safeParse, sanitizeInput, sanitizeName } = require("./networking/protocol");
 
+function sanitizeSessionToken(token) {
+  if (typeof token !== "string") {
+    return "";
+  }
+  const clean = token.trim().toLowerCase();
+  if (!/^[a-f0-9]{16,64}$/.test(clean)) {
+    return "";
+  }
+  return clean;
+}
+
 const app = express();
 app.use(express.static(path.join(__dirname, "..", "client")));
 
@@ -39,8 +50,8 @@ wss.on("connection", (socket) => {
       }
 
       const name = sanitizeName(msg.name, config.antiCheat.maxNameLength);
-      const incomingToken = typeof msg.sessionToken === "string" ? msg.sessionToken : "";
-      const sessionToken = incomingToken || crypto.randomBytes(12).toString("hex");
+      const requestedToken = sanitizeSessionToken(msg.sessionToken);
+      const sessionToken = requestedToken || crypto.randomBytes(12).toString("hex");
       const character = typeof msg.character === "string" ? msg.character : "gojo";
 
       const result = game.addPlayer({
@@ -58,7 +69,7 @@ wss.on("connection", (socket) => {
           type: "joined",
           reconnected: result.reconnected,
           playerId: result.player.id,
-          sessionToken,
+          sessionToken: result.player.sessionToken,
           map: game.map,
           config: {
             tickRate: config.net.tickRate,

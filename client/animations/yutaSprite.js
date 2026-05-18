@@ -2,6 +2,7 @@ import { loadImage } from "./imageLoader.js";
 
 const DEFAULT_SIZE = 136;
 const DASH_SIZE = Math.round(DEFAULT_SIZE * (150 / 160));
+const RIKA_SIZE = Math.round(DEFAULT_SIZE * 1.5);
 
 export class YutaSpriteRenderer {
   constructor() {
@@ -84,39 +85,43 @@ export class YutaSpriteRenderer {
   }
 
   render(ctx, x, y, state, facing = 1, _scale = 1) {
+    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
     const isDash = state === "dash";
-    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2.5 : 0;
+    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2 : 0;
     const finalY = y + bobY;
 
     if (isDash && this.dashSprite) {
-      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE);
+      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);
       return;
     }
 
     if (this.idleSprite) {
-      this.drawSprite(ctx, this.idleSprite, x, finalY, facing, DEFAULT_SIZE);
+      this.drawSprite(ctx, this.idleSprite, x, finalY, facing, DEFAULT_SIZE * scale);
       return;
     }
 
     if (this.dashSprite) {
-      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE);
+      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);
       return;
     }
 
     ctx.fillStyle = "rgba(255,150,200,0.5)";
     ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.arc(x, y, 20 * scale, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  renderRika(ctx, x, y, facing = 1) {
+  renderRika(ctx, x, y, facing = 1, floatPhase = 0, floatAmp = 2.2, _scale = 1) {
+    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    const hover = floatAmp > 0 ? Math.sin(this.walkTime * 3.1 + floatPhase) * floatAmp : 0;
+    const finalY = y + hover;
     if (this.rikaSprite) {
-      this.drawSprite(ctx, this.rikaSprite, x, y, facing, DEFAULT_SIZE);
+      this.drawSprite(ctx, this.rikaSprite, x, finalY, facing, RIKA_SIZE * scale);
       return;
     }
     ctx.fillStyle = "rgba(200,100,255,0.5)";
     ctx.beginPath();
-    ctx.arc(x, y, 30, 0, Math.PI * 2);
+    ctx.arc(x, finalY, 45 * scale, 0, Math.PI * 2);
     ctx.fill();
   }
 

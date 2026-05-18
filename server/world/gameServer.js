@@ -45,6 +45,7 @@ class GameServer {
     this.nextEnemyId = 1;
     this.nextProjectileId = 1;
     this.rikas = new Map();
+    this.pureLoveBeams = new Map();
 
     this._tickTimer = null;
     this._snapshotTimer = null;
@@ -153,17 +154,42 @@ class GameServer {
 
   addPlayer({ sessionToken, name, character, socket }) {
     console.log(`[DIAG] addPlayer called: name="${name}", character="${character || 'gojo'}", sessionToken="${sessionToken.slice(0,8)}..."`);
+
     const existingId = this.sessionToPlayer.get(sessionToken);
     if (existingId) {
       const existing = this.players.get(existingId);
       if (existing) {
+        const previousSocket = existing.socket;
+        if (previousSocket && previousSocket !== socket) {
+          this.wsToPlayer.delete(previousSocket);
+          try {
+            previousSocket.close();
+          } catch (_err) {
+          }
+        }
+
         existing.socket = socket;
         existing.offline = false;
         existing.disconnectedAt = 0;
-        existing.name = name || existing.name;
+        if (!existing.alive) {
+          existing.alive = true;
+          existing.hp = existing.maxHp;
+          existing.respawnTimer = 0;
+        }
+        if (name) {
+          existing.name = name;
+        }
+
+        if (!existing._eventQueue) {
+          existing._eventQueue = [];
+        }
+
         this.wsToPlayer.set(socket, existing.id);
+        this.clientStateCache.delete(existing.id);
         return { player: existing, reconnected: true };
       }
+
+      this.sessionToPlayer.delete(sessionToken);
     }
 
     const spawn = this.getSpawnPoint();
@@ -178,6 +204,8 @@ class GameServer {
       now: this.now,
     });
     player.socket = socket;
+    player.offline = false;
+    player.disconnectedAt = 0;
     this.players.set(player.id, player);
     this.sessionToPlayer.set(sessionToken, player.id);
     this.wsToPlayer.set(socket, player.id);
@@ -201,9 +229,14 @@ class GameServer {
     if (!player) {
       return;
     }
+
     player.socket = null;
     player.offline = true;
     player.disconnectedAt = this.now;
+    player.cast = null;
+    player.vx = 0;
+    player.vy = 0;
+
     player.input.up = false;
     player.input.down = false;
     player.input.left = false;
@@ -215,6 +248,31 @@ class GameServer {
     player.input.space = false;
     player.input.f = false;
     player.input.dodge = false;
+
+    player.prevInput.m1 = false;
+    player.prevInput.q = false;
+    player.prevInput.e = false;
+    player.prevInput.r = false;
+    player.prevInput.space = false;
+    player.prevInput.f = false;
+    player.prevInput.dodge = false;
+
+    player.deaths = (player.deaths || 0) + 1;
+    player.alive = false;
+    player.respawnTimer = -1;
+
+    this.emitEventAll({
+      type: "kill",
+      x: player.x,
+      y: player.y,
+      victimId: player.id,
+      killerId: null,
+    });
+
+    if (this.players.size === 1) {
+      this.removePlayer(player.id);
+      return;
+    }
   }
 
   removePlayer(playerId) {
@@ -222,10 +280,44 @@ class GameServer {
     if (!player) {
       return;
     }
+
+    this.rikas.delete(playerId);
+    this.pureLoveBeams.delete(playerId);
     this.players.delete(playerId);
     this.sessionToPlayer.delete(player.sessionToken);
     this.clientStateCache.delete(playerId);
     this.emitEventAll({ type: "playerLeft", id: playerId });
+    if (this.players.size === 0) {
+      this.resetEmptyLobby();
+    }
+  }
+
+  resetEmptyLobby() {
+    if (this._matchResetTimer) {
+      clearTimeout(this._matchResetTimer);
+      this._matchResetTimer = null;
+    }
+
+    this.enemies.clear();
+    this.projectiles.clear();
+    this.rikas.clear();
+    this.pureLoveBeams.clear();
+    this.domainSystem.domains.clear();
+    this.delayedActions = [];
+    this.clientStateCache.clear();
+    this.sessionToPlayer.clear();
+    this.wsToPlayer.clear();
+
+    this.enemySystem.spawnTimer = 0;
+    this.enemySystem.bossSpawned = false;
+
+    this.nextPlayerId = 1;
+    this.nextEnemyId = 1;
+    this.nextProjectileId = 1;
+    this.map = generateMap(this.config.map.width, this.config.map.height, this.rng.int(1, 99999999));
+
+    this.startedAt = Date.now();
+    this._gameOver = false;
   }
 
   queueDelayedAction(delaySec, action) {
@@ -244,6 +336,7 @@ class GameServer {
     this.enemySystem.update(dt, this.elapsedSeconds);
     this.updateProjectiles(dt);
     this.updateRikas(dt);
+    this.updatePureLoveBeams(dt);
     this.applyHazards(dt);
     this.updateDelayedActions();
     this.progression.resolvePendingChoices();
@@ -262,19 +355,8 @@ class GameServer {
     if (this._gameOver) {
       return;
     }
-
-    const winner = null;
-    this.broadcastEvent({ type: "gameOver", winner });
     this._gameOver = true;
-    if (this._matchResetTimer) {
-      clearTimeout(this._matchResetTimer);
-      this._matchResetTimer = null;
-    }
-
-    this._matchResetTimer = setTimeout(() => {
-      this._matchResetTimer = null;
-      this.resetMatch();
-    }, 5000);
+    this.resetMatch();
   }
 
   resetMatch() {
@@ -286,8 +368,24 @@ class GameServer {
     this.enemies.clear();
     this.projectiles.clear();
     this.rikas.clear();
+    this.pureLoveBeams.clear();
     this.domainSystem.domains.clear();
+    this.delayedActions = [];
+    this.clientStateCache.clear();
+    this.enemySystem.spawnTimer = 0;
+    this.enemySystem.bossSpawned = false;
+
     this.players.forEach((player) => {
+      const base = BASE_STATS[player.character] || BASE_STATS.gojo;
+      player.maxHp = base.maxHp;
+      player.maxEnergy = base.maxEnergy;
+      player.energyRegen = base.energyRegen;
+      player.moveSpeed = base.moveSpeed;
+      player.dodgeCooldownBase = base.dodgeCooldown;
+      player.dodgeDistance = base.dodgeDistance;
+      player.radius = base.radius;
+      player.armor = base.armor;
+
       player.hp = player.maxHp;
       player.energy = player.maxEnergy;
       player.alive = true;
@@ -345,6 +443,9 @@ class GameServer {
       player.kills = 0;
       player.deaths = 0;
       player.appliedUpgrades = {};
+      player.offline = false;
+      player.disconnectedAt = 0;
+
       player.modifiers = {
         damageMul: 1,
         speedMul: 1,
@@ -370,8 +471,19 @@ class GameServer {
         domainSlowMul: 1,
         domainDurationMul: 1,
         domainPowerMul: 1,
+        rikaDamageMul: 1,
+        rikaCooldownMul: 1,
+        dashSlashDamageMul: 1,
+        dashSlashRangeMul: 1,
+        fullRikaDurationMul: 1,
+        fullRikaPowerMul: 1,
+        pureLoveDamageMul: 1,
+        pureLoveRadiusMul: 1,
+        domainKatanaDamageMul: 1,
       };
+
     });
+
     this.startedAt = Date.now();
     this._gameOver = false;
     this.broadcastEvent({ type: "matchReset" });
@@ -396,14 +508,15 @@ class GameServer {
   }
 
   updatePlayers(dt) {
-    const skillLockedAtTickStart = this.domainSystem.isSkillLocked();
-
     this.players.forEach((player) => {
       player.hitFlash = Math.max(0, player.hitFlash - dt);
       player.invulnTimer = Math.max(0, player.invulnTimer - dt);
       player.stunTimer = Math.max(0, player.stunTimer - dt);
       player.comboResetTimer = Math.max(0, player.comboResetTimer - dt);
       player.m1Timer = Math.max(0, player.m1Timer - dt);
+      if (player.rikaBuffTime > 0) {
+        player.rikaBuffTime = Math.max(0, player.rikaBuffTime - dt);
+      }
 
       if (!player.alive) {
         player.respawnTimer = -1;
@@ -419,8 +532,10 @@ class GameServer {
         player.cooldowns[key] = Math.max(0, player.cooldowns[key] - dt);
       });
       player.dodgeCooldown = Math.max(0, player.dodgeCooldown - dt);
+      player.domainExhaustionTimer = Math.max(0, player.domainExhaustionTimer - dt);
 
       this.resolveCasting(player, dt);
+      const skillLockedAtTickStart = this.domainSystem.isSkillLockedForPlayer(player);
       this.resolveInput(player, dt, skillLockedAtTickStart);
 
       if (player.comboResetTimer <= 0) {
@@ -428,12 +543,6 @@ class GameServer {
       }
 
       this.updateAnimationState(player);
-
-      const rika = this.rikas.get(player.id);
-      if (rika) {
-        rika.x = player.x;
-        rika.y = player.y;
-      }
     });
   }
 
@@ -448,6 +557,12 @@ class GameServer {
     player.vy = 0;
     player.invulnTimer = 0.7;
     player.respawnTimer = 0;
+    player.domainExhaustionTimer = 0;
+    if (player.character === "yuta") {
+      this.rikas.delete(player.id);
+      this.pureLoveBeams.delete(player.id);
+    }
+    player.dashSlash = null;
     this.emitEventToPlayer(player.id, {
       type: "respawn",
       x: player.x,
@@ -484,11 +599,23 @@ class GameServer {
     } else if (cast.type === "fullRika") {
       this.fireFullRika(player);
     } else if (cast.type === "pureLove") {
-      this.firePureLove(player);
+      this.firePureLove(player, cast);
+    } else if (cast.type === "cursedWave") {
+      this.fireCursedWave(player, cast);
+    } else if (cast.type === "rikaImpulse") {
+      this.fireRikaImpulse(player, cast);
+    } else if (cast.type === "rikaDash") {
+      this.fireRikaDash(player, cast);
+    } else if (cast.type === "domainCopy") {
+      this.fireDomainCopy(player, cast);
+    } else if (cast.type === "domainCopyFire") {
+      this.fireDomainCopyFire(player, cast);
     }
   }
 
   resolveInput(player, dt, skillLockedAtTickStart) {
+    const input = player.input;
+
     if (player.stunTimer > 0) {
       player.vx *= 0.8;
       player.vy *= 0.8;
@@ -496,7 +623,92 @@ class GameServer {
       return;
     }
 
-    const input = player.input;
+    if (this.pureLoveBeams.has(player.id)) {
+      player.aimX = input.aimX;
+      player.aimY = input.aimY;
+      player.vx = 0;
+      player.vy = 0;
+      player.prevInput.m1 = input.m1;
+      player.prevInput.q = input.q;
+      player.prevInput.e = input.e;
+      player.prevInput.r = input.r;
+      player.prevInput.space = input.space;
+      player.prevInput.f = input.f;
+      player.prevInput.dodge = input.dodge;
+      player.lastProcessedInputSeq = input.seq;
+      return;
+    }
+
+    if (player.dashSlash) {
+      player.aimX = input.aimX;
+      player.aimY = input.aimY;
+      const kit = this.getKit(player);
+      const slideSpeed = kit.dashSlash.slideSpeed;
+      const moveAmount = Math.min(player.dashSlash.remainingDist, slideSpeed * dt);
+      this.moveEntityWithCollisions(player, player.dashSlash.dirX * moveAmount, player.dashSlash.dirY * moveAmount);
+      player.dashSlash.remainingDist -= moveAmount;
+      if (player.dashSlash.remainingDist <= 0) {
+        const endX = player.x;
+        const endY = player.y;
+        const startX = player.dashSlash.startX;
+        const startY = player.dashSlash.startY;
+        const kit = this.getKit(player);
+        const firstDamage = kit.dashSlash.damage * player.modifiers.dashSlashDamageMul;
+        const delayedRadius = kit.dashSlash.delayedRadius;
+
+        // First AoE hit at end position
+        this.applyDashSlashAoE(player, endX, endY, firstDamage, delayedRadius, 120);
+
+        // Emit dash slash trail event
+        this.emitEventNear(endX, endY, {
+          type: "dashSlash",
+          x: endX,
+          y: endY,
+          startX,
+          startY,
+          playerId: player.id,
+          radius: delayedRadius,
+        });
+
+        // Queue delayed second hit
+        const savedX = endX;
+        const savedY = endY;
+        this.queueDelayedAction(kit.dashSlash.delayedDelay, () => {
+          const delayedDamage = kit.dashSlash.delayedDamage * (this.getKitByPlayerId ? this.getKitByPlayerId(player.id) : kit).dashSlash.delayedDamage * (player.modifiers ? player.modifiers.dashSlashDamageMul : 1);
+          // Actually, let me use saved kit values
+        });
+
+        // For the delayed action, use a closure with captured values
+        const capturedKit = kit;
+        const capturedPlayerId = player.id;
+        this.queueDelayedAction(kit.dashSlash.delayedDelay, () => {
+          const p = this.players.get(capturedPlayerId);
+          if (!p || !p.alive) return;
+          const kitNow = this.getKit(p);
+          const delayedDmg = kitNow.dashSlash.delayedDamage * p.modifiers.dashSlashDamageMul;
+          const delayedKb = kitNow.dashSlash.delayedKnockback;
+          this.applyDashSlashAoE(p, savedX, savedY, delayedDmg, kitNow.dashSlash.delayedRadius, delayedKb);
+          this.emitEventNear(savedX, savedY, {
+            type: "dashSlashDelayed",
+            x: savedX,
+            y: savedY,
+            playerId: p.id,
+          });
+        });
+
+        player.dashSlash = null;
+      }
+      player.prevInput.m1 = input.m1;
+      player.prevInput.q = input.q;
+      player.prevInput.e = input.e;
+      player.prevInput.r = input.r;
+      player.prevInput.space = input.space;
+      player.prevInput.f = input.f;
+      player.prevInput.dodge = input.dodge;
+      player.lastProcessedInputSeq = input.seq;
+      return;
+    }
+
     player.aimX = input.aimX;
     player.aimY = input.aimY;
 
@@ -504,8 +716,14 @@ class GameServer {
     const moveY = (input.down ? 1 : 0) - (input.up ? 1 : 0);
     const moveNorm = normalize(moveX, moveY);
     const isDomainCasting = player.cast && player.cast.type === "domain";
-    const isCharging = player.cast && (player.cast.type === "purple" || player.cast.type === "pureLove");
-    const castSlow = isCharging ? 0.72 : isDomainCasting ? 0 : 1;
+    const isCharging = player.cast && (player.cast.type === "purple");
+    const isPureLoveCharging = player.cast && (player.cast.type === "pureLove" || player.cast.type === "domainCopyFire");
+    if (isPureLoveCharging) {
+      const curAim = normalize(player.aimX - player.x, player.aimY - player.y);
+      player.cast.dirX = curAim.x;
+      player.cast.dirY = curAim.y;
+    }
+    const castSlow = isPureLoveCharging ? 0 : isCharging ? 0.72 : isDomainCasting ? 0 : 1;
     const domainSlow = this.domainSystem.getPlayerSlowFactor(player);
     const moveSpeed = player.moveSpeed * player.modifiers.speedMul * castSlow * domainSlow;
     player.vx = moveNorm.x * moveSpeed;
@@ -513,12 +731,12 @@ class GameServer {
 
     if (!isDomainCasting) {
       const dodgePressed = input.dodge && !player.prevInput.dodge;
-      if (dodgePressed) {
+      if (dodgePressed && !skillLockedAtTickStart) {
         this.tryDodge(player, moveNorm);
       }
 
       const m1Held = input.m1;
-      if (m1Held) {
+      if (m1Held && !skillLockedAtTickStart) {
         this.tryM1(player);
       }
     }
@@ -529,14 +747,14 @@ class GameServer {
     const spacePressed = input.space && !player.prevInput.space;
     const fPressed = input.f && !player.prevInput.f;
 
-    if (!player.cast && !skillLockedAtTickStart) {
+    if (!player.cast && !skillLockedAtTickStart && player.domainExhaustionTimer <= 0) {
       const chara = player.character || "gojo";
-      if (chara === "yuta") {
+      if (chara === "yuta" || chara === "megumi") {
         if (qPressed) this.tryCastRika(player);
-        if (ePressed) this.tryCastDashSlash(player);
-        if (rPressed) this.tryCastFullRika(player);
-        if (spacePressed) this.tryCastDomain(player);
-        if (fPressed) this.tryCastPureLove(player);
+        if (ePressed) this.tryCastFullRika(player);
+        if (rPressed) this.tryCastPureLove(player);
+        if (spacePressed) this.tryCastDashSlash(player);
+        if (fPressed) this.tryCastDomain(player);
       } else {
         if (qPressed) this.tryCastBlue(player);
         if (ePressed) this.tryCastRed(player);
@@ -576,6 +794,11 @@ class GameServer {
       player.statePriority = 3;
       return;
     }
+    if (this.pureLoveBeams.has(player.id)) {
+      player.animState = "skill3";
+      player.statePriority = 3;
+      return;
+    }
     if (player.cast && player.cast.type === "purple") {
       player.animState = "skill3";
       player.statePriority = 3;
@@ -602,6 +825,11 @@ class GameServer {
       return;
     }
     if (player.cast && player.cast.type === "dashSlash") {
+      player.animState = "teleport";
+      player.statePriority = 6;
+      return;
+    }
+    if (player.dashSlash) {
       player.animState = "teleport";
       player.statePriority = 6;
       return;
@@ -662,12 +890,41 @@ class GameServer {
       return false;
     }
     const kit = this.getKit(player);
+    const isYutaSlash = player.character === "yuta";
 
     player.m1Timer = kit.m1.cooldown;
     player.comboStep = (player.comboStep % 3) + 1;
     player.comboResetTimer = 0.9;
 
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    const m1DirX = Number.isFinite(aim.x) ? aim.x : 0;
+    const m1DirY = Number.isFinite(aim.y) ? aim.y : 0;
+
+    const slashDirX = isYutaSlash && Math.abs(m1DirX) < 0.001 && Math.abs(m1DirY) < 0.001 ? 1 : m1DirX;
+    const slashDirY = isYutaSlash && Math.abs(m1DirX) < 0.001 && Math.abs(m1DirY) < 0.001 ? 0 : m1DirY;
+    const slashRange = kit.m1.range;
+    const coneAngle = isYutaSlash ? (kit.m1.coneAngle || 1.4) : 0;
+
+    const canM1HitTarget = (target) => {
+      if (isYutaSlash) {
+        const dx = target.x - player.x;
+        const dy = target.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > slashRange + target.radius) {
+          return false;
+        }
+        const toTarget = dist > 0.01 ? { x: dx / dist, y: dy / dist } : { x: 0, y: 0 };
+        const facing = toTarget.x * slashDirX + toTarget.y * slashDirY;
+        const coneCos = Math.cos(coneAngle * 0.5);
+        return facing > coneCos;
+      }
+
+      const toTarget = normalize(target.x - player.x, target.y - player.y);
+      const inRange = distance(player.x, player.y, target.x, target.y) <= slashRange + target.radius;
+      const facing = dot(m1DirX, m1DirY, toTarget.x, toTarget.y) > 0.2;
+      return inRange && facing;
+    };
+
     this.players.forEach((target) => {
       if (target.id === player.id || !target.alive) {
         return;
@@ -675,16 +932,13 @@ class GameServer {
       if (!this.config.match.friendlyFire && target.kind === "player") {
         return;
       }
-      const toTarget = normalize(target.x - player.x, target.y - player.y);
-      const inRange = distance(player.x, player.y, target.x, target.y) <= kit.m1.range + target.radius;
-      const facing = dot(aim.x, aim.y, toTarget.x, toTarget.y) > 0.2;
-      if (inRange && facing) {
+      if (canM1HitTarget(target)) {
         this.combat.applyDamage({
           target,
           source: player,
           amount: kit.m1.damage * player.modifiers.m1DamageMul,
           kind: "m1",
-          knockback: player.comboStep === 3 ? 180 : 85,
+          knockback: player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85),
           fromX: player.x,
           fromY: player.y,
         });
@@ -695,16 +949,13 @@ class GameServer {
       if (!enemy.alive) {
         return;
       }
-      const toTarget = normalize(enemy.x - player.x, enemy.y - player.y);
-      const inRange = distance(player.x, player.y, enemy.x, enemy.y) <= kit.m1.range + enemy.radius;
-      const facing = dot(aim.x, aim.y, toTarget.x, toTarget.y) > 0.2;
-      if (inRange && facing) {
+      if (canM1HitTarget(enemy)) {
         this.combat.applyDamage({
           target: enemy,
           source: player,
           amount: kit.m1.damage * player.modifiers.m1DamageMul,
           kind: "m1",
-          knockback: player.comboStep === 3 ? 150 : 80,
+          knockback: player.comboStep === 3 ? (isYutaSlash ? 190 : 150) : (isYutaSlash ? 110 : 80),
           fromX: player.x,
           fromY: player.y,
         });
@@ -715,19 +966,19 @@ class GameServer {
       type: "m1",
       x: player.x,
       y: player.y,
-      dirX: aim.x,
-      dirY: aim.y,
+      dirX: slashDirX,
+      dirY: slashDirY,
       combo: player.comboStep,
       playerId: player.id,
+      character: player.character || "gojo",
+      slashRange: isYutaSlash ? slashRange : undefined,
+      coneAngle: isYutaSlash ? coneAngle : undefined,
     });
     return true;
   }
 
   canUseSkill(player, energyCost, cooldownKey, baseCooldown) {
     if (!player.alive) {
-      return false;
-    }
-    if (this.domainSystem.isSkillLocked()) {
       return false;
     }
     if (player.cooldowns[cooldownKey] > 0) {
@@ -775,6 +1026,10 @@ class GameServer {
       color: "#4cb4ff",
       persistent: true,
     });
+    if (this.domainSystem.hasActiveDomain(player.id)) {
+      p.sureHit = true;
+      p.homingStrength = 3.0;
+    }
     this.projectiles.set(p.id, p);
     this.emitEventNear(player.x, player.y, {
       type: "skillBlue",
@@ -818,6 +1073,10 @@ class GameServer {
         explosionRadius: GOJO.red.explosionRadius * player.modifiers.redExplosionMul,
       },
     });
+    if (this.domainSystem.hasActiveDomain(player.id)) {
+      projectile.sureHit = true;
+      projectile.homingStrength = 3.0;
+    }
     this.projectiles.set(projectile.id, projectile);
     this.emitEventNear(player.x, player.y, {
       type: "skillRed",
@@ -871,6 +1130,10 @@ class GameServer {
         startY: player.y,
       },
     });
+    if (this.domainSystem.hasActiveDomain(player.id)) {
+      beam.sureHit = true;
+      beam.homingStrength = 3.0;
+    }
     this.projectiles.set(beam.id, beam);
     this.emitEventNear(player.x, player.y, {
       type: "skillPurple",
@@ -954,8 +1217,21 @@ class GameServer {
     if (!player.alive) {
       return false;
     }
+
+    if (player.character === "yuta") {
+      const domain = this.domainSystem.domains.get(player.id);
+      if (domain && distance(player.x, player.y, domain.x, domain.y) <= domain.radius) {
+        const kit = this.getKit(player);
+        player.cast = {
+          type: "domainCopy",
+          timer: (kit.domainCopy || {}).startup || 0.2,
+        };
+        return true;
+      }
+    }
+
     const kit = this.getKit(player);
-    const cooldownKey = player.character === "yuta" ? "space" : "f";
+    const cooldownKey = "f";
     if (player.cooldowns[cooldownKey] > 0) {
       return false;
     }
@@ -974,6 +1250,148 @@ class GameServer {
 
   fireDomain(player) {
     this.domainSystem.activateDomain(player);
+  }
+
+  fireDomainCopy(player, cast) {
+    const domain = this.domainSystem.domains.get(player.id);
+    if (!domain) return;
+
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+
+    let copyType = null;
+    let sourceKit = null;
+    let sourceChar = domain.copiedCharacter;
+
+    if (sourceChar) {
+      sourceKit = CHARACTER_REGISTRY[sourceChar];
+      if (sourceKit) {
+        const isStandard = sourceChar !== "yuta" && sourceChar !== "megumi";
+        copyType = isStandard ? "purple" : "pureLove";
+      }
+    }
+    if (!copyType) {
+      sourceKit = CHARACTER_REGISTRY.yuta;
+      sourceChar = "yuta";
+      copyType = "pureLove";
+    }
+
+    const startup = copyType === "purple"
+      ? (sourceKit.purple?.charge || 0.5)
+      : (sourceKit.pureLove?.startup || 2.0);
+
+    player.cast = {
+      type: "domainCopyFire",
+      timer: startup,
+      copyType,
+      dirX: aim.x,
+      dirY: aim.y,
+      _sourceChar: sourceChar,
+    };
+
+    if (copyType === "pureLove") {
+      const offset = 30;
+      this.emitEventNear(player.x, player.y, {
+        type: "pureLoveCharge",
+        x: player.x + aim.x * offset,
+        y: player.y + aim.y * offset,
+        playerId: player.id,
+        dirX: aim.x,
+        dirY: aim.y,
+        duration: startup,
+      });
+    } else {
+      this.emitEventNear(player.x, player.y, {
+        type: "purpleCharge",
+        x: player.x,
+        y: player.y,
+        ownerId: player.id,
+        delay: startup,
+      });
+    }
+  }
+
+  fireDomainCopyFire(player, cast) {
+    const sourceKit = CHARACTER_REGISTRY[cast._sourceChar] || CHARACTER_REGISTRY.yuta;
+    const aim = { x: cast.dirX, y: cast.dirY };
+
+    if (cast.copyType === "purple") {
+      this.fireCopiedPurple(player, aim, sourceKit);
+    } else {
+      this.fireCopiedPureLove(player, aim, sourceKit);
+    }
+  }
+
+  fireCopiedPurple(player, aim, sourceKit) {
+    const p = sourceKit.purple;
+    const beam = createProjectile({
+      id: `cp${this.nextProjectileId++}`,
+      type: "purple",
+      ownerId: player.id,
+      ownerKind: "player",
+      x: player.x,
+      y: player.y,
+      vx: aim.x,
+      vy: aim.y,
+      speed: p.speed,
+      radius: 0,
+      lifetime: p.length / p.speed + 0.08,
+      damage: p.damage * (player.modifiers.purpleDamageMul || 1),
+      penetration: true,
+      width: p.width * (player.modifiers.purpleWidthMul || 1),
+      length: p.length * (player.modifiers.purpleLengthMul || 1),
+      color: "#9b5cff",
+      meta: { startX: player.x, startY: player.y },
+    });
+    if (this.domainSystem.hasActiveDomain(player.id)) {
+      beam.sureHit = true;
+      beam.homingStrength = 3.0;
+    }
+    this.projectiles.set(beam.id, beam);
+    this.emitEventNear(player.x, player.y, {
+      type: "skillPurple",
+      x: player.x,
+      y: player.y,
+      ownerId: player.id,
+      dirX: aim.x,
+      dirY: aim.y,
+      width: beam.width,
+      length: beam.length,
+    });
+  }
+
+  fireCopiedPureLove(player, aim, sourceKit) {
+    const pl = sourceKit.pureLove;
+    const dir = normalize(aim.x, aim.y);
+    const width = pl.radius * (player.modifiers.pureLoveRadiusMul || 1);
+    const offset = pl.beamOffset || 60;
+
+    this.pureLoveBeams.set(player.id, {
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      dirX: dir.x,
+      dirY: dir.y,
+      width,
+      lifetime: pl.duration || 4,
+      totalLifetime: pl.duration || 4,
+      beamLength: pl.beamLength || 960,
+      ownerId: player.id,
+      hitTimes: new Map(),
+      redirectSpeed: pl.redirectSpeed || 0,
+      damage: pl.damage * (player.modifiers.pureLoveDamageMul || 1),
+      knockback: (pl.knockback || 600) * (player.modifiers.pureLoveKnockbackMul || 1),
+      _domainCopy: true,
+    });
+    this.emitEventNear(player.x, player.y, {
+      type: "pureLoveBeam",
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      playerId: player.id,
+      dirX: dir.x,
+      dirY: dir.y,
+      width,
+      lifetime: pl.duration || 4,
+      beamLength: pl.beamLength || 960,
+    });
   }
 
   spawnEnemyProjectile(data) {
@@ -996,6 +1414,101 @@ class GameServer {
     this.projectiles.set(projectile.id, projectile);
   }
 
+  findFirstDomainBarrierIntersection(fromX, fromY, toX, toY, padding = 0) {
+    if (!this.domainSystem || this.domainSystem.domains.size === 0) {
+      return null;
+    }
+
+    const vx = toX - fromX;
+    const vy = toY - fromY;
+    const a = vx * vx + vy * vy;
+    if (a < 0.000001) {
+      return null;
+    }
+
+    let best = null;
+    const epsilon = 0.0001;
+
+    this.domainSystem.domains.forEach((domain) => {
+      const r = Math.max(1, domain.radius + padding);
+      const fx = fromX - domain.x;
+      const fy = fromY - domain.y;
+
+      const b = 2 * (fx * vx + fy * vy);
+      const c = fx * fx + fy * fy - r * r;
+      const disc = b * b - 4 * a * c;
+      if (disc < 0) {
+        return;
+      }
+
+      const sqrtDisc = Math.sqrt(disc);
+      const inv2a = 1 / (2 * a);
+      const t1 = (-b - sqrtDisc) * inv2a;
+      const t2 = (-b + sqrtDisc) * inv2a;
+      const candidates = [t1, t2];
+
+      for (let i = 0; i < candidates.length; i += 1) {
+        const t = candidates[i];
+        if (!Number.isFinite(t) || t <= epsilon || t > 1 + epsilon) {
+          continue;
+        }
+        const clampedT = clamp(t, 0, 1);
+        const x = fromX + vx * clampedT;
+        const y = fromY + vy * clampedT;
+
+        if (!best || clampedT < best.t) {
+          best = {
+            domain,
+            t: clampedT,
+            x,
+            y,
+          };
+        }
+      }
+    });
+
+    return best;
+  }
+
+  breakProjectileOnBarrier(projectile, barrierHit) {
+    if (!projectile || !barrierHit || !barrierHit.domain) {
+      return false;
+    }
+
+    projectile.x = barrierHit.x;
+    projectile.y = barrierHit.y;
+
+    const baseDamage = Number.isFinite(projectile.damage) ? projectile.damage : 10;
+    let barrierDamage = baseDamage * 0.45;
+    if (projectile.type === "red") {
+      barrierDamage = baseDamage * 0.55;
+    } else if (projectile.type === "purple") {
+      barrierDamage = baseDamage * 0.75;
+    }
+    barrierDamage = Math.max(4, barrierDamage);
+    this.domainSystem.damageBarrier(barrierHit.domain.ownerId, barrierDamage);
+
+    this.emitEventNear(barrierHit.x, barrierHit.y, {
+      type: "domainBarrierHit",
+      x: barrierHit.x,
+      y: barrierHit.y,
+      ownerId: barrierHit.domain.ownerId,
+      projectileType: projectile.type,
+      attackerKind: projectile.ownerKind,
+    });
+
+    this.projectiles.delete(projectile.id);
+    return true;
+  }
+
+  handleProjectileDomainBarrier(projectile, fromX, fromY, toX, toY, padding = 0) {
+    const hit = this.findFirstDomainBarrierIntersection(fromX, fromY, toX, toY, padding);
+    if (!hit) {
+      return false;
+    }
+    return this.breakProjectileOnBarrier(projectile, hit);
+  }
+
   updateProjectiles(dt) {
     this.projectiles.forEach((projectile) => {
       projectile.age += dt;
@@ -1010,6 +1523,8 @@ class GameServer {
             y: projectile.y,
             radius: projectile.meta ? projectile.meta.explosionRadius : GOJO.red.explosionRadius,
           });
+        } else if (projectile.type === "blue") {
+          this.triggerBlueExplosion(projectile);
         }
         this.projectiles.delete(projectile.id);
         return;
@@ -1059,7 +1574,12 @@ class GameServer {
     projectile.x += projectile.vx * speed * dt;
     projectile.y += projectile.vy * speed * dt;
 
+    if (this.handleProjectileDomainBarrier(projectile, projectile.prevX, projectile.prevY, projectile.x, projectile.y)) {
+      return;
+    }
+
     if (this.isCollidingAnyObstacle(projectile.x, projectile.y, projectile.radius)) {
+      this.triggerBlueExplosion(projectile);
       this.projectiles.delete(projectile.id);
       return;
     }
@@ -1112,7 +1632,73 @@ class GameServer {
     });
   }
 
+  triggerBlueExplosion(projectile) {
+    const owner = this.players.get(projectile.ownerId) || null;
+    const radius = projectile.pullRadius * 1.5;
+    const strength = projectile.pullStrength * 2;
+    const targets = [];
+
+    this.players.forEach((target) => {
+      if (!target.alive || target.id === projectile.ownerId) return;
+      const d = distance(target.x, target.y, projectile.x, projectile.y);
+      if (d <= radius + target.radius) targets.push(target);
+    });
+    this.enemies.forEach((target) => {
+      if (!target.alive) return;
+      const d = distance(target.x, target.y, projectile.x, projectile.y);
+      if (d <= radius + target.radius) targets.push(target);
+    });
+
+    targets.forEach((target) => {
+      const dir = normalize(projectile.x - target.x, projectile.y - target.y);
+      const pullDist = strength * 0.15;
+      this.moveEntityWithCollisions(target, dir.x * pullDist, dir.y * pullDist, true);
+      target.vx += dir.x * strength * 0.4;
+      target.vy += dir.y * strength * 0.4;
+      this.combat.applyDamage({
+        target,
+        source: owner,
+        amount: projectile.damage * 2,
+        kind: "blueExplosion",
+        fromX: projectile.x,
+        fromY: projectile.y,
+      });
+    });
+
+    this.emitEventNear(projectile.x, projectile.y, {
+      type: "blueExplosion",
+      x: projectile.x,
+      y: projectile.y,
+      radius,
+    });
+  }
+
   updatePurpleProjectile(projectile, dt) {
+    if (projectile.sureHit && projectile.homingStrength > 0) {
+      const target = this.findNearestEnemyInDomain(projectile.ownerId, projectile.x, projectile.y);
+      if (target) {
+        const dir = normalize(target.x - projectile.x, target.y - projectile.y);
+        if (dir.len > 0.001) {
+          const currentAngle = Math.atan2(projectile.vy, projectile.vx);
+          const targetAngle = Math.atan2(dir.y, dir.x);
+          let diff = targetAngle - currentAngle;
+          diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+          const maxRot = projectile.homingStrength * dt;
+          const rot = Math.sign(diff) * Math.min(Math.abs(diff), maxRot);
+          const c = Math.cos(rot);
+          const s = Math.sin(rot);
+          const nvx = projectile.vx * c - projectile.vy * s;
+          const nvy = projectile.vx * s + projectile.vy * c;
+          projectile.vx = nvx;
+          projectile.vy = nvy;
+          if (projectile.meta) {
+            projectile.meta.startX = projectile.x;
+            projectile.meta.startY = projectile.y;
+          }
+        }
+      }
+    }
+
     const baseSpeed = projectile.speed;
     const passiveFactor = this.getPassiveProjectileFactor(projectile);
     const domainFactor = this.domainSystem.getProjectileSlow(projectile);
@@ -1125,8 +1711,14 @@ class GameServer {
     const startY = projectile.meta.startY;
     const fromX = startX + projectile.vx * prevTravel;
     const fromY = startY + projectile.vy * prevTravel;
-    const toX = startX + projectile.vx * projectile.traveled;
-    const toY = startY + projectile.vy * projectile.traveled;
+    let toX = startX + projectile.vx * projectile.traveled;
+    let toY = startY + projectile.vy * projectile.traveled;
+
+    const barrierHit = this.findFirstDomainBarrierIntersection(fromX, fromY, toX, toY);
+    if (barrierHit) {
+      toX = barrierHit.x;
+      toY = barrierHit.y;
+    }
 
     projectile.x = toX;
     projectile.y = toY;
@@ -1177,12 +1769,38 @@ class GameServer {
       }
     });
 
+    if (barrierHit) {
+      this.breakProjectileOnBarrier(projectile, barrierHit);
+      return;
+    }
+
     if (projectile.traveled >= projectile.length) {
       this.projectiles.delete(projectile.id);
     }
   }
 
   updateLinearProjectile(projectile, dt) {
+    if (projectile.sureHit && projectile.homingStrength > 0) {
+      const target = this.findNearestEnemyInDomain(projectile.ownerId, projectile.x, projectile.y);
+      if (target) {
+        const dir = normalize(target.x - projectile.x, target.y - projectile.y);
+        if (dir.len > 0.001) {
+          const currentAngle = Math.atan2(projectile.vy, projectile.vx);
+          const targetAngle = Math.atan2(dir.y, dir.x);
+          let diff = targetAngle - currentAngle;
+          diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+          const maxRot = projectile.homingStrength * dt;
+          const rot = Math.sign(diff) * Math.min(Math.abs(diff), maxRot);
+          const c = Math.cos(rot);
+          const s = Math.sin(rot);
+          const nvx = projectile.vx * c - projectile.vy * s;
+          const nvy = projectile.vx * s + projectile.vy * c;
+          projectile.vx = nvx;
+          projectile.vy = nvy;
+        }
+      }
+    }
+
     const baseSpeed = projectile.speed;
     const passiveFactor = this.getPassiveProjectileFactor(projectile);
     const domainFactor = this.domainSystem.getProjectileSlow(projectile);
@@ -1198,6 +1816,10 @@ class GameServer {
       projectile.y > this.map.height + 40
     ) {
       this.projectiles.delete(projectile.id);
+      return;
+    }
+
+    if (this.handleProjectileDomainBarrier(projectile, projectile.prevX, projectile.prevY, projectile.x, projectile.y)) {
       return;
     }
 
@@ -1268,20 +1890,24 @@ class GameServer {
   spawnSpatialCollapse(x, y, ownerId) {
     const owner = this.players.get(ownerId) || null;
     this.players.forEach((player) => {
-      if (!player.alive || player.id === ownerId) {
-        return;
-      }
+      if (!player.alive) return;
       const d = distance(player.x, player.y, x, y);
       if (d <= GOJO.collapse.radius + player.radius) {
         const distRatio = Math.max(0, d - player.radius) / GOJO.collapse.radius;
         const falloff = Math.max(150 / 700, 1 - distRatio);
-        const amount = Math.round(GOJO.collapse.damage * falloff);
+        const isOwner = player.id === ownerId;
+        let amount = Math.round(GOJO.collapse.damage * falloff);
+        let kb = GOJO.collapse.knockback;
+        if (isOwner) {
+          amount = Math.round(amount * 0.35);
+          kb = kb * 0.4;
+        }
         this.combat.applyDamage({
           target: player,
           source: owner,
           amount,
           kind: "spatialCollapse",
-          knockback: GOJO.collapse.knockback,
+          knockback: kb,
           fromX: x,
           fromY: y,
         });
@@ -1490,72 +2116,273 @@ class GameServer {
 
   updateRikas(dt) {
     this.rikas.forEach((rika, ownerId) => {
-      rika.timer -= dt;
-      if (rika.timer <= 0) {
-        this.rikas.delete(ownerId);
-        const owner = this.players.get(ownerId);
-        if (owner) {
-          owner.animState = "idle";
+      if (rika.timer !== Infinity) {
+        rika.timer -= dt;
+        if (rika.timer <= 0) {
+          this.rikas.delete(ownerId);
+          const owner = this.players.get(ownerId);
+          if (owner) {
+            owner.animState = "idle";
+          }
+          return;
         }
+      }
+
+      const owner = this.players.get(ownerId);
+      if (!owner || !owner.alive) return;
+
+      if (this.domainSystem.isSkillLockedForPlayer(owner)) {
         return;
       }
 
-      rika.attackTimer -= dt;
-      if (rika.attackTimer <= 0) {
-        rika.attackTimer = YUTA.fullRika.attackInterval;
-        const owner = this.players.get(ownerId);
-        if (!owner || !owner.alive) {
-          return;
-        }
-        const attackType = Math.random() < 0.4 ? "slam" : Math.random() < 0.6 ? "grab" : "swipe";
-        const baseDamage = attackType === "slam" ? YUTA.fullRika.slamDamage
-          : attackType === "grab" ? YUTA.fullRika.grabDamage
-          : YUTA.fullRika.swipeDamage;
-        const damage = baseDamage * owner.modifiers.fullRikaPowerMul;
-        const knockback = attackType === "slam" ? YUTA.fullRika.slamKnockback
-          : attackType === "grab" ? YUTA.fullRika.grabThrow
-          : YUTA.fullRika.swipeKnockback;
+      const companion = YUTA.rikaCompanion;
+      rika.attackTimer = Math.max(0, (Number.isFinite(rika.attackTimer) ? rika.attackTimer : 0) - dt);
 
+      // Full Rika timer-based auto-attack (enemies and players in range)
+      if (rika.timer !== Infinity && rika.attackTimer <= 0) {
+        let hasTarget = false;
         this.enemies.forEach((enemy) => {
           if (!enemy.alive) return;
           const d = distance(rika.x, rika.y, enemy.x, enemy.y);
-          if (d <= YUTA.fullRika.range + enemy.radius) {
-            this.combat.applyDamage({
-              target: enemy,
-              source: owner,
-              amount: damage,
-              kind: "rika",
-              knockback,
-              fromX: rika.x,
-              fromY: rika.y,
-            });
-          }
+          if (d <= YUTA.fullRika.range + enemy.radius) hasTarget = true;
         });
-
-        this.players.forEach((target) => {
-          if (!target.alive || target.id === ownerId) return;
+        this.players.forEach((p) => {
+          if (!p.alive || p.id === ownerId) return;
           if (!this.config.match.friendlyFire) return;
-          const d = distance(rika.x, rika.y, target.x, target.y);
-          if (d <= YUTA.fullRika.range + target.radius) {
-            this.combat.applyDamage({
-              target,
-              source: owner,
-              amount: damage,
-              kind: "rika",
-              knockback,
-              fromX: rika.x,
-              fromY: rika.y,
-            });
+          const d = distance(rika.x, rika.y, p.x, p.y);
+          if (d <= YUTA.fullRika.range + p.radius) hasTarget = true;
+        });
+        if (!hasTarget) {
+          rika.attackTimer = 0;
+        } else {
+          rika.attackTimer = YUTA.fullRika.attackInterval;
+          rika.attackCounter = (Number.isFinite(rika.attackCounter) ? rika.attackCounter : 0) + 1;
+          const isHeavy = rika.attackCounter % 10 === 0;
+
+          const attackType = Math.random() < 0.4 ? "slam" : Math.random() < 0.6 ? "grab" : "swipe";
+          const baseDamage = attackType === "slam" ? YUTA.fullRika.slamDamage
+            : attackType === "grab" ? YUTA.fullRika.grabDamage
+            : YUTA.fullRika.swipeDamage;
+          const damage = (isHeavy ? baseDamage * 2 : baseDamage) * owner.modifiers.fullRikaPowerMul;
+          const knockback = isHeavy
+            ? (attackType === "slam" ? YUTA.fullRika.slamKnockback * 2
+              : attackType === "grab" ? YUTA.fullRika.grabThrow * 2
+              : YUTA.fullRika.swipeKnockback * 2)
+            : (attackType === "slam" ? YUTA.fullRika.slamKnockback
+              : attackType === "grab" ? YUTA.fullRika.grabThrow
+              : YUTA.fullRika.swipeKnockback);
+          const range = isHeavy ? YUTA.fullRika.range * 0.75 : YUTA.fullRika.range;
+
+          this.enemies.forEach((enemy) => {
+            if (!enemy.alive) return;
+            const d = distance(rika.x, rika.y, enemy.x, enemy.y);
+            if (d <= range + enemy.radius) {
+              this.combat.applyDamage({
+                target: enemy,
+                source: owner,
+                amount: damage,
+                kind: isHeavy ? "rikaHeavy" : "rika",
+                knockback,
+                fromX: rika.x,
+                fromY: rika.y,
+              });
+            }
+          });
+
+          this.players.forEach((target) => {
+            if (!target.alive || target.id === ownerId) return;
+            if (!this.config.match.friendlyFire) return;
+            const d = distance(rika.x, rika.y, target.x, target.y);
+            if (d <= range + target.radius) {
+              this.combat.applyDamage({
+                target,
+                source: owner,
+                amount: damage,
+                kind: isHeavy ? "rikaHeavy" : "rika",
+                knockback,
+                fromX: rika.x,
+                fromY: rika.y,
+              });
+            }
+          });
+
+          this.emitEventNear(rika.x, rika.y, {
+            type: isHeavy ? "rikaCompanionAttack" : "rikaAttack",
+            x: rika.x,
+            y: rika.y,
+            ownerId,
+            attackType: isHeavy ? "heavy" : attackType,
+            radius: isHeavy ? range : undefined,
+          });
+        }
+      }
+
+      const sideDeadzone = 8;
+      if (rika.anchorSide !== -1 && rika.anchorSide !== 1) {
+        rika.anchorSide = rika.x <= owner.x ? -1 : 1;
+      }
+      const relX = rika.x - owner.x;
+      if (relX < -sideDeadzone) {
+        rika.anchorSide = -1;
+      } else if (relX > sideDeadzone) {
+        rika.anchorSide = 1;
+      }
+      rika.facing = rika.anchorSide < 0 ? 1 : -1;
+
+      if (rika.state === "follow") {
+        const offsetX = rika.anchorSide * companion.followDistance;
+        const targetX = owner.x + offsetX;
+        const targetY = owner.y;
+        const followLerp = 0.24;
+
+        rika.targetId = null;
+
+        const dx = targetX - rika.x;
+        const dy = targetY - rika.y;
+        rika.x += dx * followLerp;
+        rika.y += dy * followLerp;
+
+        let closestTarget = null;
+        let closestDist = companion.detectRange;
+        this.enemies.forEach((enemy) => {
+          if (!enemy.alive) return;
+          const d = distance(owner.x, owner.y, enemy.x, enemy.y);
+          if (d < closestDist) {
+            closestDist = d;
+            closestTarget = enemy;
+          }
+        });
+        this.players.forEach((p) => {
+          if (!p.alive || p.id === ownerId) return;
+          if (!this.config.match.friendlyFire) return;
+          const d = distance(owner.x, owner.y, p.x, p.y);
+          if (d < closestDist) {
+            closestDist = d;
+            closestTarget = p;
           }
         });
 
-        this.emitEventNear(rika.x, rika.y, {
-          type: "rikaAttack",
-          x: rika.x,
-          y: rika.y,
-          ownerId,
-          attackType,
-        });
+        if (closestTarget) {
+          rika.state = "advance";
+          rika.targetId = closestTarget.id;
+        }
+      }
+
+      if (rika.state === "advance") {
+        const target = this.findRikaTarget(rika.targetId);
+        if (!target || !target.alive) {
+          rika.state = "follow";
+          rika.targetId = null;
+        } else {
+          const d = distance(rika.x, rika.y, target.x, target.y);
+          if (d > companion.detectRange * 1.5) {
+            rika.state = "follow";
+            rika.targetId = null;
+          } else {
+            const inAttackRange = d <= companion.attackRange + target.radius + 6;
+            if (inAttackRange) {
+              rika.state = "attack";
+            } else {
+              const toTarget = normalize(target.x - rika.x, target.y - rika.y);
+              rika.x += toTarget.x * companion.moveSpeed * dt;
+              rika.y += toTarget.y * companion.moveSpeed * dt;
+            }
+          }
+        }
+      }
+
+      if (rika.state === "attack") {
+        const target = this.findRikaTarget(rika.targetId);
+        if (!target || !target.alive) {
+          rika.state = "follow";
+          rika.targetId = null;
+        } else {
+          const d = distance(rika.x, rika.y, target.x, target.y);
+          if (d > companion.detectRange * 1.5) {
+            rika.state = "follow";
+            rika.targetId = null;
+          } else if (d > companion.attackRange + target.radius + 10) {
+            rika.state = "advance";
+          } else if (rika.timer === Infinity && rika.attackTimer <= 0) {
+            rika.attackCounter = (Number.isFinite(rika.attackCounter) ? rika.attackCounter : 0) + 1;
+            const heavyEvery = Math.max(1, Math.floor(companion.heavyEvery || 10));
+            const isHeavy = rika.attackCounter % heavyEvery === 0;
+            const toTarget = normalize(target.x - rika.x, target.y - rika.y);
+            if (isHeavy) {
+              rika.attackTimer = companion.heavyCooldown;
+              const impactX = target.x;
+              const impactY = target.y;
+              const heavyRadius = companion.heavyRadius;
+              const heavyDamage = companion.heavyDamage * owner.modifiers.rikaDamageMul;
+              this.enemies.forEach((enemy) => {
+                if (!enemy.alive) return;
+                const distToImpact = distance(enemy.x, enemy.y, impactX, impactY);
+                if (distToImpact > heavyRadius + enemy.radius) return;
+                this.combat.applyDamage({
+                  target: enemy,
+                  source: owner,
+                  amount: heavyDamage,
+                  kind: "rikaHeavy",
+                  knockback: companion.heavyKnockback,
+                  knockbackDistanceCap: companion.heavyKnockbackDistance,
+                  fromX: impactX,
+                  fromY: impactY,
+                });
+              });
+              this.players.forEach((p) => {
+                if (!p.alive || p.id === ownerId) return;
+                if (!this.config.match.friendlyFire) return;
+                const distToImpact = distance(p.x, p.y, impactX, impactY);
+                if (distToImpact > heavyRadius + p.radius) return;
+                this.combat.applyDamage({
+                  target: p,
+                  source: owner,
+                  amount: heavyDamage,
+                  kind: "rikaHeavy",
+                  knockback: companion.heavyKnockback,
+                  knockbackDistanceCap: companion.heavyKnockbackDistance,
+                  fromX: impactX,
+                  fromY: impactY,
+                });
+              });
+              this.emitEventNear(rika.x, rika.y, {
+                type: "rikaCompanionAttack",
+                x: impactX,
+                y: impactY,
+                ownerId,
+                dirX: toTarget.x,
+                dirY: toTarget.y,
+                attackType: "heavy",
+                radius: heavyRadius,
+              });
+            } else {
+              const isPlayerTarget = target.kind === "player";
+              if (isPlayerTarget && !this.config.match.friendlyFire) {
+                rika.attackTimer = 0;
+              } else {
+                rika.attackTimer = companion.cooldown;
+                this.combat.applyDamage({
+                  target,
+                  source: owner,
+                  amount: companion.damage * owner.modifiers.rikaDamageMul,
+                  kind: "rika",
+                  knockback: companion.knockback,
+                  fromX: rika.x,
+                  fromY: rika.y,
+                });
+                this.emitEventNear(rika.x, rika.y, {
+                  type: "rikaCompanionAttack",
+                  x: rika.x,
+                  y: rika.y,
+                  ownerId,
+                  dirX: toTarget.x,
+                  dirY: toTarget.y,
+                  attackType: "normal",
+                });
+              }
+            }
+          }
+        }
       }
     });
   }
@@ -1567,12 +2394,44 @@ class GameServer {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
-    player.cast = {
-      type: "rika",
-      timer: kit.rika.startup,
-      dirX: aim.x,
-      dirY: aim.y,
-    };
+
+    if (this.rikas.has(player.id)) {
+      const rika = this.rikas.get(player.id);
+      let nearestEnemy = null;
+      let nearestDist = Infinity;
+      this.enemies.forEach((enemy) => {
+        if (!enemy.alive) return;
+        const d = distance(rika.x, rika.y, enemy.x, enemy.y);
+        if (d < nearestDist && d <= kit.rika.impulseDetectRange) {
+          nearestDist = d;
+          nearestEnemy = enemy;
+        }
+      });
+      if (nearestEnemy) {
+        player.cast = {
+          type: "rikaImpulse",
+          timer: kit.rika.startup,
+          dirX: aim.x,
+          dirY: aim.y,
+          targetId: nearestEnemy.id,
+        };
+      } else {
+        player.cast = {
+          type: "rikaDash",
+          timer: kit.rika.startup,
+          dirX: aim.x,
+          dirY: aim.y,
+        };
+      }
+    } else {
+      player.rikaBuffTime = kit.cursedWave ? kit.cursedWave.comboWindow : 3;
+      player.cast = {
+        type: "rika",
+        timer: kit.rika.startup,
+        dirX: aim.x,
+        dirY: aim.y,
+      };
+    }
     return true;
   }
 
@@ -1630,21 +2489,124 @@ class GameServer {
     });
   }
 
+  fireRikaImpulse(player, cast) {
+    const kit = this.getKit(player);
+    const rika = this.rikas.get(player.id);
+    if (!rika) return;
+    const damage = kit.rika.impulseDamage * player.modifiers.rikaDamageMul;
+
+    let targetEnemy = null;
+    this.enemies.forEach((enemy) => {
+      if (enemy.id === cast.targetId && enemy.alive) {
+        targetEnemy = enemy;
+      }
+    });
+
+    if (targetEnemy) {
+      this.combat.applyDamage({
+        target: targetEnemy,
+        source: player,
+        amount: damage,
+        kind: "rikaImpulse",
+        knockback: kit.rika.impulseKnockback,
+        fromX: rika.x,
+        fromY: rika.y,
+      });
+    }
+
+    this.enemies.forEach((enemy) => {
+      if (!enemy.alive || enemy.id === cast.targetId) return;
+      const d = distance(rika.x, rika.y, enemy.x, enemy.y);
+      if (d <= kit.rika.impulseRadius + enemy.radius) {
+        this.combat.applyDamage({
+          target: enemy,
+          source: player,
+          amount: damage * 0.5,
+          kind: "rikaImpulse",
+          knockback: kit.rika.impulseKnockback * 0.6,
+          fromX: rika.x,
+          fromY: rika.y,
+        });
+      }
+    });
+
+    this.players.forEach((other) => {
+      if (other.id === player.id || !other.alive) return;
+      if (!this.config.match.friendlyFire) return;
+      const d = distance(rika.x, rika.y, other.x, other.y);
+      if (d <= kit.rika.impulseRadius + other.radius) {
+        this.combat.applyDamage({
+          target: other,
+          source: player,
+          amount: damage * 0.5,
+          kind: "rikaImpulse",
+          knockback: kit.rika.impulseKnockback * 0.6,
+          fromX: rika.x,
+          fromY: rika.y,
+        });
+      }
+    });
+
+    this.emitEventNear(rika.x, rika.y, {
+      type: "rikaImpulse",
+      x: rika.x,
+      y: rika.y,
+      radius: kit.rika.impulseRadius,
+      playerId: player.id,
+    });
+  }
+
+  fireRikaDash(player, cast) {
+    const kit = this.getKit(player);
+    const rika = this.rikas.get(player.id);
+    if (!rika) return;
+    const startX = rika.x;
+    const startY = rika.y;
+    const dist = kit.rika.dashDistance;
+    rika.x += cast.dirX * dist;
+    rika.y += cast.dirY * dist;
+
+    rika.x = Math.max(0, Math.min(this.map ? this.map.width || 4000 : 4000, rika.x));
+    rika.y = Math.max(0, Math.min(this.map ? this.map.height || 3000 : 3000, rika.y));
+
+    this.emitEventNear(startX, startY, {
+      type: "rikaDash",
+      startX,
+      startY,
+      endX: rika.x,
+      endY: rika.y,
+      playerId: player.id,
+    });
+  }
+
   tryCastDashSlash(player) {
     const kit = this.getKit(player);
-    if (!this.canUseSkill(player, kit.dashSlash.energy, "e", kit.dashSlash.cooldown)) {
+    const comboActive = player.rikaBuffTime > 0 && player.character === "yuta";
+    const energyCost = comboActive ? YUTA.cursedWave.energy : kit.dashSlash.energy;
+    const cd = comboActive ? YUTA.cursedWave.cooldown : kit.dashSlash.cooldown;
+    if (!this.canUseSkill(player, energyCost, "space", cd)) {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     if (Math.abs(aim.x) < 0.001 && Math.abs(aim.y) < 0.001) {
       aim.x = 1;
     }
-    player.cast = {
-      type: "dashSlash",
-      timer: kit.dashSlash.startup,
-      dirX: aim.x,
-      dirY: aim.y,
-    };
+    if (comboActive) {
+      player.rikaBuffTime = 0;
+      player.cast = {
+        type: "cursedWave",
+        timer: YUTA.cursedWave.startup,
+        dirX: aim.x,
+        dirY: aim.y,
+      };
+    } else {
+      player.cast = {
+        type: "dashSlash",
+        timer: kit.dashSlash.startup,
+        dirX: aim.x,
+        dirY: aim.y,
+      };
+    }
     return true;
   }
 
@@ -1653,51 +2615,18 @@ class GameServer {
     const dirX = cast.dirX;
     const dirY = cast.dirY;
     const dist = kit.dashSlash.distance * player.modifiers.dashSlashRangeMul;
-    const damage = kit.dashSlash.damage * player.modifiers.dashSlashDamageMul;
 
-    this.enemies.forEach((enemy) => {
-      if (!enemy.alive) return;
-      const toTarget = normalize(enemy.x - player.x, enemy.y - player.y);
-      const dotForward = dirX * toTarget.x + dirY * toTarget.y;
-      if (dotForward < 0.3) return;
-      const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d <= dist + enemy.radius) {
-        this.combat.applyDamage({
-          target: enemy,
-          source: player,
-          amount: damage,
-          kind: "dashSlash",
-          knockback: 120,
-          fromX: player.x,
-          fromY: player.y,
-        });
-      }
-    });
-
-    this.players.forEach((target) => {
-      if (target.id === player.id || !target.alive) return;
-      if (!this.config.match.friendlyFire) return;
-      const toTarget = normalize(target.x - player.x, target.y - player.y);
-      const dotForward = dirX * toTarget.x + dirY * toTarget.y;
-      if (dotForward < 0.3) return;
-      const d = distance(player.x, player.y, target.x, target.y);
-      if (d <= dist + target.radius) {
-        this.combat.applyDamage({
-          target,
-          source: player,
-          amount: damage,
-          kind: "dashSlash",
-          knockback: 120,
-          fromX: player.x,
-          fromY: player.y,
-        });
-      }
-    });
-
-    this.moveEntityWithCollisions(player, dirX * dist, dirY * dist, true);
+    // Start sliding dash (no damage at cast time)
+    player.dashSlash = {
+      dirX,
+      dirY,
+      remainingDist: dist,
+      startX: player.x,
+      startY: player.y,
+    };
 
     this.emitEventNear(player.x, player.y, {
-      type: "dashSlash",
+      type: "dashSlashStart",
       x: player.x,
       y: player.y,
       playerId: player.id,
@@ -1706,11 +2635,45 @@ class GameServer {
     });
   }
 
+  applyDashSlashAoE(source, x, y, damage, radius, knockback) {
+    this.enemies.forEach((enemy) => {
+      if (!enemy.alive) return;
+      const d = distance(x, y, enemy.x, enemy.y);
+      if (d <= radius + enemy.radius) {
+        this.combat.applyDamage({
+          target: enemy,
+          source,
+          amount: damage,
+          kind: "dashSlash",
+          knockback,
+          fromX: x,
+          fromY: y,
+        });
+      }
+    });
+    this.players.forEach((target) => {
+      if (target.id === source.id || !target.alive) return;
+      if (!this.config.match.friendlyFire) return;
+      const d = distance(x, y, target.x, target.y);
+      if (d <= radius + target.radius) {
+        this.combat.applyDamage({
+          target,
+          source,
+          amount: damage,
+          kind: "dashSlash",
+          knockback,
+          fromX: x,
+          fromY: y,
+        });
+      }
+    });
+  }
+
   tryCastFullRika(player) {
     const kit = this.getKit(player);
     if (player.character !== "yuta") return false;
     if (this.rikas.has(player.id)) return false;
-    if (!this.canUseSkill(player, kit.fullRika.energy, "r", kit.fullRika.cooldown)) {
+    if (!this.canUseSkill(player, kit.fullRika.energy, "e", kit.fullRika.cooldown)) {
       return false;
     }
     player.cast = {
@@ -1723,12 +2686,23 @@ class GameServer {
   fireFullRika(player) {
     const kit = this.getKit(player);
     const duration = kit.fullRika.duration * player.modifiers.fullRikaDurationMul;
+    const existing = this.rikas.get(player.id);
+    const wasPermanent = existing && existing.timer === Infinity;
+    const anchorSide = existing && (existing.anchorSide === 1 || existing.anchorSide === -1)
+      ? existing.anchorSide
+      : -1;
     this.rikas.set(player.id, {
       x: player.x,
       y: player.y,
       ownerId: player.id,
       timer: duration,
       attackTimer: 0.5,
+      facing: anchorSide < 0 ? 1 : -1,
+      anchorSide,
+      state: "follow",
+      targetId: null,
+      attackCounter: 0,
+      _restorePermanent: wasPermanent,
     });
     this.emitEventNear(player.x, player.y, {
       type: "fullRika",
@@ -1741,62 +2715,246 @@ class GameServer {
 
   tryCastPureLove(player) {
     const kit = this.getKit(player);
-    if (!this.canUseSkill(player, kit.pureLove.energy, "f", kit.pureLove.cooldown)) {
+    if (player.character !== "yuta") return false;
+    if (!this.rikas.has(player.id)) return false;
+    if (!this.canUseSkill(player, kit.pureLove.energy, "r", kit.pureLove.cooldown)) {
       return false;
     }
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
       type: "pureLove",
       timer: kit.pureLove.startup,
+      dirX: aim.x,
+      dirY: aim.y,
     };
+    const chargeOffset = 150;
+    this.emitEventNear(player.x, player.y, {
+      type: "pureLoveCharge",
+      x: player.x + aim.x * chargeOffset,
+      y: player.y + aim.y * chargeOffset,
+      playerId: player.id,
+      dirX: aim.x,
+      dirY: aim.y,
+      duration: kit.pureLove.startup,
+    });
     return true;
   }
 
-  firePureLove(player) {
+  firePureLove(player, cast) {
     const kit = this.getKit(player);
-    const radius = kit.pureLove.radius * player.modifiers.pureLoveRadiusMul;
-    const damage = kit.pureLove.damage * player.modifiers.pureLoveDamageMul;
+    const dir = normalize(cast.dirX, cast.dirY);
+    const width = kit.pureLove.radius * player.modifiers.pureLoveRadiusMul;
+    const offset = kit.pureLove.beamOffset || 60;
 
-    this.enemies.forEach((enemy) => {
-      if (!enemy.alive) return;
-      const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d <= radius + enemy.radius) {
-        const falloff = Math.max(0.3, 1 - (d - enemy.radius) / radius);
-        this.combat.applyDamage({
-          target: enemy,
-          source: player,
-          amount: Math.round(damage * falloff),
-          kind: "pureLove",
-          knockback: kit.pureLove.knockback * falloff,
-          fromX: player.x,
-          fromY: player.y,
-        });
-      }
-    });
-
-    this.players.forEach((target) => {
-      if (target.id === player.id || !target.alive) return;
-      if (!this.config.match.friendlyFire) return;
-      const d = distance(player.x, player.y, target.x, target.y);
-      if (d <= radius + target.radius) {
-        const falloff = Math.max(0.3, 1 - (d - target.radius) / radius);
-        this.combat.applyDamage({
-          target,
-          source: player,
-          amount: Math.round(damage * falloff),
-          kind: "pureLove",
-          knockback: kit.pureLove.knockback * falloff,
-          fromX: player.x,
-          fromY: player.y,
-        });
-      }
+    this.pureLoveBeams.set(player.id, {
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      dirX: dir.x,
+      dirY: dir.y,
+      width: width,
+      beamLength: kit.pureLove.beamLength,
+      lifetime: 4.0,
+      totalLifetime: 4.0,
+      ownerId: player.id,
+      hitTimes: new Map(),
     });
 
     this.emitEventNear(player.x, player.y, {
-      type: "pureLove",
+      type: "pureLoveBeam",
+      playerId: player.id,
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      dirX: dir.x,
+      dirY: dir.y,
+      width: width,
+      lifetime: 4.0,
+    });
+  }
+
+  updatePureLoveBeams(dt) {
+    this.pureLoveBeams.forEach((beam, ownerId) => {
+      const owner = this.players.get(ownerId);
+      if (!owner || !owner.alive) {
+        this.pureLoveBeams.delete(ownerId);
+        return;
+      }
+      if (!beam._domainCopy && !this.rikas.has(ownerId)) {
+        this.pureLoveBeams.delete(ownerId);
+        return;
+      }
+
+      beam.lifetime -= dt;
+      if (beam.lifetime <= 0) {
+        this.pureLoveBeams.delete(ownerId);
+        return;
+      }
+
+      const kit = this.getKit(owner);
+
+      // Slow redirection toward player aim (or nearest enemy in domain)
+      let targetDir;
+      if (this.domainSystem.hasActiveDomain(ownerId)) {
+        const t = this.findNearestEnemyInDomain(ownerId, beam.x, beam.y);
+        if (t) {
+          targetDir = normalize(t.x - beam.x, t.y - beam.y);
+        }
+      }
+      if (!targetDir) {
+        targetDir = normalize(owner.aimX - owner.x, owner.aimY - owner.y);
+      }
+      const currentAngle = Math.atan2(beam.dirY, beam.dirX);
+      const targetAngle = Math.atan2(targetDir.y, targetDir.x);
+      let angleDiff = targetAngle - currentAngle;
+      angleDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
+      const maxRotation = kit.pureLove.redirectSpeed * dt;
+      const rotation = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), maxRotation);
+      const cos = Math.cos(rotation);
+      const sin = Math.sin(rotation);
+      const newDirX = beam.dirX * cos - beam.dirY * sin;
+      const newDirY = beam.dirX * sin + beam.dirY * cos;
+      beam.dirX = newDirX;
+      beam.dirY = newDirY;
+
+      // Update beam origin position
+      const offset = kit.pureLove.beamOffset || 60;
+      beam.x = owner.x + beam.dirX * offset;
+      beam.y = owner.y + beam.dirY * offset;
+
+      // Continuous damage
+      const beamLength = kit.pureLove.beamLength;
+      let endX = beam.x + beam.dirX * beamLength;
+      let endY = beam.y + beam.dirY * beamLength;
+      const totalDamage = kit.pureLove.damage * owner.modifiers.pureLoveDamageMul;
+      const damagePerTick = totalDamage * dt / 4.0;
+      const knockbackPerTick = kit.pureLove.knockback * dt / 4.0;
+      const hitInterval = 0.15;
+      const now = this.elapsedSeconds;
+
+      if (beam._fullLength == null) {
+        beam._fullLength = beam.beamLength;
+      }
+
+      const barrierHit = this.findFirstDomainBarrierIntersection(beam.x, beam.y, endX, endY);
+      if (barrierHit) {
+        endX = barrierHit.x;
+        endY = barrierHit.y;
+        const dx = endX - beam.x;
+        const dy = endY - beam.y;
+        beam.beamLength = Math.sqrt(dx * dx + dy * dy);
+        this.domainSystem.damageBarrier(barrierHit.domain.ownerId, damagePerTick * 0.45);
+      } else {
+        if (beam.beamLength !== beam._fullLength) {
+          beam.beamLength = beam._fullLength;
+        }
+      }
+
+      this.enemies.forEach((enemy) => {
+        if (!enemy.alive) return;
+        const distToSegment = distancePointToSegment(enemy.x, enemy.y, beam.x, beam.y, endX, endY);
+        if (distToSegment > beam.width / 2 + enemy.radius) return;
+
+        const lastHit = beam.hitTimes.get(enemy.id) || -Infinity;
+        if (now - lastHit < hitInterval) return;
+        beam.hitTimes.set(enemy.id, now);
+
+        this.combat.applyDamage({
+          target: enemy,
+          source: owner,
+          amount: damagePerTick,
+          kind: "pureLove",
+          knockback: knockbackPerTick,
+          fromX: beam.x,
+          fromY: beam.y,
+        });
+      });
+
+      this.players.forEach((target) => {
+        if (target.id === ownerId || !target.alive) return;
+        if (!this.config.match.friendlyFire) return;
+        const distToSegment = distancePointToSegment(target.x, target.y, beam.x, beam.y, endX, endY);
+        if (distToSegment > beam.width / 2 + target.radius) return;
+
+        const lastHit = beam.hitTimes.get(target.id) || -Infinity;
+        if (now - lastHit < hitInterval) return;
+        beam.hitTimes.set(target.id, now);
+
+        this.combat.applyDamage({
+          target,
+          source: owner,
+          amount: damagePerTick,
+          kind: "pureLove",
+          knockback: knockbackPerTick,
+          fromX: beam.x,
+          fromY: beam.y,
+        });
+      });
+    });
+  }
+
+  fireCursedWave(player, cast) {
+    const kit = this.getKit(player);
+    const dirX = cast.dirX;
+    const dirY = cast.dirY;
+    const waveRange = kit.cursedWave.range;
+    const waveWidth = kit.cursedWave.width;
+    const damage = kit.cursedWave.damage * player.modifiers.pureLoveDamageMul;
+    const knockback = kit.cursedWave.knockback;
+    const toX = player.x + dirX * waveRange;
+    const toY = player.y + dirY * waveRange;
+
+    const canHit = (target) => {
+      const dx = target.x - player.x;
+      const dy = target.y - player.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > waveRange + target.radius + waveWidth * 0.5) {
+        return false;
+      }
+      const forward = dx * dirX + dy * dirY;
+      if (forward < -target.radius || forward > waveRange + target.radius + waveWidth * 0.5) {
+        return false;
+      }
+      const cutDist = distancePointToSegment(target.x, target.y, player.x, player.y, toX, toY);
+      return cutDist <= target.radius + waveWidth * 0.5;
+    };
+
+    const processTarget = (target) => {
+      if (!target.alive) return;
+      if (target.kind === "player" && target.id === player.id) {
+        this.combat.applyDamage({
+          target,
+          source: player,
+          amount: Math.round(damage * 0.35),
+          kind: "cursedWave",
+          knockback: knockback * 0.4,
+          fromX: player.x,
+          fromY: player.y,
+        });
+        return;
+      }
+      if (!canHit(target)) return;
+      this.combat.applyDamage({
+        target,
+        source: player,
+        amount: damage,
+        kind: "cursedWave",
+        knockback,
+        fromX: player.x,
+        fromY: player.y,
+      });
+    };
+
+    this.players.forEach(processTarget);
+    this.enemies.forEach(processTarget);
+
+    this.emitEventNear(player.x, player.y, {
+      type: "cursedWave",
       x: player.x,
       y: player.y,
       playerId: player.id,
-      radius,
+      dirX,
+      dirY,
+      range: waveRange,
+      width: waveWidth,
     });
   }
 
@@ -1977,6 +3135,53 @@ class GameServer {
     });
   }
 
+  findEnemyById(id) {
+    let found = null;
+    this.enemies.forEach((enemy) => {
+      if (enemy.id === id) found = enemy;
+    });
+    return found;
+  }
+
+  findNearestEnemy(x, y) {
+    let nearest = null;
+    let bestDist = Infinity;
+    this.enemies.forEach((enemy) => {
+      if (!enemy.alive) return;
+      const d = distance(x, y, enemy.x, enemy.y);
+      if (d < bestDist) {
+        bestDist = d;
+        nearest = enemy;
+      }
+    });
+    return nearest;
+  }
+
+  findNearestEnemyInDomain(ownerId, x, y) {
+    const domain = this.domainSystem.domains.get(ownerId);
+    if (!domain) return null;
+    let nearest = null;
+    let bestDist = Infinity;
+    this.enemies.forEach((enemy) => {
+      if (!enemy.alive) return;
+      const d = distance(x, y, enemy.x, enemy.y);
+      if (d >= bestDist) return;
+      if (distance(enemy.x, enemy.y, domain.x, domain.y) <= domain.radius + enemy.radius) {
+        bestDist = d;
+        nearest = enemy;
+      }
+    });
+    return nearest;
+  }
+
+  findRikaTarget(id) {
+    if (!id) return null;
+    if (id.startsWith("p")) {
+      return this.players.get(id) || null;
+    }
+    return this.findEnemyById(id);
+  }
+
   emitEventNear(x, y, event, radius = 1100) {
     this.players.forEach((player) => {
       if (distance(player.x, player.y, x, y) <= radius) {
@@ -2008,11 +3213,11 @@ class GameServer {
         character: player.character || "gojo",
         x: Math.round(player.x),
         y: Math.round(player.y),
-        vx: Number(player.vx.toFixed(2)),
-        vy: Number(player.vy.toFixed(2)),
-        hp: Number(player.hp.toFixed(1)),
+        vx: Math.round(player.vx * 100) / 100,
+        vy: Math.round(player.vy * 100) / 100,
+        hp: Math.round(player.hp * 10) / 10,
         maxHp: player.maxHp,
-        energy: Number(player.energy.toFixed(1)),
+        energy: Math.round(player.energy * 10) / 10,
         maxEnergy: player.maxEnergy,
         alive: player.alive,
         level: player.level,
@@ -2021,6 +3226,19 @@ class GameServer {
         animState: player.animState,
         invuln: player.invulnTimer > 0,
         rikaActive: this.rikas.has(player.id),
+        rikaX: (() => { const r = this.rikas.get(player.id); return r ? Math.round(r.x * 10) / 10 : undefined; })(),
+        rikaY: (() => { const r = this.rikas.get(player.id); return r ? Math.round(r.y * 10) / 10 : undefined; })(),
+        rikaFacing: (() => { const r = this.rikas.get(player.id); return r ? r.facing : undefined; })(),
+        rikaState: (() => { const r = this.rikas.get(player.id); return r ? r.state : undefined; })(),
+        pureLoveActive: this.pureLoveBeams.has(player.id),
+        pureLoveX: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.x * 10) / 10 : undefined; })(),
+        pureLoveY: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.y * 10) / 10 : undefined; })(),
+        pureLoveDirX: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.dirX * 100) / 100 : undefined; })(),
+        pureLoveDirY: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.dirY * 100) / 100 : undefined; })(),
+        pureLoveWidth: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.width * 10) / 10 : undefined; })(),
+        pureLoveBeamLength: (() => { const b = this.pureLoveBeams.get(player.id); return b ? b.beamLength : undefined; })(),
+        pureLoveLifetime: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.lifetime * 10) / 10 : undefined; })(),
+        pureLoveTotalLifetime: (() => { const b = this.pureLoveBeams.get(player.id); return b ? b.totalLifetime : undefined; })(),
       });
     });
 
@@ -2031,12 +3249,12 @@ class GameServer {
         type: enemy.type,
         x: Math.round(enemy.x),
         y: Math.round(enemy.y),
-        hp: Number(enemy.hp.toFixed(1)),
+        hp: Math.round(enemy.hp * 10) / 10,
         maxHp: enemy.maxHp,
         alive: enemy.alive,
         state: enemy.state,
         frozen: enemy.freezeTimer > 0,
-        freezeLeft: Number(enemy.freezeTimer.toFixed(2)),
+        freezeLeft: Math.round(enemy.freezeTimer * 100) / 100,
       });
     });
 
@@ -2055,10 +3273,10 @@ class GameServer {
         width: p.width,
         length: p.length,
         color: p.color,
-        life: Number((p.lifetime - p.age).toFixed(2)),
-        traveled: Number(p.traveled.toFixed(1)),
-        vx: Number(p.vx.toFixed(3)),
-        vy: Number(p.vy.toFixed(3)),
+        life: Math.round((p.lifetime - p.age) * 100) / 100,
+        traveled: Math.round(p.traveled * 10) / 10,
+        vx: Math.round(p.vx * 1000) / 1000,
+        vy: Math.round(p.vy * 1000) / 1000,
       });
     });
 
@@ -2099,9 +3317,9 @@ class GameServer {
       const item = currentArray[i];
       const key = item[keyField];
       seen.add(key);
-      const serialized = JSON.stringify(item);
-      if (cacheMap.get(key) !== serialized) {
-        cacheMap.set(key, serialized);
+      const hash = this._fastHash(item);
+      if (cacheMap.get(key) !== hash) {
+        cacheMap.set(key, hash);
         changed.push(item);
       }
     }
@@ -2114,10 +3332,22 @@ class GameServer {
       }
     });
 
-    return {
-      changed,
-      removed,
-    };
+    return { changed, removed };
+  }
+
+  _fastHash(obj) {
+    let h = 5381;
+    const keys = Object.keys(obj);
+    for (let i = 0; i < keys.length; i++) {
+      const val = obj[keys[i]];
+      if (val === null || val === undefined || typeof val === "object") continue;
+      const str = keys[i] + ":" + String(val);
+      for (let j = 0; j < str.length; j++) {
+        h = ((h << 5) + h) + str.charCodeAt(j);
+        h |= 0;
+      }
+    }
+    return h;
   }
 
   broadcastSnapshots() {
@@ -2140,7 +3370,7 @@ class GameServer {
         serverTime: this.now,
         tick: Math.floor((this.now - this.startedAt) / (1000 / this.config.net.tickRate)),
         phase: this.phaseName(),
-        elapsedSec: Number(this.elapsedSeconds.toFixed(1)),
+        elapsedSec: Math.round(this.elapsedSeconds * 10) / 10,
         delta: {
           players: playersDelta.changed,
           enemies: enemiesDelta.changed,
@@ -2169,12 +3399,12 @@ class GameServer {
           kills: player.kills,
           deaths: player.deaths,
           cooldowns: {
-            q: Number(player.cooldowns.q.toFixed(2)),
-            e: Number(player.cooldowns.e.toFixed(2)),
-            r: Number(player.cooldowns.r.toFixed(2)),
-            space: Number(player.cooldowns.space.toFixed(2)),
-            f: Number(player.cooldowns.f.toFixed(2)),
-            dodge: Number(player.dodgeCooldown.toFixed(2)),
+            q: Math.round(player.cooldowns.q * 100) / 100,
+            e: Math.round(player.cooldowns.e * 100) / 100,
+            r: Math.round(player.cooldowns.r * 100) / 100,
+            space: Math.round(player.cooldowns.space * 100) / 100,
+            f: Math.round(player.cooldowns.f * 100) / 100,
+            dodge: Math.round(player.dodgeCooldown * 100) / 100,
           },
           alive: player.alive,
           ackSeq: player.lastProcessedInputSeq,
@@ -2186,7 +3416,7 @@ class GameServer {
                 rarity: item.rarity,
               }))
             : null,
-          skillLock: this.domainSystem.isSkillLocked(),
+          skillLock: this.domainSystem.isSkillLockedForPlayer(player),
         },
       };
 

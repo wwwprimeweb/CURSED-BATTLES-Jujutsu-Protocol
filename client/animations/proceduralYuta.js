@@ -1,4 +1,4 @@
-import { drawM1Slash, drawDashSlashTrail, drawRikaSwing, drawPureLoveExplosion } from "./yutaEffects.js";
+import { drawM1Combined, drawCursedWave, drawRikaClawScratch, drawPureLoveExplosion } from "./yutaEffects.js";
 import { SkillVFX } from "../particles/proceduralEffects.js";
 
 export class YutaSkillEffects {
@@ -32,20 +32,65 @@ export class YutaSkillEffects {
     this.rikas.set(Date.now(), { x, y, life: duration });
   }
 
-  addRikaAttack(x, y) {
-    this.katanaSlashes.push({ type: "rika", x, y, life: 0.4 });
+  addRikaAttack(x, y, dirX = 1, dirY = 0, options = {}) {
+    let fx = dirX;
+    let fy = dirY;
+    const valid = Number.isFinite(fx) && Number.isFinite(fy) && Math.hypot(fx, fy) > 0.001;
+    if (!valid) {
+      const a = Math.random() * Math.PI * 2;
+      fx = Math.cos(a);
+      fy = Math.sin(a);
+    }
+    const life = Number.isFinite(options.life) ? Math.max(0.2, options.life) : 0.4;
+    const size = Number.isFinite(options.size) ? Math.max(0.6, options.size) : 1;
+    const intensity = Number.isFinite(options.intensity) ? Math.max(0.5, options.intensity) : 1;
+    this.katanaSlashes.push({
+      type: "rika",
+      x,
+      y,
+      dirX: fx,
+      dirY: fy,
+      life,
+      maxLife: life,
+      size,
+      intensity,
+    });
   }
 
   addPureLove(x, y, radius) {
     this.pureLoves.push({ x, y, radius, life: 0.8 });
   }
 
-  addKatanaSlash(x, y, dirX, dirY, combo) {
-    this.katanaSlashes.push({ type: "m1", x, y, dirX, dirY, combo, life: 0.3 });
+  addKatanaSlash(x, y, dirX, dirY, combo, options = {}) {
+    const range = Number.isFinite(options.range) ? Math.max(85, options.range) : 160;
+    const coneAngle = Number.isFinite(options.coneAngle) ? Math.max(0.5, options.coneAngle) : 0.6;
+
+    this.katanaSlashes.push({
+      type: "m1Combined",
+      x,
+      y,
+      dirX,
+      dirY,
+      combo,
+      range,
+      coneAngle,
+      life: 0.5,
+      maxLife: 0.5,
+    });
   }
 
-  addDashSlash(x, y, dirX, dirY) {
-    this.katanaSlashes.push({ type: "dash", x, y, dirX, dirY, life: 0.25 });
+  addCursedWave(x, y, dirX, dirY, range = 300, width = 120) {
+    this.katanaSlashes.push({
+      type: "cursedWave",
+      x,
+      y,
+      dirX,
+      dirY,
+      range,
+      width,
+      life: 0.6,
+      maxLife: 0.6,
+    });
   }
 
   render(ctx, camera) {
@@ -73,13 +118,18 @@ export class YutaSkillEffects {
       if (slash.life <= 0) continue;
       const sx = (slash.x - cx) * z + w * 0.5;
       const sy = (slash.y - cy) * z + h * 0.5;
-      const progress = 1 - slash.life / 0.3;
-      if (slash.type === "m1") {
-        drawM1Slash(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1);
-      } else if (slash.type === "dash") {
-        drawDashSlashTrail(ctx, sx, sy, slash.dirX, slash.dirY, progress);
+      const maxLife = Number.isFinite(slash.maxLife) ? slash.maxLife : 0.3;
+      const progress = 1 - slash.life / maxLife;
+      if (slash.type === "m1Combined") {
+        drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle);
       } else if (slash.type === "rika") {
-        drawRikaSwing(ctx, sx, sy, progress);
+        const size = Number.isFinite(slash.size) ? slash.size : 1;
+        const intensity = Number.isFinite(slash.intensity) ? slash.intensity : 1;
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.scale(size, size);
+        drawRikaClawScratch(ctx, 0, 0, slash.dirX, slash.dirY, progress, intensity);
+        ctx.restore();
       }
     }
   }

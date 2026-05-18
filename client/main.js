@@ -91,13 +91,19 @@ function handleJoined(msg) {
   console.log(`[DIAG] handleJoined: playerId=${msg.playerId}, joined set to true`);
   state.joined = true;
   state.playerId = msg.playerId;
-  state.sessionToken = msg.sessionToken;
-  localStorage.setItem(SESSION_KEY, state.sessionToken);
+  state.sessionToken = msg.sessionToken || state.sessionToken;
+  if (state.sessionToken) {
+    localStorage.setItem(SESSION_KEY, state.sessionToken);
+  }
   renderer.setMap(msg.map);
   input.setEnabled(true);
   console.log(`[DIAG] Camera now at (${renderer.camera.x}, ${renderer.camera.y})`);
   startScreen.classList.remove("visible");
-  if (menuBg) menuBg.style.opacity = "0";
+  startScreen.style.display = "none";
+  if (menuBg) {
+    menuBg.style.opacity = "0";
+    menuBg.style.display = "none";
+  }
 }
 
 function handleConnectionState(info) {
@@ -112,16 +118,27 @@ function handlePong(msg) {
   }
 }
 
+const CHAR_MOVE_SPEED = {
+  gojo: 172, yuta: 178, sukuna: 168, yuji: 180, megumi: 175, hakari: 170,
+};
+
 function applyInputPrediction(pred, payload, dt) {
   const keys = payload.keys;
   const moveX = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   const moveY = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
   const len = Math.hypot(moveX, moveY);
-  const nx = len > 0 ? moveX / len : 0;
-  const ny = len > 0 ? moveY / len : 0;
-  const speed = 172;
+  if (len < 0.001) return;
+  const nx = moveX / len;
+  const ny = moveY / len;
+  const speed = CHAR_MOVE_SPEED[state.selectedChar] || 172;
   pred.x += nx * speed * dt;
   pred.y += ny * speed * dt;
+  if (renderer && renderer.map) {
+    const m = renderer.map;
+    const r = 38;
+    pred.x = Math.max(r, Math.min(m.width - r, pred.x));
+    pred.y = Math.max(r, Math.min(m.height - r, pred.y));
+  }
 }
 
 function handleSnapshot(snapshot) {
@@ -188,16 +205,73 @@ function handleEvents(events) {
     if (ev.type === "hit") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffd7e2", count: 6, speed: 140, life: 0.15, size: 2 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 4, speed: 80, life: 0.12, size: 3 });
+      if (ev.kind === "m1") {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 260, life: 0.25, size: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 14, speed: 200, life: 0.28, size: 2.5 });
+        renderer.yutaVisual && renderer.yutaVisual.triggerHit(ev.x, ev.y, 1.2);
+      }
       audio.play("hit");
     } else if (ev.type === "m1") {
       const dirX = ev.dirX || (renderer.playerFacing.get(ev.playerId) || 1);
       const dirY = ev.dirY || 0;
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 5, speed: 100, life: 0.12, size: 1.5 });
-      particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#66c6ff", count: 4, life: 0.15 });
-      if (ev.combo === 3) {
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 150, life: 0.1, size: 1.8 });
+      const combo = ev.combo || 1;
+      const attackerCharacter = ev.character || "gojo";
+      if (attackerCharacter === "yuta") {
+        const slashRange = Number.isFinite(ev.slashRange) ? ev.slashRange : 160;
+        const perpX = -dirY;
+        const perpY = dirX;
+        const midX = ev.x + dirX * slashRange * 0.5;
+        const midY = ev.y + dirY * slashRange * 0.5;
+        const tipX = ev.x + dirX * slashRange * 0.85;
+        const tipY = ev.y + dirY * slashRange * 0.85;
+
+        renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange);
+
+        particles.spawnBurst({ x: midX, y: midY, color: "#ff66b2", count: 12, speed: 220, life: 0.3, size: 3 });
+        particles.spawnBurst({ x: tipX, y: tipY, color: "#ff99cc", count: 8, speed: 180, life: 0.25, size: 2.5 });
+        particles.spawnLine({ x: midX, y: midY, dirX, dirY, color: "#ffccdd", count: 6, life: 0.2 });
+
+        for (let k = 0; k < 10; k += 1) {
+          const t = k / 9;
+          const spread = (t - 0.5) * 40;
+          const px = midX + perpX * spread;
+          const py = midY + perpY * spread;
+          particles.spawnBurst({
+            x: px,
+            y: py,
+            color: k % 2 === 0 ? "#ffd6ea" : "#ff88c4",
+            count: 3,
+            speed: 120 + Math.random() * 100,
+            life: 0.14 + Math.random() * 0.08,
+            size: 1.5 + Math.random() * 1.2,
+          });
+        }
+
+        if (combo === 3) {
+          particles.spawnBurst({ x: tipX, y: tipY, color: "#ffffff", count: 14, speed: 260, life: 0.32, size: 3.5 });
+          for (let m = 0; m < 8; m += 1) {
+            const spread = (m / 7 - 0.5) * 50;
+            const px = tipX + perpX * spread;
+            const py = tipY + perpY * spread;
+            particles.spawnBurst({
+              x: px,
+              y: py,
+              color: m % 2 === 0 ? "#ffffff" : "#ff66b2",
+              count: 4,
+              speed: 160 + Math.random() * 140,
+              life: 0.18 + Math.random() * 0.1,
+              size: 2 + Math.random() * 1.5,
+            });
+          }
+        }
+      } else {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 5, speed: 100, life: 0.12, size: 1.5 });
+        particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#66c6ff", count: 4, life: 0.15 });
+        if (combo === 3) {
+          particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 150, life: 0.1, size: 1.8 });
+        }
+        renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo);
       }
-      renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, ev.combo || 1);
     } else if (ev.type === "kill" || ev.type === "enemyDeath") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff78a0", count: 16, speed: 220, life: 0.33, size: 2.8 });
       audio.play("kill");
@@ -240,30 +314,129 @@ function handleEvents(events) {
     } else if (ev.type === "teleportEnd") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f1fbff", count: 12, speed: 165, life: 0.16, size: 2.1 });
     } else if (ev.type === "rika") {
-      renderer.yutaVisual.triggerRika(ev.x, ev.y, ev.dirX, ev.dirY);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 20, speed: 250, life: 0.4, size: 3 });
+      const dirX = Number.isFinite(ev.dirX) ? ev.dirX : (renderer.playerFacing.get(ev.playerId) || 1);
+      const dirY = Number.isFinite(ev.dirY) ? ev.dirY : 0;
+      const impactRange = 140;
+      const impactX = ev.x + dirX * impactRange;
+      const impactY = ev.y + dirY * impactRange;
+
+      renderer.yutaVisual.triggerRika(ev.x, ev.y, dirX, dirY);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 200, life: 0.28, size: 2.4 });
+      particles.spawnBurst({ x: impactX, y: impactY, color: "#ff66b2", count: 24, speed: 300, life: 0.38, size: 3.2 });
+      particles.spawnBurst({ x: impactX, y: impactY, color: "#ffffff", count: 10, speed: 210, life: 0.24, size: 2.2 });
+      particles.spawnLine({ x: impactX, y: impactY, dirX, dirY, color: "#ffd0e8", count: 7, life: 0.22 });
       audio.play("skillRed");
-    } else if (ev.type === "dashSlash") {
-      renderer.yutaVisual.triggerDashSlash(ev.x, ev.y, ev.dirX, ev.dirY);
-      particles.spawnLine({ x: ev.x, y: ev.y, dirX: ev.dirX, dirY: ev.dirY, color: "#ff99cc", count: 8, life: 0.3 });
+    } else if (ev.type === "rikaImpulse") {
+      renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, 0, 0, "heavy", ev.radius);
+      renderer.yutaVisual.triggerRikaImpulse(ev.x, ev.y, ev.radius);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff3399", count: 40, speed: 400, life: 0.6, size: 6 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 300, life: 0.45, size: 4 });
+      audio.play("skillPurple");
+    } else if (ev.type === "rikaDash") {
+      renderer.yutaVisual.triggerRikaDash(ev.startX, ev.startY, ev.endX, ev.endY);
+      particles.spawnBurst({ x: ev.startX, y: ev.startY, color: "#ff99cc", count: 15, speed: 200, life: 0.3, size: 3 });
+      particles.spawnBurst({ x: ev.endX, y: ev.endY, color: "#ff66b2", count: 20, speed: 300, life: 0.4, size: 4 });
       audio.play("skillBlue");
+    } else if (ev.type === "dashSlash") {
+      renderer.yutaVisual.triggerDashSlash(ev.startX || ev.x, ev.startY || ev.y, ev.x, ev.y, ev.radius);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 25, speed: 350, life: 0.5, size: 4 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 200, life: 0.35, size: 2.5 });
+      audio.play("skillBlue");
+    } else if (ev.type === "dashSlashDelayed") {
+      renderer.yutaVisual.triggerSlashCuts(ev.x, ev.y);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 30, speed: 400, life: 0.55, size: 5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 250, life: 0.4, size: 3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 25, speed: 300, life: 0.5, size: 3.5 });
     } else if (ev.type === "fullRika") {
       renderer.yutaVisual.triggerFullRika(ev.x, ev.y, ev.duration || 20);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc3388", count: 30, speed: 300, life: 0.6, size: 4 });
       audio.play("skillPurple");
     } else if (ev.type === "rikaAttack") {
-      renderer.yutaVisual.effects.addRikaAttack(ev.x, ev.y);
+      renderer.yutaVisual.effects.addRikaAttack(ev.x, ev.y, ev.dirX, ev.dirY);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 180, life: 0.3, size: 2.5 });
-    } else if (ev.type === "pureLove") {
-      renderer.yutaVisual.triggerPureLove(ev.x, ev.y, ev.radius || 260);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 40, speed: 400, life: 0.8, size: 5 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 30, speed: 300, life: 0.6, size: 3.5 });
+    } else if (ev.type === "rikaCompanionAttack") {
+      const heavy = ev.attackType === "heavy";
+      renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, ev.dirX, ev.dirY, ev.attackType, ev.radius);
+      particles.spawnBurst({
+        x: ev.x,
+        y: ev.y,
+        color: heavy ? "#ffd2ea" : "#cc3388",
+        count: heavy ? 22 : 8,
+        speed: heavy ? 290 : 150,
+        life: heavy ? 0.45 : 0.25,
+        size: heavy ? 4 : 2,
+      });
+      if (heavy) {
+        renderer.addMarker({
+          x: ev.x,
+          y: ev.y,
+          radius: ev.radius || 170,
+          color: "rgba(255,130,200,0.55)",
+          ttl: 0.52,
+        });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 16, speed: 220, life: 0.32, size: 3.2 });
+      }
+    } else if (ev.type === "pureLoveCharge") {
+      renderer.yutaVisual.triggerPureLoveCharge(ev.playerId, ev.x, ev.y, ev.dirX, ev.dirY, ev.duration);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 8, speed: 120, life: 0.4, size: 2 });
+    } else if (ev.type === "pureLoveBeam") {
+      renderer.yutaVisual.triggerPureLoveBeam(ev.x, ev.y, ev.dirX, ev.dirY, ev.width, ev.lifetime);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 300, life: 0.5, size: 3.5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 15, speed: 200, life: 0.4, size: 2.5 });
+      audio.play("skillPurple");
+    } else if (ev.type === "cursedWave") {
+      const waveRange = Number.isFinite(ev.range) ? ev.range : 300;
+      const waveWidth = Number.isFinite(ev.width) ? ev.width : 120;
+      const dirX = ev.dirX || (renderer.playerFacing.get(ev.playerId) || 1);
+      const dirY = ev.dirY || 0;
+      const midX = ev.x + dirX * waveRange * 0.4;
+      const midY = ev.y + dirY * waveRange * 0.4;
+
+      renderer.yutaVisual.triggerCursedWave(ev.x, ev.y, dirX, dirY, waveRange, waveWidth);
+
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff3399", count: 12, speed: 200, life: 0.3, size: 3 });
+      particles.spawnBurst({ x: midX, y: midY, color: "#ff66cc", count: 18, speed: 280, life: 0.4, size: 4 });
+      particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#ff99cc", count: 10, life: 0.3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 150, life: 0.2, size: 2.5 });
+
       audio.play("skillPurple");
     } else if (ev.type === "domainStart") {
       renderer.onDomainStart(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d6ebff", count: 28, speed: 320, life: 0.45, size: 3.1 });
       audio.play("domainStart");
       hud.pushNotice("Dominio ativado", "domain", "a atmosfera mudou");
+
+      if (ev.ownerId === state.playerId && ev.copiedCharacter !== undefined) {
+        if (!document.getElementById("domain-hint-style")) {
+          const styleEl = document.createElement("style");
+          styleEl.id = "domain-hint-style";
+          styleEl.textContent = "@keyframes dhFadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}";
+          document.head.appendChild(styleEl);
+        }
+        const hintEl = document.createElement("div");
+        hintEl.id = "domain-hint";
+        hintEl.style.cssText =
+          "position:fixed;bottom:120px;left:50%;transform:translateX(-50%);" +
+          "background:rgba(8,13,22,0.85);border:1px solid rgba(255,102,178,0.5);" +
+          "border-radius:14px;padding:14px 28px;text-align:center;z-index:9999;" +
+          "backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,0.5);" +
+          "animation:dhFadeIn 0.25s ease-out;";
+        const cap = ev.copiedCharacter ? ev.copiedCharacter.charAt(0).toUpperCase() + ev.copiedCharacter.slice(1) : "Pure Love";
+        hintEl.innerHTML =
+          '<div style="font-size:15px;color:#ff99cc;font-weight:bold;letter-spacing:0.5px;">' +
+          'Clique [F] para ativar habilidade' +
+          '</div>' +
+          '<div style="font-size:12px;color:#b3b3b3;margin-top:4px;">' +
+          cap +
+          '</div>';
+        document.body.appendChild(hintEl);
+        setTimeout(() => {
+          hintEl.style.transition = "opacity 0.3s,transform 0.3s";
+          hintEl.style.opacity = "0";
+          hintEl.style.transform = "translateX(-50%) translateY(10px)";
+          setTimeout(() => hintEl.remove(), 300);
+        }, 4000);
+      }
     } else if (ev.type === "domainCollapse") {
       renderer.onDomainCollapse(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f4d2ff", count: 20, speed: 260, life: 0.32, size: 2.9 });
@@ -272,8 +445,36 @@ function handleEvents(events) {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#c080ff", count: 20, speed: 200, life: 0.4, size: 4 });
         renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 100, color: "rgba(200,150,255,0.6)", ttl: 0.6 });
       }
+    } else if (ev.type === "domainBarrierHit") {
+      const byEnemy = ev.attackerKind === "enemy";
+      const isPurple = ev.projectileType === "purple";
+      const baseColor = byEnemy ? "#ffae62" : (isPurple ? "#b995ff" : "#a9d9ff");
+      const coreColor = byEnemy ? "#ffd7b0" : "#ffffff";
+      particles.spawnBurst({
+        x: ev.x,
+        y: ev.y,
+        color: baseColor,
+        count: byEnemy ? 16 : 12,
+        speed: byEnemy ? 220 : 180,
+        life: byEnemy ? 0.24 : 0.2,
+        size: byEnemy ? 2.6 : 2.2,
+      });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: coreColor, count: byEnemy ? 7 : 5, speed: 120, life: 0.14, size: 1.8 });
+      particles.spawnLine({
+        x: ev.x,
+        y: ev.y,
+        dirX: Math.cos(Date.now() * 0.01),
+        dirY: Math.sin(Date.now() * 0.01),
+        color: byEnemy ? "#ffd7b0" : "#d6ecff",
+        count: byEnemy ? 5 : 4,
+        life: 0.12,
+      });
     } else if (ev.type === "freezeTick") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f8fdff", count: 8, speed: 125, life: 0.18, size: 2.1 });
+    } else if (ev.type === "blueExplosion") {
+      renderer.addBlueExplosion({ x: ev.x, y: ev.y, radius: ev.radius || 200 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66ccff", count: 30, speed: 250, life: 0.4, size: 3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 15, speed: 150, life: 0.3, size: 2 });
     } else if (ev.type === "redExplosion") {
       renderer.addRedExplosion({ x: ev.x, y: ev.y, radius: ev.radius || 110 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff4d6d", count: 25, speed: 350, life: 0.3, size: 2.5 });
@@ -317,7 +518,11 @@ function handleMatchReset() {
     state.localPred.y = state.you.y;
   }
   startScreen.classList.remove("visible");
-  if (menuBg) menuBg.style.opacity = "0";
+  startScreen.style.display = "none";
+  if (menuBg) {
+    menuBg.style.opacity = "0";
+    menuBg.style.display = "none";
+  }
   input.setEnabled(true);
   input.resetActionKeys();
   hud.hideUpgradeChoices();
@@ -371,20 +576,19 @@ function start() {
   localStorage.setItem(NICK_KEY, nick);
   audio.unlock();
 
-  if (state.connected && !state.joined) {
-    const savedToken = state.sessionToken;
+  const char = state.selectedChar || 'gojo';
+  state.sessionToken = state.sessionToken || localStorage.getItem(SESSION_KEY) || "";
+
+  if (state.connected || state.reconnecting || state.joined) {
+    clearTimeout(net.reconnectTimer);
     net.disconnect();
-    setTimeout(() => {
-      net.connect({ name: nick, sessionToken: savedToken });
-    }, 300);
-    return;
   }
 
-  if (state.connected || state.reconnecting) {
-    return;
-  }
+  state.joined = false;
+  state.reconnecting = false;
+  state.connected = false;
 
-  net.connect({ name: nick, sessionToken: state.sessionToken, character: state.selectedChar || 'gojo' });
+  net.connect({ name: nick, sessionToken: state.sessionToken, character: char });
 }
 
 function sendInputIfNeeded(nowMs) {
@@ -433,7 +637,7 @@ function loop(nowMs) {
     renderer.updateCamera(state.localPred.x, state.localPred.y);
   }
 
-  interpolation.updateSmoothing();
+  interpolation.updateSmoothing(1 / 60);
   particles.update(1 / 60);
   renderer.updateEffects(1 / 60);
 
@@ -446,6 +650,7 @@ function loop(nowMs) {
     interpolation,
     youId: state.playerId,
     you: state.you,
+    localPred: state.localPred,
   });
 
   if (state.joined) {

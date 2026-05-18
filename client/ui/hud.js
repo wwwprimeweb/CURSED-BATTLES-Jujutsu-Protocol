@@ -9,10 +9,42 @@ const CHARACTER_SKILLS = {
   ],
   yuta: [
     { key: "q", hotkey: "Q", icon: "Rk", name: "Rika", cost: 40, baseCooldown: 12, tag: "area" },
-    { key: "e", hotkey: "E", icon: "Ds", name: "Dash Slash", cost: 20, baseCooldown: 4, tag: "mobilidade" },
-    { key: "r", hotkey: "R", icon: "Fr", name: "Full Rika", cost: 55, baseCooldown: 35, tag: "invocacao" },
-    { key: "space", hotkey: "Space", icon: "Dm", name: "Mutual Love", cost: 80, baseCooldown: 75, tag: "dominio" },
-    { key: "f", hotkey: "F", icon: "Pl", name: "Pure Love", cost: 90, baseCooldown: 45, tag: "ultimate" },
+    { key: "e", hotkey: "E", icon: "Fr", name: "Full Rika", cost: 55, baseCooldown: 35, tag: "invocacao" },
+    { key: "r", hotkey: "R", icon: "Pl", name: "Pure Love", cost: 90, baseCooldown: 45, tag: "ultimate" },
+    { key: "space", hotkey: "Space", icon: "Ds", name: "Dash Slash", cost: 40, baseCooldown: 4, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Mutual Love", cost: 80, baseCooldown: 75, tag: "dominio" },
+    { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
+  ],
+  sukuna: [
+    { key: "q", hotkey: "Q", icon: "Cl", name: "Cleave", cost: 35, baseCooldown: 10, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Fc", name: "Furnace", cost: 45, baseCooldown: 14, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Fo", name: "Full Output", cost: 80, baseCooldown: 22, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Fs", name: "Flash Step", cost: 40, baseCooldown: 10, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Malevolent Shrine", cost: 80, baseCooldown: 75, tag: "dominio" },
+    { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
+  ],
+  yuji: [
+    { key: "q", hotkey: "Q", icon: "Df", name: "Divergent Fist", cost: 30, baseCooldown: 8, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Bf", name: "Black Flash", cost: 40, baseCooldown: 12, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Dw", name: "Death Painting", cost: 75, baseCooldown: 20, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Rs", name: "Rush", cost: 30, baseCooldown: 8, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Self-Embodiment", cost: 75, baseCooldown: 65, tag: "dominio" },
+    { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
+  ],
+  megumi: [
+    { key: "q", hotkey: "Q", icon: "Nu", name: "Nue", cost: 35, baseCooldown: 10, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Or", name: "Orochi", cost: 50, baseCooldown: 30, tag: "invocacao" },
+    { key: "r", hotkey: "R", icon: "Mh", name: "Mahoraga", cost: 85, baseCooldown: 42, tag: "ultimate" },
+    { key: "space", hotkey: "Space", icon: "Ss", name: "Shadow Step", cost: 20, baseCooldown: 4, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Chimera Shadow", cost: 75, baseCooldown: 70, tag: "dominio" },
+    { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
+  ],
+  hakari: [
+    { key: "q", hotkey: "Q", icon: "Jr", name: "Jackpot Rush", cost: 30, baseCooldown: 7, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Rg", name: "Restless Gambler", cost: 40, baseCooldown: 12, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Lr", name: "Lucky Roll", cost: 80, baseCooldown: 22, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Ss", name: "Sudden Strike", cost: 25, baseCooldown: 7, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Idle Death Gamble", cost: 80, baseCooldown: 65, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
 };
@@ -191,6 +223,18 @@ export class Hud {
     this.upgradePicking = false;
     this.currentChoiceKey = "";
     this.suppressChoiceKey = "";
+    this._barsHtml = "";
+    this._cooldownsHtml = "";
+    this._m1Html = "";
+    this._timerHtml = "";
+    this._topRightHtml = "";
+    this._bossBarHtml = "";
+    this._minimapHtml = "";
+    this._prevChar = "";
+  }
+
+  _updateInner(el, html) {
+    if (el.innerHTML !== html) el.innerHTML = html;
   }
 
   update({ you, phase, elapsedSec, ping, connected, interpolation, map }) {
@@ -205,28 +249,51 @@ export class Hud {
     const now = performance.now();
 
     const chara = you.character || "gojo";
+
+    const barsHtml = createBarsHtml(you, { tookDamage });
+    if (barsHtml !== this._barsHtml) {
+      this._barsHtml = barsHtml;
+      this.barsEl.innerHTML = barsHtml;
+    }
+
     const skills = getSkills(chara);
-    this.barsEl.innerHTML = createBarsHtml(you, { tookDamage });
-    this.cooldownsEl.innerHTML = createSkillHtml(you.cooldowns || {}, you.energy || 0, skills);
-    this.m1El.innerHTML = `
+    const cooldownsHtml = createSkillHtml(you.cooldowns || {}, you.energy || 0, skills);
+    if (cooldownsHtml !== this._cooldownsHtml || chara !== this._prevChar) {
+      this._cooldownsHtml = cooldownsHtml;
+      this.cooldownsEl.innerHTML = cooldownsHtml;
+    }
+
+    const m1Html = `
       <div class="m1-chip ${energyDrop ? "is-active" : ""}">
         <span>M1</span>
         <small>Ataque basico</small>
       </div>
     `;
+    if (m1Html !== this._m1Html) {
+      this._m1Html = m1Html;
+      this.m1El.innerHTML = m1Html;
+    }
 
-    this.timerEl.innerHTML = `
+    const timerHtml = `
       <span class="timer-time">${formatTime(elapsedSec)}</span>
       <span class="timer-phase">${escapeHtml(phase)}</span>
     `;
+    if (timerHtml !== this._timerHtml) {
+      this._timerHtml = timerHtml;
+      this.timerEl.innerHTML = timerHtml;
+    }
 
-    this.topRightEl.innerHTML = `
+    const topRightHtml = `
       <div class="status-line"><span>Kills</span><b>${you.kills}</b></div>
       <div class="status-line"><span>Deaths</span><b>${you.deaths}</b></div>
       <div class="status-line"><span>Ping</span><b>${ping}ms</b></div>
       <div class="status-line ${connected ? "online" : "offline"}"><span>Net</span><b>${connected ? "Online" : "Reconectando"}</b></div>
       <div class="status-state">${you.alive ? "Ativo" : "Derrubado"}${you.skillLock ? " | Dominio" : ""}</div>
     `;
+    if (topRightHtml !== this._topRightHtml) {
+      this._topRightHtml = topRightHtml;
+      this.topRightEl.innerHTML = topRightHtml;
+    }
 
     const boss = this.updateBossBar(interpolation);
     this.updateMinimap({ map, interpolation, you });
@@ -247,18 +314,22 @@ export class Hud {
 
     this.prevHp = you.hp;
     this.prevEnergy = you.energy;
+    this._prevChar = chara;
   }
 
   updateBossBar(interpolation) {
     const boss = findBoss(interpolation);
     if (!boss) {
-      this.bossBarEl.classList.add("hidden");
-      this.bossBarEl.innerHTML = "";
+      if (!this.bossBarEl.classList.contains("hidden")) {
+        this.bossBarEl.classList.add("hidden");
+        this.bossBarEl.innerHTML = "";
+        this._bossBarHtml = "";
+      }
       return null;
     }
 
     const hpPercent = pct(boss.raw.hp, boss.raw.maxHp);
-    this.bossBarEl.innerHTML = `
+    const bossBarHtml = `
       <div class="boss-meta">
         <span>Boss</span>
         <strong>${escapeHtml(formatBossName(boss.raw.type))}</strong>
@@ -266,6 +337,10 @@ export class Hud {
       </div>
       <div class="boss-track"><div class="boss-fill" style="width:${hpPercent}%"></div></div>
     `;
+    if (bossBarHtml !== this._bossBarHtml) {
+      this._bossBarHtml = bossBarHtml;
+      this.bossBarEl.innerHTML = bossBarHtml;
+    }
     this.bossBarEl.classList.remove("hidden");
     return boss;
   }
@@ -339,7 +414,11 @@ export class Hud {
       });
     }
 
-    this.minimapEl.innerHTML = parts.join("");
+    const minimapHtml = parts.join("");
+    if (minimapHtml !== this._minimapHtml) {
+      this._minimapHtml = minimapHtml;
+      this.minimapEl.innerHTML = minimapHtml;
+    }
   }
 
   pushNotice(title, tone = "info", detail = "") {

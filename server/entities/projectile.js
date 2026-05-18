@@ -30,6 +30,8 @@ function createProjectile(data) {
     length: data.length || 0,
     traveled: 0,
     hitTargets: new Set(),
+    sureHit: false,
+    homingStrength: 0,
     meta: data.meta || {},
   };
 }

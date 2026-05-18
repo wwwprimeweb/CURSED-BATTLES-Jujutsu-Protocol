@@ -44,22 +44,31 @@ export class InterpolationBuffer {
     this.applyDelta(this.domains, snapshot.delta.domains, snapshot.removed.domains);
   }
 
-  updateSmoothing(alpha = 0.22) {
+  updateSmoothing(dt = 1 / 60) {
+    const alpha = 0.22;
+    const fastAlpha = 0.35;
     this.players.forEach((entry) => {
-      entry.x += (entry.tx - entry.x) * alpha;
-      entry.y += (entry.ty - entry.y) * alpha;
+      const dx = entry.tx - entry.x;
+      const dy = entry.ty - entry.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const a = dist > 30 ? fastAlpha : alpha;
+      entry.x += dx * a;
+      entry.y += dy * a;
     });
     this.enemies.forEach((entry) => {
-      entry.x += (entry.tx - entry.x) * alpha;
-      entry.y += (entry.ty - entry.y) * alpha;
+      const dx = entry.tx - entry.x;
+      const dy = entry.ty - entry.y;
+      const a = Math.sqrt(dx * dx + dy * dy) > 30 ? fastAlpha : alpha;
+      entry.x += dx * a;
+      entry.y += dy * a;
     });
     this.projectiles.forEach((entry) => {
-      entry.x += (entry.tx - entry.x) * 0.38;
-      entry.y += (entry.ty - entry.y) * 0.38;
+      entry.x += (entry.tx - entry.x) * Math.min(1, 12 * dt);
+      entry.y += (entry.ty - entry.y) * Math.min(1, 12 * dt);
     });
     this.domains.forEach((entry) => {
-      entry.x += (entry.tx - entry.x) * alpha;
-      entry.y += (entry.ty - entry.y) * alpha;
+      entry.x += (entry.tx - entry.x) * Math.min(1, 6 * dt);
+      entry.y += (entry.ty - entry.y) * Math.min(1, 6 * dt);
     });
   }
 }

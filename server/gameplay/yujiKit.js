@@ -1,0 +1,80 @@
+"use strict";
+
+const YUJI = {
+  m1: {
+    name: "Black Flash Combo",
+    damage: 24,
+    range: 80,
+    cooldown: 0.28,
+    startup: 0.06,
+    active: 0.08,
+    recovery: 0.1,
+  },
+  passive: {
+    radius: 100,
+    projectileSlow: 0.2,
+    dashSlow: 0.15,
+  },
+  blue: {
+    energy: 30,
+    cooldown: 8,
+    speed: 220,
+    lifetime: 2.5,
+    pullRadius: 120,
+    tickDamage: 5,
+    tickRate: 0.25,
+    radius: 30,
+    startup: 0.08,
+    pullStrength: 140,
+  },
+  red: {
+    energy: 40,
+    cooldown: 12,
+    speed: 650,
+    damage: 90,
+    radius: 32,
+    knockback: 900,
+    lifetime: 0.6,
+    startup: 0.1,
+    explosionRadius: 100,
+  },
+  collapse: {
+    damage: 600,
+    radius: 280,
+    delay: 3.0,
+    knockback: 200,
+  },
+  purple: {
+    energy: 75,
+    cooldown: 20,
+    damage: 300,
+    width: 100,
+    length: 1600,
+    speed: 850,
+    charge: 0.5,
+  },
+  teleport: {
+    energy: 30,
+    cooldown: 8,
+    distance: 280,
+    startup: 0.05,
+    recovery: 0.08,
+  },
+  domain: {
+    energyInitial: 75,
+    startup: 0.9,
+    drainPerSecond: 5,
+    freezeDps: 10,
+    freezePersistSec: 3.5,
+    radius: 380,
+    slowEnemy: 0.35,
+    slowProjectile: 0.5,
+    cooldown: 65,
+    conflictExtraDrain: 4,
+    collapseStun: 0.7,
+  },
+};
+
+module.exports = {
+  YUJI,
+};

@@ -1,0 +1,80 @@
+"use strict";
+
+const SUKUNA = {
+  m1: {
+    name: "Dismantle",
+    damage: 28,
+    range: 90,
+    cooldown: 0.32,
+    startup: 0.08,
+    active: 0.1,
+    recovery: 0.12,
+  },
+  passive: {
+    radius: 110,
+    projectileSlow: 0.3,
+    dashSlow: 0.1,
+  },
+  blue: {
+    energy: 35,
+    cooldown: 10,
+    speed: 200,
+    lifetime: 3,
+    pullRadius: 130,
+    tickDamage: 7,
+    tickRate: 0.25,
+    radius: 34,
+    startup: 0.1,
+    pullStrength: 160,
+  },
+  red: {
+    energy: 45,
+    cooldown: 14,
+    speed: 750,
+    damage: 105,
+    radius: 36,
+    knockback: 1000,
+    lifetime: 0.7,
+    startup: 0.12,
+    explosionRadius: 110,
+  },
+  collapse: {
+    damage: 700,
+    radius: 300,
+    delay: 3.5,
+    knockback: 230,
+  },
+  purple: {
+    energy: 80,
+    cooldown: 22,
+    damage: 350,
+    width: 120,
+    length: 1800,
+    speed: 900,
+    charge: 0.5,
+  },
+  teleport: {
+    energy: 40,
+    cooldown: 10,
+    distance: 300,
+    startup: 0.06,
+    recovery: 0.1,
+  },
+  domain: {
+    energyInitial: 80,
+    startup: 1.0,
+    drainPerSecond: 6,
+    freezeDps: 14,
+    freezePersistSec: 4,
+    radius: 450,
+    slowEnemy: 0.5,
+    slowProjectile: 0.7,
+    cooldown: 75,
+    conflictExtraDrain: 6,
+    collapseStun: 0.8,
+  },
+};
+
+module.exports = {
+  SUKUNA,
+};

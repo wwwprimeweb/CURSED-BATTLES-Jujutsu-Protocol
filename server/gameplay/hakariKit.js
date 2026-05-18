@@ -1,0 +1,80 @@
+"use strict";
+
+const HAKARI = {
+  m1: {
+    name: "Brawling Beatdown",
+    damage: 22,
+    range: 75,
+    cooldown: 0.26,
+    startup: 0.06,
+    active: 0.08,
+    recovery: 0.09,
+  },
+  passive: {
+    radius: 100,
+    projectileSlow: 0.2,
+    dashSlow: 0.1,
+  },
+  blue: {
+    energy: 30,
+    cooldown: 7,
+    speed: 190,
+    lifetime: 3,
+    pullRadius: 125,
+    tickDamage: 5,
+    tickRate: 0.2,
+    radius: 30,
+    startup: 0.08,
+    pullStrength: 150,
+  },
+  red: {
+    energy: 40,
+    cooldown: 12,
+    speed: 700,
+    damage: 85,
+    radius: 32,
+    knockback: 950,
+    lifetime: 0.7,
+    startup: 0.1,
+    explosionRadius: 105,
+  },
+  collapse: {
+    damage: 600,
+    radius: 280,
+    delay: 3.0,
+    knockback: 200,
+  },
+  purple: {
+    energy: 80,
+    cooldown: 22,
+    damage: 310,
+    width: 110,
+    length: 1700,
+    speed: 850,
+    charge: 0.5,
+  },
+  teleport: {
+    energy: 25,
+    cooldown: 7,
+    distance: 290,
+    startup: 0.05,
+    recovery: 0.08,
+  },
+  domain: {
+    energyInitial: 80,
+    startup: 0.9,
+    drainPerSecond: 4,
+    freezeDps: 10,
+    freezePersistSec: 3.5,
+    radius: 400,
+    slowEnemy: 0.3,
+    slowProjectile: 0.5,
+    cooldown: 65,
+    conflictExtraDrain: 4,
+    collapseStun: 0.6,
+  },
+};
+
+module.exports = {
+  HAKARI,
+};

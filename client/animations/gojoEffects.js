@@ -178,14 +178,14 @@ export function drawM1Punch(ctx, x, y, dirX, dirY, progress, comboStep, time) {
     ctx.save();
     ctx.globalAlpha = alpha * 0.7;
     ctx.shadowBlur = 0;
-    for (let i = 0; i < 6; i++) {
-      const t = Math.random();
-      const dist = range * (0.3 + t * 0.6);
-      const spread = (Math.random() - 0.5) * 0.5;
+    for (let i = 0; i < 4; i++) {
+      const seed = i * 0.618;
+      const dist = range * (0.3 + seed * 0.4);
+      const spread = (seed - 0.5) * 0.4;
       const a = angle + spread;
-      ctx.fillStyle = `rgba(255,255,255,${0.2 + Math.random() * 0.3})`;
+      ctx.fillStyle = `rgba(255,255,255,${0.2 + seed * 0.2})`;
       ctx.beginPath();
-      ctx.arc(x + Math.cos(a) * dist, y + Math.sin(a) * dist, 1.5 + Math.random() * 2, 0, Math.PI * 2);
+      ctx.arc(x + Math.cos(a) * dist, y + Math.sin(a) * dist, 1.5 + seed * 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();

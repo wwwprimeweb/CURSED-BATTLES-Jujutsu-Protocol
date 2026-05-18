@@ -25,8 +25,8 @@ class DomainSystem {
     const kit = this.getDomainKit(player);
     const radius = kit.radius * player.modifiers.domainRadiusMul;
     const drain = kit.drainPerSecond * player.modifiers.domainDrainMul;
-    const slowEnemy = kit.slowEnemy * player.modifiers.domainSlowMul;
-    const slowProjectile = kit.slowProjectile * player.modifiers.domainSlowMul;
+    const slowEnemy = (kit.slowEnemy || 0) * player.modifiers.domainSlowMul;
+    const slowProjectile = (kit.slowProjectile || 0) * player.modifiers.domainSlowMul;
 
     const domain = {
       id: `d_${player.id}`,
@@ -45,6 +45,17 @@ class DomainSystem {
       barrierMaxHp: 100,
     };
 
+    if (domain.character === "yuta") {
+      domain.copiedCharacter = null;
+      this.server.players.forEach((p) => {
+        if (p.id === player.id || !p.alive) return;
+        const d = distance(p.x, p.y, player.x, player.y);
+        if (d <= domain.radius) {
+          domain.copiedCharacter = p.character;
+        }
+      });
+    }
+
     this.domains.set(player.id, domain);
     this.server.emitEventAll({
       type: "domainStart",
@@ -52,6 +63,7 @@ class DomainSystem {
       y: player.y,
       ownerId: player.id,
       radius,
+      copiedCharacter: domain.copiedCharacter,
     });
     return true;
   }
@@ -63,6 +75,34 @@ class DomainSystem {
 
   isSkillLocked() {
     return this.domains.size > 0;
+  }
+
+  isSkillLockedForPlayer(player) {
+    if (!player || !player.alive) {
+      return false;
+    }
+
+    let locked = false;
+    this.domains.forEach((domain) => {
+      if (locked) {
+        return;
+      }
+      if (domain.character !== "gojo") {
+        return;
+      }
+      if (domain.ownerId === player.id) {
+        return;
+      }
+      const owner = this.server.players.get(domain.ownerId);
+      if (!owner || !owner.alive) {
+        return;
+      }
+      const d = distance(player.x, player.y, domain.x, domain.y);
+      if (d <= domain.radius) {
+        locked = true;
+      }
+    });
+    return locked;
   }
 
   hasActiveDomain(playerId) {
@@ -123,7 +163,6 @@ class DomainSystem {
 
     this.applyDomainFreezeEffects(dt);
     this.applyDomainPlayerEffects(dt);
-    this.applyDomainProjectileDamage(dt);
   }
 
   applyDomainPlayerEffects(dt) {
@@ -141,7 +180,7 @@ class DomainSystem {
           this.server.combat.applyDamage({
             target: targetPlayer,
             source: owner,
-            amount: this.getKitByDomain(domain).freezeDps * 0.6 * dt,
+            amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
             kind: "domainFreeze",
             fromX: domain.x,
             fromY: domain.y,
@@ -151,22 +190,6 @@ class DomainSystem {
             x: targetPlayer.x,
             y: targetPlayer.y,
           });
-        }
-      });
-    });
-  }
-
-  applyDomainProjectileDamage(dt) {
-    if (this.domains.size === 0) return;
-    this.server.projectiles.forEach((proj) => {
-      if (proj.ownerKind !== "enemy") return;
-      this.domains.forEach((domain) => {
-        const owner = this.server.players.get(domain.ownerId);
-        if (!owner || !owner.alive) return;
-        const d = distance(proj.x, proj.y, domain.x, domain.y);
-        if (d <= domain.radius) {
-          const dmg = (proj.damage || 10) * 0.2 * dt;
-          this.damageBarrier(domain.ownerId, dmg);
         }
       });
     });
@@ -201,12 +224,12 @@ class DomainSystem {
       }
 
       const kit = this.getKitByDomain(sourceDomain);
-      enemy.freezeTimer = Math.max(enemy.freezeTimer, kit.freezePersistSec);
+      enemy.freezeTimer = Math.max(enemy.freezeTimer, kit.freezePersistSec || 0);
       const owner = this.server.players.get(sourceDomain.ownerId) || null;
       this.server.combat.applyDamage({
         target: enemy,
         source: owner,
-        amount: kit.freezeDps * dt,
+        amount: (kit.freezeDps || 0) * dt,
         kind: "domainFreeze",
         fromX: sourceDomain.x,
         fromY: sourceDomain.y,
@@ -250,10 +273,13 @@ class DomainSystem {
     this.domains.delete(ownerId);
 
     const owner = this.server.players.get(ownerId);
-    if (owner && byConflict) {
-      const kit = this.getKitByDomain(domain);
-      owner.stunTimer = Math.max(owner.stunTimer, kit.collapseStun);
-      owner.cooldowns.f = Math.max(owner.cooldowns.f, kit.cooldown * 0.5);
+    if (owner) {
+      owner.domainExhaustionTimer = 10;
+      if (byConflict) {
+        const kit = this.getKitByDomain(domain);
+        owner.stunTimer = Math.max(owner.stunTimer, kit.collapseStun);
+        owner.cooldowns.f = Math.max(owner.cooldowns.f, kit.cooldown * 0.5);
+      }
     }
 
     this.server.emitEventAll({

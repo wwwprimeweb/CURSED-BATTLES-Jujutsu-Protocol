@@ -70,28 +70,29 @@ export class GojoSpriteRenderer {
   }
 
   render(ctx, x, y, state, facing = 1, _scale = 1) {
+    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
     const isDash = state === "dash";
-    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2.5 : 0;
+    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2 : 0;
     const finalY = y + bobY;
 
     if (isDash && this.dashSprite) {
-      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE);
+      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);
       return;
     }
 
     if (this.idleSprite) {
-      this.drawSprite(ctx, this.idleSprite, x, finalY, facing, DEFAULT_SIZE);
+      this.drawSprite(ctx, this.idleSprite, x, finalY, facing, DEFAULT_SIZE * scale);
       return;
     }
 
     if (this.dashSprite) {
-      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE);
+      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);
       return;
     }
 
     ctx.fillStyle = "rgba(100,100,255,0.5)";
     ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.arc(x, y, 20 * scale, 0, Math.PI * 2);
     ctx.fill();
   }
 

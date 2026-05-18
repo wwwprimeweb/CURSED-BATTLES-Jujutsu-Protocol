@@ -187,6 +187,45 @@ export class SkillVFX {
     ctx.restore();
   }
 
+  static drawPinkBeam(ctx, x1, y1, x2, y2, width = 30, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = "rgba(255,102,178,0.9)";
+    ctx.shadowColor = "rgba(255,51,153,1)";
+    ctx.shadowBlur = 40;
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,200,230,0.7)";
+    ctx.lineWidth = width * 0.35;
+    ctx.shadowBlur = 20;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  static drawPinkSphere(ctx, x, y, radius, progress, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const pulse = 1 + Math.sin(progress * Math.PI * 6) * 0.08;
+    const currentRadius = radius * pulse;
+    ctx.shadowColor = "rgba(255,51,153,1)";
+    ctx.shadowBlur = 60;
+    ctx.globalCompositeOperation = "lighter";
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, currentRadius);
+    grad.addColorStop(0, `rgba(255,255,255,${0.95 * alpha})`);
+    grad.addColorStop(0.2, `rgba(255,200,230,${0.7 * alpha})`);
+    grad.addColorStop(0.5, `rgba(255,51,153,${0.4 * alpha})`);
+    grad.addColorStop(1, `rgba(255,102,178,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   static drawPurpleExplosion(ctx, x, y, radius) {
     ctx.save();
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);

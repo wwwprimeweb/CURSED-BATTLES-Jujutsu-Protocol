@@ -9,14 +9,13 @@ export class NetworkClient {
     this.name = "Sorcerer";
     this.sessionToken = "";
     this.reconnectTimer = null;
-    this.reconnectAttempts = 0;
     this.manualClose = false;
     this.connVersion = 0;
   }
 
   connect({ name, sessionToken, character }) {
     this.name = name || this.name;
-    this.sessionToken = sessionToken || this.sessionToken;
+    this.sessionToken = typeof sessionToken === "string" ? sessionToken : "";
     this.character = character || 'gojo';
     this.manualClose = false;
     this.connVersion += 1;
@@ -29,7 +28,6 @@ export class NetworkClient {
     this.socket.addEventListener("open", () => {
       if (version !== this.connVersion) return;
       console.log("[DIAG] WebSocket OPEN, sending join");
-      this.reconnectAttempts = 0;
       this.send({
         type: "join",
         name: this.name,
@@ -83,10 +81,7 @@ export class NetworkClient {
     this.socket.addEventListener("close", () => {
       if (version !== this.connVersion) return;
       if (this.onConnectionState) {
-        this.onConnectionState({ connected: false, reconnecting: !this.manualClose });
-      }
-      if (!this.manualClose) {
-        this.scheduleReconnect();
+        this.onConnectionState({ connected: false, reconnecting: false });
       }
     });
 
@@ -96,15 +91,6 @@ export class NetworkClient {
         this.socket.close();
       }
     });
-  }
-
-  scheduleReconnect() {
-    clearTimeout(this.reconnectTimer);
-    const wait = Math.min(3000, 600 + this.reconnectAttempts * 450);
-    this.reconnectAttempts += 1;
-    this.reconnectTimer = setTimeout(() => {
-      this.connect({ name: this.name, sessionToken: this.sessionToken });
-    }, wait);
   }
 
   disconnect() {
@@ -134,7 +120,7 @@ export class NetworkClient {
 
   rejoin(name) {
     if (name) this.name = name;
-    this.send({ type: "join", name: this.name, sessionToken: this.sessionToken });
+    this.send({ type: "join", name: this.name, sessionToken: this.sessionToken || "" });
   }
 
   ping() {

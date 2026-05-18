@@ -42,15 +42,21 @@ export class Renderer {
     this.domainOverlayAlpha = 0;
     this.activeDomainOwnerIds = new Set();
     this.playerFacing = new Map();
+    this.localVisualPos = null;
     this.dashVisuals = new Map();
     this.dashTweens = new Map();
     this.markers = [];
     this.redExplosions = [];
+    this.blueExplosions = [];
     this.purpleCharges = new Map();
     this.purpleExplosions = [];
     this.interpolationRef = null;
     this.hollowPurpleImg = new Image();
     this.hollowPurpleImg.src = "/assets/habilit%20hollow%20purple";
+    this.blueImg = new Image();
+    this.blueImg.src = "/assets/habilit/blue.png";
+    this.redImg = new Image();
+    this.redImg.src = "/assets/habilit/red.png";
 
     this.resize();
     window.addEventListener("resize", () => this.resize());
@@ -71,6 +77,7 @@ export class Renderer {
     this.map = map;
     this.camera.x = map.width * 0.5;
     this.camera.y = map.height * 0.5;
+    this.localVisualPos = null;
   }
 
   updateCamera(targetX, targetY) {
@@ -143,6 +150,10 @@ export class Renderer {
 
   addRedExplosion({ x, y, radius = 110, ttl = 0.5 }) {
     this.redExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
+  }
+
+  addBlueExplosion({ x, y, radius = 200, ttl = 0.6 }) {
+    this.blueExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
   }
 
   startPurpleCharge(ev) {
@@ -344,6 +355,13 @@ export class Renderer {
         this.redExplosions.splice(i, 1);
       }
     }
+    for (let i = this.blueExplosions.length - 1; i >= 0; i -= 1) {
+      const e = this.blueExplosions[i];
+      e.life -= dt;
+      if (e.life <= 0) {
+        this.blueExplosions.splice(i, 1);
+      }
+    }
   }
 
   drawMarkers() {
@@ -402,7 +420,7 @@ export class Renderer {
       ctx.arc(p.x, p.y, shockwaveRadius * 1.15, 0, Math.PI * 2);
       ctx.stroke();
 
-      const fragCount = 12 + Math.floor(t * 8);
+      const fragCount = 8 + Math.floor(t * 4);
       for (let f = 0; f < fragCount; f++) {
         const angle = (f / fragCount) * Math.PI * 2 + Math.sin(s + f * 1.7) * 0.3 + (1 - t) * 0.5;
         const fragDist = e.radius * (0.2 + (1 - t) * 0.8) * (0.6 + Math.sin(s + f * 2.3) * 0.4) * z;
@@ -427,7 +445,7 @@ export class Renderer {
         ctx.stroke();
       }
 
-      const lineCount = 8 + Math.floor(t * 6);
+      const lineCount = 5 + Math.floor(t * 3);
       for (let l = 0; l < lineCount; l++) {
         const angle = (l / lineCount) * Math.PI * 2 + (1 - t) * 0.8 + Math.sin(s + l * 1.3) * 0.2;
         const len = e.radius * (0.4 + (1 - t) * 0.8) * (0.7 + Math.sin(s + l * 2.1) * 0.3) * z;
@@ -441,8 +459,8 @@ export class Renderer {
         ctx.stroke();
       }
 
-      for (let l = 0; l < 5; l++) {
-        const angle = (l / 5) * Math.PI * 2 + (1 - t) * 1.2 + Math.sin(s + l * 1.7) * 0.3;
+      for (let l = 0; l < 3; l++) {
+        const angle = (l / 3) * Math.PI * 2 + (1 - t) * 1.2 + Math.sin(s + l * 1.7) * 0.3;
         const len = e.radius * (0.3 + (1 - t) * 0.6) * (0.5 + Math.sin(s + l * 2.5) * 0.5) * z;
         const lx = Math.cos(angle) * len;
         const ly = Math.sin(angle) * len;
@@ -452,6 +470,89 @@ export class Renderer {
         ctx.moveTo(p.x + lx * 0.2, p.y + ly * 0.2);
         ctx.lineTo(p.x + lx, p.y + ly);
         ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  drawBlueExplosions() {
+    const ctx = this.ctx;
+    const z = this.camera.zoom || 1;
+    for (let i = 0; i < this.blueExplosions.length; i += 1) {
+      const e = this.blueExplosions[i];
+      const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
+      const t = e.life / e.ttl;
+      const s = e.seed;
+
+      ctx.save();
+
+      const a = Math.min(t * 2.5, 1) * (1 - Math.max(0, t - 0.85) * 6);
+
+      const ringR = e.radius * 0.8 * (0.05 + t * 0.95) * z;
+
+      ctx.shadowColor = "#66ccff";
+      ctx.shadowBlur = 40 * a * z;
+      ctx.strokeStyle = `rgba(150,220,255,${0.7 * a})`;
+      ctx.lineWidth = (5 - t * 3) * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ringR + 4 * z, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.shadowBlur = 15 * a * z;
+      ctx.strokeStyle = `rgba(200,235,255,${0.5 * a})`;
+      ctx.lineWidth = (2 + t * 2) * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      const gradR = Math.max(ringR * 1.4, 10 * z);
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gradR);
+      grad.addColorStop(0, `rgba(150,220,255,${0.6 * a})`);
+      grad.addColorStop(0.3, `rgba(80,170,240,${0.5 * a})`);
+      grad.addColorStop(0.7, `rgba(20,60,140,${0.2 * a})`);
+      grad.addColorStop(1, `rgba(5,15,50,0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, gradR, 0, Math.PI * 2);
+      ctx.fill();
+
+      const streakCount = 8;
+      for (let j = 0; j < streakCount; j++) {
+        const angle = (j / streakCount) * Math.PI * 2 + s * 0.1 + t * 0.4;
+        const outer = ringR * 1.5;
+        const inner = ringR * 0.1;
+        ctx.strokeStyle = `rgba(170,225,255,${0.25 * a})`;
+        ctx.lineWidth = (2.5 - t * 1.5) * z;
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(angle) * outer, p.y + Math.sin(angle) * outer);
+        ctx.lineTo(p.x + Math.cos(angle) * inner, p.y + Math.sin(angle) * inner);
+        ctx.stroke();
+      }
+
+      const pullCount = 6;
+      for (let j = 0; j < pullCount; j++) {
+        const angle = (j / pullCount) * Math.PI * 2 + Math.sin(s + j * 1.7) * 0.5 + t * 0.6;
+        const dist = ringR * (0.4 + t * 0.8) * (0.4 + Math.sin(s + j * 2.3) * 0.3);
+        const px = p.x + Math.cos(angle) * dist;
+        const py = p.y + Math.sin(angle) * dist;
+        const sz = (2 + (1 - t) * 2.5) * z;
+        ctx.fillStyle = `rgba(190,235,255,${0.5 * a})`;
+        ctx.beginPath();
+        ctx.arc(px, py, sz, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      if (t < 0.35) {
+        const flashT = t / 0.35;
+        const flashA = (1 - flashT) * 0.6;
+        ctx.shadowColor = "#88ddff";
+        ctx.shadowBlur = 60 * flashA * z;
+        ctx.fillStyle = `rgba(200,240,255,${flashA})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, (8 - flashT * 6) * z, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       ctx.restore();
@@ -490,6 +591,7 @@ export class Renderer {
     const ctx = this.ctx;
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
+    const zoom = this.camera.zoom || 1;
 
     this.drawGrid();
 
@@ -499,7 +601,7 @@ export class Renderer {
       ctx.fillStyle = "rgba(50,80,140,0.08)";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, zone.radius, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, zone.radius * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     });
@@ -510,7 +612,7 @@ export class Renderer {
       ctx.fillStyle = `rgba(220,58,72,${0.12 * pulse})`;
       ctx.strokeStyle = "rgba(255,98,116,0.34)";
       ctx.beginPath();
-      ctx.arc(p.x, p.y, hazard.radius, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, hazard.radius * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     });
@@ -520,14 +622,14 @@ export class Renderer {
       ctx.fillStyle = "rgba(20,26,38,0.95)";
       ctx.strokeStyle = "rgba(115,140,185,0.25)";
       ctx.lineWidth = 2;
-      ctx.fillRect(p.x, p.y, obs.w, obs.h);
-      ctx.strokeRect(p.x + 0.5, p.y + 0.5, obs.w - 1, obs.h - 1);
+      ctx.fillRect(p.x, p.y, obs.w * zoom, obs.h * zoom);
+      ctx.strokeRect(p.x + 0.5, p.y + 0.5, obs.w * zoom - 1, obs.h * zoom - 1);
     });
 
     const topLeft = worldToScreen(this.camera, this.canvas, 0, 0);
     ctx.strokeStyle = "rgba(170,200,255,0.2)";
     ctx.lineWidth = 3;
-    ctx.strokeRect(topLeft.x, topLeft.y, this.map.width, this.map.height);
+    ctx.strokeRect(topLeft.x, topLeft.y, this.map.width * zoom, this.map.height * zoom);
 
     if (w && h) {
       ctx.fillStyle = "rgba(0,0,0,0.07)";
@@ -535,7 +637,7 @@ export class Renderer {
     }
   }
 
-  drawDomains(domains, youId, you) {
+  drawDomains(domains, youId, you, localPred) {
     const ctx = this.ctx;
     const now = Date.now();
     let insideDomain = false;
@@ -558,67 +660,18 @@ export class Renderer {
 
       if (currentR < 2) return;
 
-      const bg = this.domainVisual.getBackground(ownerId);
-      const overlay = this.domainVisual.getOverlay(ownerId);
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
-      ctx.clip();
-
-      if (bg) {
-        const aspect = bg.width / bg.height;
-        let dw = vz * 2;
-        let dh = dw / aspect;
-        if (dh < vz * 2) {
-          dh = vz * 2;
-          dw = dh * aspect;
-        }
-        ctx.drawImage(bg, p.x - dw / 2, p.y - dh / 2, dw, dh);
-      } else {
-        const skyGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, vz);
-        skyGrad.addColorStop(0, isMine ? "rgba(10,20,50,0.95)" : "rgba(30,10,50,0.95)");
-        skyGrad.addColorStop(0.5, isMine ? "rgba(5,15,40,0.92)" : "rgba(20,5,40,0.92)");
-        skyGrad.addColorStop(1, "rgba(0,0,0,0.98)");
-        ctx.fillStyle = skyGrad;
-        ctx.fill();
-
-        const innerR = vz * 0.95;
-        for (let i = 0; i < 80; i++) {
-          const seed = i * 137.508;
-          const angle = (seed % 360) * Math.PI / 180;
-          const dist = ((seed * 7919) % innerR);
-          const starX = p.x + Math.cos(angle) * dist;
-          const starY = p.y + Math.sin(angle) * dist;
-          const starSize = 0.5 + (seed % 3) * 0.5;
-          const twinkle = 0.5 + Math.sin(now * 0.003 + seed) * 0.5;
-          const alpha = twinkle * (0.6 + (seed % 40) * 0.01);
-          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        for (let i = 0; i < 5; i++) {
-          const a = now * 0.0003 + i * (Math.PI * 2 / 5);
-          const nebulaR = innerR * (0.3 + i * 0.12);
-          const nx = p.x + Math.cos(a) * nebulaR * 0.5;
-          const ny = p.y + Math.sin(a) * nebulaR * 0.5;
-          const ng = ctx.createRadialGradient(nx, ny, 0, nx, ny, nebulaR);
-          ng.addColorStop(0, isMine ? "rgba(80,160,255,0.04)" : "rgba(180,80,255,0.04)");
-          ng.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.fillStyle = ng;
-          ctx.beginPath();
-          ctx.arc(nx, ny, nebulaR, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      let char;
+      try {
+        char = this.domainVisual.getCharacter(ownerId);
+      } catch (e) {
+        console.error("getCharacter failed:", e);
+        char = "gojo";
       }
-
-      if (overlay) {
-        ctx.drawImage(overlay, p.x - vz, p.y - vz, vz * 2, vz * 2);
+      try {
+        this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, entry.x, entry.y, p, vz, z, expandProgress, isMine, now);
+      } catch (e) {
+        console.error("renderParallax call failed:", e);
       }
-
-      ctx.restore();
 
       ctx.save();
       ctx.globalAlpha = expandAlpha;
@@ -654,12 +707,12 @@ export class Renderer {
       }
       ctx.restore();
 
-      if (you) {
-        const dx = you.x - entry.x;
-        const dy = you.y - entry.y;
-        if (dx * dx + dy * dy <= d.radius * d.radius) {
-          insideDomain = true;
-        }
+      const cx = localPred ? localPred.x : (you ? you.x : 0);
+      const cy = localPred ? localPred.y : (you ? you.y : 0);
+      const ddx = cx - entry.x;
+      const ddy = cy - entry.y;
+      if (ddx * ddx + ddy * ddy <= d.radius * d.radius) {
+        insideDomain = true;
       }
     });
 
@@ -709,12 +762,13 @@ export class Renderer {
   drawProjectiles(projectiles) {
     const ctx = this.ctx;
     const now = Date.now();
+    const zoom = this.camera.zoom || 1;
     projectiles.forEach((entry) => {
       const p = entry.raw;
       const screen = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
 
       if (p.type === "purple") {
-        const sphereR = Math.max(10, p.width * 0.55);
+        const sphereR = Math.max(10 * zoom, p.width * 0.55 * zoom);
         const px = screen.x;
         const py = screen.y;
         const pulse = 1 + Math.sin(now * 0.003) * 0.03;
@@ -777,9 +831,9 @@ export class Renderer {
         }
         ctx.shadowBlur = 0;
 
-        for (let vein = 0; vein < 5; vein++) {
-          const vAngle = (vein / 5) * Math.PI * 2 + now * 0.001;
-          const dots = 8 + (vein * 3) % 4;
+        for (let vein = 0; vein < 3; vein++) {
+          const vAngle = (vein / 3) * Math.PI * 2 + now * 0.001;
+          const dots = 5 + (vein * 3) % 4;
           for (let d = 0; d < dots; d++) {
             const t = (d + 1) / (dots + 1);
             const spread = 0.3 + Math.sin(vein * 2.7 + d * 1.3) * 0.2;
@@ -796,7 +850,7 @@ export class Renderer {
           }
         }
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 20; i++) {
           const angle = i * 2.399 + Math.sin(now * 0.002 + i * 0.5) * 0.2;
           const dist = sphereR * (0.1 + (Math.sin(i * 3.7 + now * 0.001) * 0.5 + 0.5) * 0.8);
           const sx = px + Math.cos(angle) * dist;
@@ -809,14 +863,14 @@ export class Renderer {
           ctx.fill();
         }
 
-        for (let i = 0; i < 12; i++) {
-          const angle = (i / 12) * Math.PI * 2 + now * 0.002;
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2 + now * 0.002;
           const dist = sphereR * (0.85 + Math.sin(now * 0.003 + i * 1.3) * 0.1);
           const ex = px + Math.cos(angle) * dist;
           const ey = py + Math.sin(angle) * dist;
           const arcAngle = angle + Math.PI * 0.5;
           const arcLen = sphereR * (0.15 + Math.sin(now * 0.004 + i * 0.7) * 0.08 + 0.1);
-          for (let s = 0; s < 3; s++) {
+          for (let s = 0; s < 2; s++) {
             const st = (s + 1) / 4;
             const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.005 + i + s) * 3;
             const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.005 + i + s) * 3;
@@ -836,91 +890,42 @@ export class Renderer {
       ctx.save();
 
       if (p.type === "blue") {
-        const orbR = Math.max(10, p.radius);
-        const coreGrad = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, orbR * 2.5);
-        coreGrad.addColorStop(0, "rgba(255,255,255,1)");
-        coreGrad.addColorStop(0.15, "rgba(220,240,255,1)");
-        coreGrad.addColorStop(0.4, "rgba(100,190,255,0.95)");
-        coreGrad.addColorStop(0.7, "rgba(40,120,255,0.6)");
-        coreGrad.addColorStop(1, "rgba(0,50,200,0)");
-        ctx.shadowColor = "#4488ff";
-        ctx.shadowBlur = 50;
-        ctx.fillStyle = coreGrad;
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y, orbR * 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y, orbR * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowColor = "#88ccff";
-        ctx.shadowBlur = 25;
-        ctx.strokeStyle = "rgba(200,235,255,0.8)";
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y, orbR * 0.7, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "rgba(180,220,255,0.5)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y, orbR * 1.1, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.strokeStyle = "rgba(140,200,255,0.3)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(screen.x, screen.y, orbR * 1.6, 0, Math.PI * 2);
-        ctx.stroke();
-        const electricTime = now * 0.005;
-        ctx.shadowBlur = 0;
-        for (let i = 0; i < 4; i++) {
-          const baseAngle = (i / 4) * Math.PI * 2 + electricTime * 0.4 + i * 0.7;
-          const arcLen = orbR * (2.5 + Math.sin(electricTime * 2 + i) * 1.2);
-          const segments = 6 + Math.floor(Math.abs(Math.sin(electricTime + i * 1.3)) * 4);
-          ctx.strokeStyle = `rgba(180,230,255,${0.35 + Math.sin(electricTime * 1.5 + i * 2) * 0.15})`;
-          ctx.lineWidth = 2 + Math.sin(electricTime + i) * 1;
+        const baseR = Math.max(10 * zoom, p.radius * zoom);
+        const size = baseR * 2 * 1.3;
+        if (this.blueImg.complete && this.blueImg.naturalWidth > 0) {
+          ctx.shadowColor = "#66ccff";
+          ctx.shadowBlur = 100;
+          ctx.drawImage(this.blueImg, screen.x - size / 2, screen.y - size / 2, size, size);
+          ctx.shadowColor = "#88ddff";
+          ctx.shadowBlur = 20;
+          ctx.drawImage(this.blueImg, screen.x - size / 2, screen.y - size / 2, size, size);
+        } else {
+          ctx.fillStyle = "#4cb4ff";
+          ctx.shadowColor = "#66ccff";
+          ctx.shadowBlur = 80;
           ctx.beginPath();
-          let lx = screen.x + Math.cos(baseAngle) * orbR * 0.6;
-          let ly = screen.y + Math.sin(baseAngle) * orbR * 0.6;
-          ctx.moveTo(lx, ly);
-          for (let s = 1; s <= segments; s++) {
-            const t = s / segments;
-            const a = baseAngle + Math.sin(t * 8 + electricTime * 3 + i) * 0.8;
-            const dist = orbR * 0.6 + t * arcLen;
-            lx = screen.x + Math.cos(a) * dist;
-            ly = screen.y + Math.sin(a) * dist;
-            ctx.lineTo(lx, ly);
-          }
-          ctx.stroke();
-        }
-        ctx.shadowColor = "#4499ff";
-        ctx.shadowBlur = 12;
-        for (let i = 0; i < 12; i++) {
-          const angle = now * 0.006 + i * (Math.PI * 2 / 12) + Math.sin(now * 0.004 + i) * 0.3;
-          const dist = orbR * (1.3 + Math.sin(now * 0.007 + i * 1.5) * 0.6);
-          const px = screen.x + Math.cos(angle) * dist;
-          const py = screen.y + Math.sin(angle) * dist;
-          const sz = 0.5 + Math.abs(Math.sin(now * 0.009 + i * 0.7)) * 0.7;
-          ctx.fillStyle = `rgba(200,240,255,${0.4 + Math.sin(now * 0.005 + i) * 0.2})`;
-          ctx.beginPath();
-          ctx.arc(px, py, sz, 0, Math.PI * 2);
+          ctx.arc(screen.x, screen.y, baseR * 1.3, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.shadowBlur = 0;
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2 + now * 0.004 + Math.sin(now * 0.003 + i) * 0.2;
-          const dist = orbR * (1.8 + Math.sin(now * 0.006 + i * 1.1) * 0.5);
+        const pullCount = 12;
+        for (let i = 0; i < pullCount; i++) {
+          const speed = 0.0001 + ((i * 7.31 + 3.17) % 1) * 0.002;
+          const phase = (now * speed + i / pullCount) % 1;
+          if (phase < 0.2) continue;
+          const angle = i * 2.094 + phase * Math.PI * 4;
+          const dist = baseR * 3.5 * Math.pow(1 - phase, 2);
           const px = screen.x + Math.cos(angle) * dist;
           const py = screen.y + Math.sin(angle) * dist;
-          const sz = 0.3 + Math.sin(now * 0.008 + i * 2) * 0.3;
-          ctx.fillStyle = `rgba(180,220,255,0.3)`;
+          const alpha = (1 - phase) * 0.5;
+          const sz = (3 + Math.sin(now * 0.005 + i) * 1) * (1 - phase * 0.5);
+          ctx.fillStyle = `rgba(180,230,255,${alpha})`;
           ctx.beginPath();
           ctx.arc(px, py, sz, 0, Math.PI * 2);
           ctx.fill();
         }
       } else if (p.type === "red") {
-        const r = Math.max(8, p.radius);
+        const r = Math.max(8 * zoom, p.radius * zoom);
         const px = screen.x;
         const py = screen.y;
         const pulse = 1 + Math.sin(now * 0.004 + 1) * 0.04;
@@ -932,8 +937,8 @@ export class Renderer {
           const trailDirX = dx / trailLen;
           const trailDirY = dy / trailLen;
           const extend = Math.min(40, trailLen * 2);
-          for (let i = 0; i < 6; i++) {
-            const t = (i + 1) / 7;
+          for (let i = 0; i < 4; i++) {
+            const t = (i + 1) / 5;
             const tx = px - trailDirX * extend * t;
             const ty = py - trailDirY * extend * t;
             const flicker = 0.6 + Math.sin(now * 0.015 + i * 2.5 + t * 5) * 0.3;
@@ -947,47 +952,18 @@ export class Renderer {
         }
 
         ctx.save();
+        const spriteSize = r * 2 * 2.2 * 0.7;
         ctx.shadowColor = "#ff2040";
         ctx.shadowBlur = 70;
-        const bgGrad = ctx.createRadialGradient(px, py, 0, px, py, r * pulse * 2.2);
-        bgGrad.addColorStop(0, "rgba(255,255,255,0.12)");
-        bgGrad.addColorStop(0.12, "rgba(255,180,180,0.1)");
-        bgGrad.addColorStop(0.35, "rgba(255,80,100,0.08)");
-        bgGrad.addColorStop(0.6, "rgba(220,30,60,0.04)");
-        bgGrad.addColorStop(1, "rgba(150,0,30,0)");
-        ctx.fillStyle = bgGrad;
-        ctx.beginPath();
-        ctx.arc(px, py, r * pulse * 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
+        ctx.drawImage(this.redImg, screen.x - spriteSize / 2, screen.y - spriteSize / 2, spriteSize, spriteSize);
+        ctx.shadowColor = "#ff6080";
+        ctx.shadowBlur = 20;
+        ctx.drawImage(this.redImg, screen.x - spriteSize / 2, screen.y - spriteSize / 2, spriteSize, spriteSize);
         ctx.shadowBlur = 0;
 
-        const smokeGrad = ctx.createRadialGradient(px, py, 0, px, py, r * pulse * 1.7);
-        smokeGrad.addColorStop(0, "rgba(255,235,235,0.45)");
-        smokeGrad.addColorStop(0.1, "rgba(255,200,200,0.3)");
-        smokeGrad.addColorStop(0.25, "rgba(255,130,150,0.22)");
-        smokeGrad.addColorStop(0.5, "rgba(235,70,100,0.12)");
-        smokeGrad.addColorStop(0.75, "rgba(200,30,60,0.05)");
-        smokeGrad.addColorStop(1, "rgba(140,10,40,0)");
-        ctx.fillStyle = smokeGrad;
-        ctx.beginPath();
-        ctx.arc(px, py, r * pulse * 1.7, 0, Math.PI * 2);
-        ctx.fill();
-
-        const innerGrad = ctx.createRadialGradient(px, py, 0, px, py, r * pulse * 1.1);
-        innerGrad.addColorStop(0, "rgba(255,255,255,0.5)");
-        innerGrad.addColorStop(0.15, "rgba(255,220,220,0.3)");
-        innerGrad.addColorStop(0.4, "rgba(255,160,180,0.12)");
-        innerGrad.addColorStop(0.7, "rgba(255,100,130,0.05)");
-        innerGrad.addColorStop(1, "rgba(220,60,90,0)");
-        ctx.fillStyle = innerGrad;
-        ctx.beginPath();
-        ctx.arc(px, py, r * pulse * 1.1, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let vein = 0; vein < 6; vein++) {
-          const vAngle = (vein / 6) * Math.PI * 2 + now * 0.0015 + vein * 0.3;
-          const dots = 6 + (vein * 3) % 5;
+        for (let vein = 0; vein < 4; vein++) {
+          const vAngle = (vein / 4) * Math.PI * 2 + now * 0.0015 + vein * 0.3;
+          const dots = 4 + (vein * 3) % 4;
           for (let d = 0; d < dots; d++) {
             const t = (d + 1) / (dots + 1);
             const spread = 0.35 + Math.sin(vein * 2.7 + d * 1.3) * 0.25;
@@ -1004,7 +980,7 @@ export class Renderer {
           }
         }
 
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 25; i++) {
           const angle = i * 2.399 + Math.sin(now * 0.003 + i * 0.5) * 0.3;
           const dist = r * (0.05 + (Math.sin(i * 3.7 + now * 0.002) * 0.5 + 0.5) * 0.85);
           const sx = px + Math.cos(angle) * dist;
@@ -1017,7 +993,7 @@ export class Renderer {
           ctx.fill();
         }
 
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 10; i++) {
           const angle = now * 0.005 + i * (Math.PI * 2 / 15) + Math.sin(now * 0.003 + i * 0.6) * 0.5;
           const dist = r * (0.6 + Math.sin(now * 0.006 + i * 1.1) * 0.5 + 0.5);
           const sx2 = px + Math.cos(angle) * dist;
@@ -1030,14 +1006,14 @@ export class Renderer {
           ctx.fill();
         }
 
-        for (let i = 0; i < 12; i++) {
-          const angle = (i / 12) * Math.PI * 2 + now * 0.003;
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2 + now * 0.003;
           const dist = r * (0.88 + Math.sin(now * 0.004 + i * 1.3) * 0.12);
           const ex = px + Math.cos(angle) * dist;
           const ey = py + Math.sin(angle) * dist;
           const arcAngle = angle + Math.PI * 0.5;
           const arcLen = r * (0.15 + Math.sin(now * 0.005 + i * 0.7) * 0.1 + 0.12);
-          for (let s = 0; s < 3; s++) {
+          for (let s = 0; s < 2; s++) {
             const st = (s + 1) / 4;
             const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.006 + i + s) * 4;
             const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.006 + i + s) * 4;
@@ -1052,14 +1028,14 @@ export class Renderer {
         ctx.restore();
       } else {
         ctx.strokeStyle = "rgba(255,165,92,0.45)";
-        ctx.lineWidth = Math.max(2, p.radius * 0.45);
+        ctx.lineWidth = Math.max(2 * zoom, p.radius * 0.45 * zoom);
         ctx.beginPath();
         ctx.moveTo(prev.x, prev.y);
         ctx.lineTo(screen.x, screen.y);
         ctx.stroke();
         ctx.fillStyle = "#ffbe73";
         ctx.beginPath();
-        ctx.arc(screen.x, screen.y, Math.max(3, p.radius), 0, Math.PI * 2);
+        ctx.arc(screen.x, screen.y, Math.max(3 * zoom, p.radius * zoom), 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -1069,10 +1045,12 @@ export class Renderer {
 
   drawEnemies(enemies) {
     const ctx = this.ctx;
+    const zoom = this.camera.zoom || 1;
     enemies.forEach((entry) => {
       const e = entry.raw;
       const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
-      const radius = e.type === "boss" ? 34 : e.type === "elite" ? 24 : 18;
+      const baseRadius = e.type === "boss" ? 34 : e.type === "elite" ? 24 : 18;
+      const radius = baseRadius * zoom;
       const frozen = Boolean(e.frozen);
 
       ctx.save();
@@ -1090,7 +1068,7 @@ export class Renderer {
         ctx.shadowColor = "rgba(227,244,255,0.85)";
         ctx.shadowBlur = 16;
       }
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
       ctx.fill();
@@ -1099,24 +1077,25 @@ export class Renderer {
       if (frozen) {
         const pulse = 0.75 + Math.sin(Date.now() * 0.01 + radius) * 0.15;
         ctx.strokeStyle = "rgba(243,252,255,0.75)";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 * zoom;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, radius + 4 + pulse * 2, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, radius + 4 * zoom + pulse * 2 * zoom, 0, Math.PI * 2);
         ctx.stroke();
       }
 
       const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
       ctx.fillStyle = "rgba(14,18,27,0.8)";
-      ctx.fillRect(p.x - radius, p.y - radius - 10, radius * 2, 4);
+      ctx.fillRect(p.x - radius, p.y - radius - 10 * zoom, radius * 2, 4 * zoom);
       ctx.fillStyle = "#ff6e8f";
-      ctx.fillRect(p.x - radius, p.y - radius - 10, radius * 2 * hpPct, 4);
+      ctx.fillRect(p.x - radius, p.y - radius - 10 * zoom, radius * 2 * hpPct, 4 * zoom);
       ctx.restore();
     });
   }
 
-  drawPlayers(players, youId) {
+  drawPlayers(players, youId, localPred) {
     const ctx = this.ctx;
     const now = performance.now();
+    this.yutaVisual.updateBeamsFromPlayerSnapshots(players);
     players.forEach((entry) => {
       const p = entry.raw;
       const isYou = p.id === youId;
@@ -1126,14 +1105,33 @@ export class Renderer {
       const tween = this.dashTweens.get(p.id);
       let rx = entry.x;
       let ry = entry.y;
+      if (isYou && localPred && !tween) {
+        if (!this.localVisualPos) {
+          this.localVisualPos = { x: localPred.x, y: localPred.y };
+        }
+        const dx = localPred.x - this.localVisualPos.x;
+        const dy = localPred.y - this.localVisualPos.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 140) {
+          this.localVisualPos.x = localPred.x;
+          this.localVisualPos.y = localPred.y;
+        } else {
+          const follow = dist > 28 ? 0.52 : 0.38;
+          this.localVisualPos.x += dx * follow;
+          this.localVisualPos.y += dy * follow;
+        }
+        rx = this.localVisualPos.x;
+        ry = this.localVisualPos.y;
+      }
       if (tween) {
         const t = Math.min(1, (now - tween.startTime) / tween.duration);
         const ease = 1 - Math.pow(1 - t, 3);
         rx = tween.startX + (tween.endX - tween.startX) * ease;
         ry = tween.startY + (tween.endY - tween.startY) * ease;
+        if (isYou) {
+          this.localVisualPos = { x: rx, y: ry };
+        }
       }
-
-      const pos = worldToScreen(this.camera, this.canvas, rx, ry);
 
       let facing = this.playerFacing.get(p.id) || 1;
       const pvx = p.vx || 0;
@@ -1149,7 +1147,7 @@ export class Renderer {
         ctx.globalAlpha = 0.35;
       }
 
-      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState);
+      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx, ry);
 
       ctx.restore();
     });
@@ -1209,7 +1207,7 @@ export class Renderer {
     ctx.restore();
   }
 
-  render({ interpolation, youId, you }) {
+  render({ interpolation, youId, you, localPred }) {
     this.interpolationRef = interpolation || this.interpolationRef;
     if (typeof window._diagRender === 'undefined') {
       window._diagRender = 0;
@@ -1225,19 +1223,84 @@ export class Renderer {
       }
       this.domainVisual.updatePlayers(interpolation.players);
       this.ctx.save();
-      this.drawDomains(interpolation.domains, youId, you);
+      this.drawDomains(interpolation.domains, youId, you, localPred);
       this.ctx.restore();
       this.drawMarkers();
       this.drawRedExplosions();
+      this.drawBlueExplosions();
       this.drawProjectiles(interpolation.projectiles);
       this.renderPurpleCharges(this.ctx, this.camera);
       this.renderPurpleExplosions(this.ctx, this.camera);
       this.drawEnemies(interpolation.enemies);
-      this.drawPlayers(interpolation.players, youId);
+      this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);
       this.yutaVisual.renderEffects(this.ctx, this.camera);
       this.drawM1PunchEffects();
       this.particles.render(this.ctx, this.camera);
+      this.ctx.save();
+      this.drawDomainPrivacy(interpolation.domains, you, localPred, this.camera.zoom, this.camera.x, this.camera.y, this.canvas.clientWidth, this.canvas.clientHeight);
+      this.ctx.restore();
+    }
+  }
+
+  drawDomainPrivacy(domains, you, localPred, z, cx, cy, w, h) {
+    if (!domains || domains.size === 0) return;
+    const ctx = this.ctx;
+    const px = localPred ? localPred.x : (you ? you.x : 0);
+    const py = localPred ? localPred.y : (you ? you.y : 0);
+
+    let viewerInsideAny = false;
+
+    domains.forEach((entry) => {
+      const d = entry.raw || entry;
+      const ex = entry.x;
+      const ey = entry.y;
+      const targetR = d.radius;
+      const currentR = this.domainVisual.getCurrentRadius(d.ownerId, targetR);
+      if (currentR < 2) return;
+      const vz = currentR * z;
+      const spx = (ex - cx) * z + w * 0.5;
+      const spy = (ey - cy) * z + h * 0.5;
+      const viewerInside = Math.hypot(px - ex, py - ey) <= targetR;
+
+      if (viewerInside) {
+        viewerInsideAny = true;
+      } else {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(spx, spy, vz, 0, Math.PI * 2);
+        ctx.fillStyle = "#000000";
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+
+    if (viewerInsideAny) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w, h);
+
+      domains.forEach((entry) => {
+        const d = entry.raw || entry;
+        const ex = entry.x;
+        const ey = entry.y;
+        const targetR = d.radius;
+        const currentR = this.domainVisual.getCurrentRadius(d.ownerId, targetR);
+        if (currentR < 2) return;
+        const vz = currentR * z;
+        const spx = (ex - cx) * z + w * 0.5;
+        const spy = (ey - cy) * z + h * 0.5;
+        const viewerInside = Math.hypot(px - ex, py - ey) <= targetR;
+
+        if (viewerInside) {
+          ctx.arc(spx, spy, vz, 0, Math.PI * 2, true);
+          ctx.closePath();
+        }
+      });
+
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fill("evenodd");
+      ctx.restore();
     }
   }
 }
