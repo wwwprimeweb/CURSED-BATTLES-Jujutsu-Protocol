@@ -39,6 +39,7 @@ export function mapServerStateToAnim(serverState) {
     skill3: "skill_purple",
     teleport: "teleport",
     domain: "domain",
+    domain_prepare: "domain",
   };
   return map[serverState] || "idle";
 }

@@ -25,13 +25,13 @@ const LAYER_ALPHA = {
 };
 
 const LAYER_OFFSET = {
-  far: { x: 0, y: 0 },
-  mid: { x: 0.2, y: -0.25 },
+  far: { x: 0.12, y: 0 },
+  mid: { x: 0.2, y: 0.3 },
   close: { x: 0, y: 0 },
 };
 
 const PARALLAX_DEPTHS = {
-  far: 0.15,
+  far: 0.25,
   mid: 0.06,
   close: 0,
 };
@@ -353,9 +353,6 @@ export class DomainVisualSystem {
           const cy2 = p.y + lo.y * vz + dy;
           ctx.save();
           ctx.translate(cx2, cy2);
-          if (key === 'mid') {
-            ctx.rotate(this.rotationTime * 0.021);
-          }
           ctx.globalAlpha = alpha * (LAYER_ALPHA[key] ?? 1);
           this.drawScaledImage(ctx, img, 0, 0, vz, 0, 0, LAYER_SCALE[key]);
           ctx.globalAlpha = 1;

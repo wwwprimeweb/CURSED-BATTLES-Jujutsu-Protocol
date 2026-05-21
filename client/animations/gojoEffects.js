@@ -131,63 +131,41 @@ export function drawDodgeEffect(ctx, x, y, facing, progress) {
   ctx.restore();
 }
 
-export function drawM1Punch(ctx, x, y, dirX, dirY, progress, comboStep, time) {
+export function drawGojoM1Sprite(ctx, x, y, dirX, dirY, progress, comboStep, sprite) {
   if (progress <= 0.01 || progress >= 0.98) return;
 
-  const alpha = Math.min(1, progress * 5) * Math.max(0, 1 - progress * 1.2);
+  const rawFadeIn = Math.min(1, progress * 4);
+  const fadeIn = rawFadeIn * rawFadeIn * (3 - 2 * rawFadeIn);
+  const rawFadeOut = Math.max(0, 1 - progress * 1.4);
+  const fadeOut = rawFadeOut * rawFadeOut * (3 - 2 * rawFadeOut);
+  const alpha = fadeIn * fadeOut;
   if (alpha <= 0.01) return;
 
-  const range = 85;
-  const extend = Math.min(1, progress * 3.5);
   const angle = Math.atan2(dirY, dirX);
-  const endX = x + dirX * range * extend;
-  const endY = y + dirY * range * extend;
-  const wMul = 0.3 + comboStep * 0.35;
+  const range = 85;
+  const moveIn = 0.7;
+  const spriteDist = range * 1.15 * moveIn;
+  const perpX = -dirY;
+  const perpY = dirX;
+  const offsetMap = { 1: 0, 2: 35, 3: 18 };
+  const offset = offsetMap[comboStep] || 0;
+  const baseY = y - 25;
+  const sx = Math.cos(angle) * spriteDist + perpX * offset;
+  const sy = Math.sin(angle) * spriteDist + perpY * offset;
 
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.translate(x, y);
-  ctx.rotate(angle);
+  if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+    const aspect = sprite.naturalWidth / sprite.naturalHeight;
+    const sizes = { 1: 65, 2: 85, 3: 75 };
+    const spriteHeight = (sizes[comboStep] || 65) * 0.7;
+    const spriteWidth = spriteHeight * aspect;
 
-  const shapeLen = range * extend;
-  const cp1x = shapeLen * 0.44;
-  const cp1y = -30 * wMul;
-  const epx = shapeLen;
-  const epy = -10 * wMul;
-  const cp2x = shapeLen * 0.55;
-  const cp2y = 5 * wMul;
-
-  ctx.shadowColor = "#4488ff";
-  ctx.shadowBlur = 50 + comboStep * 15;
-  ctx.globalCompositeOperation = "lighter";
-
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.quadraticCurveTo(cp1x, cp1y, epx, epy);
-  ctx.quadraticCurveTo(cp2x, cp2y, 0, 0);
-  const grad = ctx.createLinearGradient(0, 0, shapeLen, 0);
-  grad.addColorStop(0, "#ffffff");
-  grad.addColorStop(0.4, "#6fefff");
-  grad.addColorStop(1, "#32d6c9");
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  ctx.restore();
-
-  if (comboStep === 3 && progress < 0.4) {
     ctx.save();
-    ctx.globalAlpha = alpha * 0.7;
-    ctx.shadowBlur = 0;
-    for (let i = 0; i < 4; i++) {
-      const seed = i * 0.618;
-      const dist = range * (0.3 + seed * 0.4);
-      const spread = (seed - 0.5) * 0.4;
-      const a = angle + spread;
-      ctx.fillStyle = `rgba(255,255,255,${0.2 + seed * 0.2})`;
-      ctx.beginPath();
-      ctx.arc(x + Math.cos(a) * dist, y + Math.sin(a) * dist, 1.5 + seed * 1.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.translate(x, baseY);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.translate(sx, sy);
+    ctx.rotate(angle);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(sprite, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
     ctx.restore();
   }
 }

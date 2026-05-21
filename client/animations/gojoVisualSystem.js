@@ -1,15 +1,17 @@
-import { GojoSpriteRenderer } from "./gojoSprite.js";
+import { CharacterSprite } from "./characterSprite.js";
 import { GojoSkillEffects } from "./proceduralGojo.js";
 import { drawDeathPose, drawHitReaction, drawDodgeEffect } from "./gojoEffects.js";
 
 export class GojoVisualSystem {
   constructor() {
-    this.gojoSprite = new GojoSpriteRenderer();
+    this.gojoSprite = new CharacterSprite("gojo");
     this.effects = new GojoSkillEffects();
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
     this.m1Slashes = [];
     this.time = 0;
+    this.gojoAttackSprite = new Image();
+    this.gojoAttackSprite.src = "/assets/habilit/gojoattack.png";
   }
 
   update(dt) {
@@ -28,13 +30,35 @@ export class GojoVisualSystem {
     });
 
     for (let i = this.m1Slashes.length - 1; i >= 0; i--) {
-      this.m1Slashes[i].life -= dt;
-      if (this.m1Slashes[i].life <= 0) this.m1Slashes.splice(i, 1);
+      const slash = this.m1Slashes[i];
+      slash.life -= dt;
+      if (slash.life <= 0) {
+        this.m1Slashes.splice(i, 1);
+      }
+
+      // Trail sprites — 1 por frame na posição exata do sprite principal
+      const range = 85;
+      const spriteDist = range * 1.15 * 0.7;
+      const offsetMap = { 1: 0, 2: 35, 3: 18 };
+      const offsetVal = offsetMap[slash.comboStep] || 0;
+      const perpX = -slash.dirY;
+      const perpY = slash.dirX;
+      const tx = slash.worldX + slash.dirX * spriteDist + perpX * offsetVal;
+      const ty = slash.worldY + slash.dirY * spriteDist + perpY * offsetVal;
+      if (!slash.trail) slash.trail = [];
+      slash.trail.push({ x: tx, y: ty, life: 0.4 });
+
+      if (slash.trail) {
+        for (let t = slash.trail.length - 1; t >= 0; t--) {
+          slash.trail[t].life -= dt;
+          if (slash.trail[t].life <= 0) slash.trail.splice(t, 1);
+        }
+      }
     }
   }
 
   triggerM1(worldX, worldY, dirX, dirY, comboStep) {
-    this.m1Slashes.push({ worldX, worldY, dirX, dirY, comboStep, life: 0.3 });
+    this.m1Slashes.push({ worldX, worldY, dirX, dirY, comboStep, life: 0.5 });
   }
 
   triggerHit(x, y, intensity = 1) {
@@ -81,6 +105,11 @@ export class GojoVisualSystem {
     };
     const animState = state || p.animState || "idle";
     const spriteScale = zoom;
+
+    if (animState === "domain_prepare") {
+      this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+      return;
+    }
 
     if (animState === "dodge" && p.dodgeStartTime) {
       const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;

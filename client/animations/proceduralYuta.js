@@ -7,6 +7,8 @@ export class YutaSkillEffects {
     this.pureLoves = [];
     this.katanaSlashes = [];
     this.time = 0;
+    this.katanaSprite = new Image();
+    this.katanaSprite.src = "/assets/habilit/yutaattack.png";
   }
 
   update(dt) {
@@ -74,8 +76,8 @@ export class YutaSkillEffects {
       combo,
       range,
       coneAngle,
-      life: 0.5,
-      maxLife: 0.5,
+      life: 0.8,
+      maxLife: 0.8,
     });
   }
 
@@ -121,7 +123,7 @@ export class YutaSkillEffects {
       const maxLife = Number.isFinite(slash.maxLife) ? slash.maxLife : 0.3;
       const progress = 1 - slash.life / maxLife;
       if (slash.type === "m1Combined") {
-        drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle);
+        drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle, this.katanaSprite);
       } else if (slash.type === "rika") {
         const size = Number.isFinite(slash.size) ? slash.size : 1;
         const intensity = Number.isFinite(slash.intensity) ? slash.intensity : 1;

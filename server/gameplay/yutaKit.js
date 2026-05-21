@@ -4,9 +4,9 @@ const YUTA = {
   m1: {
     name: "Katana Combat",
     damage: 42,
-    range: 160,
+    range: 250,
     coneAngle: 1.4,
-    cooldown: 0.4,
+    cooldown: 0.56,
     startup: 0.07,
     active: 0.1,
     recovery: 0.1,

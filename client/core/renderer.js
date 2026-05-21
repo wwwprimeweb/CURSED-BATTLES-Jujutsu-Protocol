@@ -1,7 +1,8 @@
 import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
 import { YutaVisualSystem } from "../animations/yutaVisualSystem.js";
+import { GenericVisualSystem } from "../animations/genericVisualSystem.js";
 import { DomainVisualSystem } from "../animations/domainVisualSystem.js";
-import { drawM1Punch } from "../animations/gojoEffects.js";
+import { drawGojoM1Sprite } from "../animations/gojoEffects.js";
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
@@ -10,8 +11,8 @@ function clamp(v, min, max) {
 function worldToScreen(camera, canvas, x, y) {
   const zoom = camera.zoom || 1;
   return {
-    x: (x - camera.x) * zoom + canvas.clientWidth * 0.5,
-    y: (y - camera.y) * zoom + canvas.clientHeight * 0.5,
+    x: (x - camera.x) * zoom + canvas.width * 0.5,
+    y: (y - camera.y) * zoom + canvas.height * 0.5,
   };
 }
 
@@ -22,6 +23,10 @@ export class Renderer {
     this.particles = particleSystem;
     this.gojoVisual = new GojoVisualSystem();
     this.yutaVisual = new YutaVisualSystem();
+    this.sukunaVisual = new GenericVisualSystem("sukuna");
+    this.yujiVisual = new GenericVisualSystem("yuji");
+    this.megumiVisual = new GenericVisualSystem("megumi");
+    this.hakariVisual = new GenericVisualSystem("hakari");
     this.domainVisual = new DomainVisualSystem();
     this.map = null;
     this.camera = {
@@ -302,8 +307,14 @@ export class Renderer {
   }
 
   getVisualForPlayer(character) {
-    if (character === "yuta") return this.yutaVisual;
-    return this.gojoVisual;
+    switch (character) {
+      case "yuta": return this.yutaVisual;
+      case "sukuna": return this.sukunaVisual;
+      case "yuji": return this.yujiVisual;
+      case "megumi": return this.megumiVisual;
+      case "hakari": return this.hakariVisual;
+      default: return this.gojoVisual;
+    }
   }
 
   triggerDash(playerId, ev, startX, startY) {
@@ -321,6 +332,10 @@ export class Renderer {
   updateEffects(dt) {
     this.gojoVisual.update(dt);
     this.yutaVisual.update(dt);
+    this.sukunaVisual.update(dt);
+    this.yujiVisual.update(dt);
+    this.megumiVisual.update(dt);
+    this.hakariVisual.update(dt);
     this.domainVisual.update(dt);
     const now = performance.now();
     this.dashVisuals.forEach((expiry, id) => {
@@ -1159,8 +1174,30 @@ export class Renderer {
       const slash = this.gojoVisual.m1Slashes[i];
       if (slash.life <= 0) continue;
       const pos = worldToScreen(this.camera, this.canvas, slash.worldX, slash.worldY);
-      const progress = 1 - slash.life / 0.3;
-      drawM1Punch(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, this.gojoVisual.time);
+      const progress = 1 - slash.life / 0.5;
+      const sprite = this.gojoVisual.gojoAttackSprite;
+
+      // Trail sprites
+      if (slash.trail && sprite && sprite.complete && sprite.naturalWidth > 0) {
+        const aspect = sprite.naturalWidth / sprite.naturalHeight;
+        const tHeight = 12 + slash.comboStep * 3;
+        const tWidth = tHeight * aspect;
+        const angle = Math.atan2(slash.dirY, slash.dirX);
+        for (const t of slash.trail) {
+          const tp = worldToScreen(this.camera, this.canvas, t.x, t.y);
+          const baseY = tp.y - 25;
+          const tAlpha = (t.life / 0.4) * 0.25;
+          ctx.save();
+          ctx.translate(tp.x, baseY);
+          ctx.globalCompositeOperation = "lighter";
+          ctx.rotate(angle);
+          ctx.globalAlpha = tAlpha;
+          ctx.drawImage(sprite, -tWidth / 2, -tHeight / 2, tWidth, tHeight);
+          ctx.restore();
+        }
+      }
+
+      drawGojoM1Sprite(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, sprite);
     }
   }
 
@@ -1235,6 +1272,10 @@ export class Renderer {
       this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);
       this.yutaVisual.renderEffects(this.ctx, this.camera);
+      this.sukunaVisual.renderEffects(this.ctx, this.camera);
+      this.yujiVisual.renderEffects(this.ctx, this.camera);
+      this.megumiVisual.renderEffects(this.ctx, this.camera);
+      this.hakariVisual.renderEffects(this.ctx, this.camera);
       this.drawM1PunchEffects();
       this.particles.render(this.ctx, this.camera);
       this.ctx.save();

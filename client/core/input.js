@@ -14,8 +14,8 @@ export class InputManager {
       f: false,
       dodge: false,
     };
-    this.mouseX = canvas.clientWidth * 0.5;
-    this.mouseY = canvas.clientHeight * 0.5;
+    this.mouseX = canvas.width * 0.5;
+    this.mouseY = canvas.height * 0.5;
     this.enabled = false;
     this.onUpgradeKey = null;
   }
@@ -98,8 +98,8 @@ export class InputManager {
 
   toPayload(camera, seq) {
     const zoom = camera.zoom || 1;
-    const aimX = camera.x + (this.mouseX - this.canvas.clientWidth * 0.5) / zoom;
-    const aimY = camera.y + (this.mouseY - this.canvas.clientHeight * 0.5) / zoom;
+    const aimX = camera.x + (this.mouseX - this.canvas.width * 0.5) / zoom;
+    const aimY = camera.y + (this.mouseY - this.canvas.height * 0.5) / zoom;
     return {
       type: "input",
       seq,

@@ -218,52 +218,11 @@ function handleEvents(events) {
       const attackerCharacter = ev.character || "gojo";
       if (attackerCharacter === "yuta") {
         const slashRange = Number.isFinite(ev.slashRange) ? ev.slashRange : 160;
-        const perpX = -dirY;
-        const perpY = dirX;
-        const midX = ev.x + dirX * slashRange * 0.5;
-        const midY = ev.y + dirY * slashRange * 0.5;
-        const tipX = ev.x + dirX * slashRange * 0.85;
-        const tipY = ev.y + dirY * slashRange * 0.85;
+        const coneAngle = Number.isFinite(ev.coneAngle) ? ev.coneAngle : 1.4;
 
-        renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange);
-
-        particles.spawnBurst({ x: midX, y: midY, color: "#ff66b2", count: 12, speed: 220, life: 0.3, size: 3 });
-        particles.spawnBurst({ x: tipX, y: tipY, color: "#ff99cc", count: 8, speed: 180, life: 0.25, size: 2.5 });
-        particles.spawnLine({ x: midX, y: midY, dirX, dirY, color: "#ffccdd", count: 6, life: 0.2 });
-
-        for (let k = 0; k < 10; k += 1) {
-          const t = k / 9;
-          const spread = (t - 0.5) * 40;
-          const px = midX + perpX * spread;
-          const py = midY + perpY * spread;
-          particles.spawnBurst({
-            x: px,
-            y: py,
-            color: k % 2 === 0 ? "#ffd6ea" : "#ff88c4",
-            count: 3,
-            speed: 120 + Math.random() * 100,
-            life: 0.14 + Math.random() * 0.08,
-            size: 1.5 + Math.random() * 1.2,
-          });
-        }
-
-        if (combo === 3) {
-          particles.spawnBurst({ x: tipX, y: tipY, color: "#ffffff", count: 14, speed: 260, life: 0.32, size: 3.5 });
-          for (let m = 0; m < 8; m += 1) {
-            const spread = (m / 7 - 0.5) * 50;
-            const px = tipX + perpX * spread;
-            const py = tipY + perpY * spread;
-            particles.spawnBurst({
-              x: px,
-              y: py,
-              color: m % 2 === 0 ? "#ffffff" : "#ff66b2",
-              count: 4,
-              speed: 160 + Math.random() * 140,
-              life: 0.18 + Math.random() * 0.1,
-              size: 2 + Math.random() * 1.5,
-            });
-          }
-        }
+        renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange, coneAngle);
+      } else if (attackerCharacter === "gojo") {
+        renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo);
       } else {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 5, speed: 100, life: 0.12, size: 1.5 });
         particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#66c6ff", count: 4, life: 0.15 });

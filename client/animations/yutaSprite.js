@@ -9,12 +9,14 @@ export class YutaSpriteRenderer {
     this.idleSprite = null;
     this.dashSprite = null;
     this.rikaSprite = null;
+    this.domainPrepSprite = null;
     this.isLoaded = false;
     this.loadError = null;
     this.walkTime = 0;
     this.loadIdleSprite();
     this.loadDashSprite();
     this.loadRikaSprite();
+    this.loadDomainPrepSprite();
   }
 
   async loadIdleSprite() {
@@ -74,8 +76,26 @@ export class YutaSpriteRenderer {
     console.error("[YutaSprite] All rika paths failed");
   }
 
+  async loadDomainPrepSprite() {
+    const paths = [
+      "/assets/sprites/yutade.png",
+      "/client/assets/sprites/yutade.png",
+      "./assets/sprites/yutade.png",
+      "../client/assets/sprites/yutade.png",
+      "yutade.png",
+    ];
+    for (const path of paths) {
+      try {
+        this.domainPrepSprite = await loadImage(path);
+        this.checkLoaded();
+        return;
+      } catch (e) {
+      }
+    }
+  }
+
   checkLoaded() {
-    if (this.idleSprite || this.dashSprite || this.rikaSprite) {
+    if (this.idleSprite || this.dashSprite || this.rikaSprite || this.domainPrepSprite) {
       this.isLoaded = true;
     }
   }
@@ -86,9 +106,15 @@ export class YutaSpriteRenderer {
 
   render(ctx, x, y, state, facing = 1, _scale = 1) {
     const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    const isDomainPrep = state === "domain_prepare";
     const isDash = state === "dash";
     const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2 : 0;
     const finalY = y + bobY;
+
+    if (isDomainPrep && this.domainPrepSprite) {
+      this.drawSprite(ctx, this.domainPrepSprite, x, finalY, facing, DEFAULT_SIZE * scale);
+      return;
+    }
 
     if (isDash && this.dashSprite) {
       this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);

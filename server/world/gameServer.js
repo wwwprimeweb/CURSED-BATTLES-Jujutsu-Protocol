@@ -783,6 +783,12 @@ class GameServer {
       return;
     }
 
+    if (player.cast && player.cast.type === "domain") {
+      player.animState = "domain_prepare";
+      player.statePriority = 2;
+      return;
+    }
+
     if (this.domainSystem.domains.has(player.id)) {
       player.animState = "domain";
       player.statePriority = 2;

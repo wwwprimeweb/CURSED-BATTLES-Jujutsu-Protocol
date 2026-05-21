@@ -72,7 +72,7 @@ export function drawRikaShockwave(ctx, x, y, radius, progress, intensity = 1) {
   ctx.restore();
 }
 
-export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range, coneAngle) {
+export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range, coneAngle, katanaSprite) {
   if (progress <= 0.01 || progress >= 0.98) return;
   const fastPhase = Math.min(1, progress * 8);
   const fadePhase = Math.max(0, 1 - Math.max(0, progress - 0.4) * 1.67);
@@ -84,57 +84,33 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
   const arcStart = angle - sweepAngle * 0.5;
   const arcEnd = arcStart + sweepAngle * Math.min(1, progress * 3);
   const bladeLen = range * 0.95;
-  const innerR = 30;
 
   ctx.save();
   ctx.translate(x, y);
   ctx.globalCompositeOperation = "lighter";
 
-  ctx.globalAlpha = alpha * 0.2;
-  ctx.shadowColor = "#ff1a80";
-  ctx.shadowBlur = 60;
-  ctx.fillStyle = "rgba(255,26,128,0.12)";
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.arc(0, 0, bladeLen + 16, arcStart, arcEnd);
-  ctx.closePath();
-  ctx.fill();
+  // Sprite principal
+  if (katanaSprite && katanaSprite.complete && katanaSprite.naturalWidth > 0) {
+    const spriteDist = bladeLen * 0.84;
+    const rotationOffset = 0;
+    const aspect = katanaSprite.naturalWidth / katanaSprite.naturalHeight;
+    const moveIn = Math.min(1, progress * 5);
+    const growScale = Math.min(1, 0.3 + progress * 3.5);
+    const spriteWidth = (110 + comboStep * 15) * 1.3 * growScale;
+    const spriteHeight = spriteWidth / aspect;
+    const spriteAlpha = alpha * (1 - Math.max(0, progress - 0.8) * 5);
+    const sx = Math.cos(angle) * spriteDist * moveIn;
+    const sy = Math.sin(angle) * spriteDist * moveIn;
 
-  ctx.globalAlpha = alpha * 0.5;
-  ctx.shadowColor = "#ff3388";
-  ctx.shadowBlur = 40;
-  const bladeGrad = ctx.createRadialGradient(0, 0, innerR * 0.5, 0, 0, bladeLen);
-  bladeGrad.addColorStop(0, "rgba(255,240,250,0)");
-  bladeGrad.addColorStop(0.35, "rgba(255,180,230,0.12)");
-  bladeGrad.addColorStop(0.7, "rgba(255,80,190,0.35)");
-  bladeGrad.addColorStop(0.9, "rgba(255,50,160,0.55)");
-  bladeGrad.addColorStop(1, "rgba(255,40,150,0.1)");
-  ctx.fillStyle = bladeGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, bladeLen, arcStart, arcEnd);
-  ctx.arc(0, 0, innerR, arcEnd, arcStart, true);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.globalAlpha = alpha * 0.7;
-  ctx.shadowColor = "#ff66cc";
-  ctx.shadowBlur = 25;
-  ctx.strokeStyle = "rgba(255,102,204,0.8)";
-  ctx.lineWidth = 4;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.arc(0, 0, bladeLen, arcStart + 0.05, arcEnd - 0.05);
-  ctx.stroke();
-
-  ctx.globalAlpha = alpha * 0.5;
-  for (let i = 0; i < 8 + comboStep * 3; i += 1) {
-    const t = Math.random();
-    const a = arcStart + t * (arcEnd - arcStart);
-    const dist = bladeLen * (0.7 + Math.random() * 0.28);
-    ctx.fillStyle = "#ffb3d9";
-    ctx.beginPath();
-    ctx.arc(Math.cos(a) * dist, Math.sin(a) * dist, 1.5 + Math.random() * 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(angle + Math.PI + rotationOffset);
+    if (dirX > 0) ctx.scale(1, -1);
+    ctx.globalAlpha = spriteAlpha;
+    ctx.shadowColor = "#ff66cc";
+    ctx.shadowBlur = 35;
+    ctx.drawImage(katanaSprite, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
+    ctx.restore();
   }
 
   ctx.restore();

@@ -300,6 +300,11 @@ export class YutaVisualSystem {
     const animState = state || p.animState || "idle";
     const spriteScale = zoom;
 
+    if (animState === "domain_prepare") {
+      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+      return;
+    }
+
     if (animState === "dodge" && p.dodgeStartTime) {
       const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
       const dodgeProgress = Math.min(1, dodgeAge / 0.2);
