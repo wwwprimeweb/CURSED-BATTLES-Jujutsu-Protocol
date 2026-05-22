@@ -1,10 +1,19 @@
-import { CharacterSprite } from "./characterSprite.js";
+import { SpriteAnimator } from "./spriteAnimator.js";
+import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH } from "./gojoSprites.js";
 import { GojoSkillEffects } from "./proceduralGojo.js";
-import { drawDeathPose, drawHitReaction, drawDodgeEffect } from "./gojoEffects.js";
+import { drawHitReaction } from "./gojoEffects.js";
 
 export class GojoVisualSystem {
   constructor() {
-    this.gojoSprite = new CharacterSprite("gojo");
+    this.gojoSprite = new SpriteAnimator({
+      sheetPath: GOJO_MANGA_SPRITE_PATH,
+      cellWidth: SPRITE_CONFIG.cellWidth,
+      cellHeight: SPRITE_CONFIG.cellHeight,
+      pivotX: SPRITE_CONFIG.pivotX,
+      pivotY: SPRITE_CONFIG.pivotY,
+      renderScale: SPRITE_CONFIG.renderScale,
+      animations: GOJO_ANIMATIONS,
+    });
     this.effects = new GojoSkillEffects();
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
@@ -12,12 +21,25 @@ export class GojoVisualSystem {
     this.time = 0;
     this.gojoAttackSprite = new Image();
     this.gojoAttackSprite.src = "/assets/habilit/gojoattack.png";
+    this.dashImage = new Image();
+    this.dashImage.src = "/assets/sprites/gojo_shinjuku/dash.png";
+    this.domainPrepFrames = [];
+    for (let i = 0; i < 5; i++) {
+      const img = new Image();
+      img.src = `/assets/sprites/gojo_shinjuku/domain_prep_${i}.png`;
+      this.domainPrepFrames.push(img);
+    }
+    this.domainPrepTime = 0;
+    this._wasDomainPrep = false;
+    this.domainPrepTimings = [0.2, 0.2, 0.3, 0.25, 0.6];
   }
 
   update(dt) {
     this.time += dt;
     this.gojoSprite.update(dt);
     this.effects.update(dt);
+
+    this.domainPrepTime += dt;
 
     this.hitFlashes.forEach((flash, id) => {
       flash.life -= dt;
@@ -57,8 +79,12 @@ export class GojoVisualSystem {
     }
   }
 
-  triggerM1(worldX, worldY, dirX, dirY, comboStep) {
-    this.m1Slashes.push({ worldX, worldY, dirX, dirY, comboStep, life: 0.5 });
+  triggerM1(worldX, worldY, dirX, dirY, comboStep, playerId) {
+    this.m1Slashes.push({
+      worldX: worldX - dirX * 35,
+      worldY: worldY - 35,
+      dirX, dirY, comboStep, life: 0.5,
+    });
   }
 
   triggerHit(x, y, intensity = 1) {
@@ -103,22 +129,44 @@ export class GojoVisualSystem {
       x: (worldX - camera.x) * zoom + ctx.canvas.width * 0.5,
       y: (worldY - camera.y) * zoom + ctx.canvas.height * 0.5,
     };
-    const animState = state || p.animState || "idle";
+    let animState = state || p.animState || "idle";
     const spriteScale = zoom;
 
-    if (animState === "domain_prepare") {
-      this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+    if (animState !== "domain_prepare") {
+      this._wasDomainPrep = false;
+    }
+
+    if (animState === "dash") {
+      if (this.dashImage.complete && this.dashImage.naturalWidth > 0) {
+        const targetSize = 110 * spriteScale;
+        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 34 * spriteScale, facing, targetSize);
+      }
+      if (p.alive) {
+        ctx.fillStyle = "#dce9ff";
+        ctx.font = "600 14px Rajdhani";
+        ctx.textAlign = "center";
+        ctx.fillText(p.name || "Gojo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+      }
       return;
     }
 
-    if (animState === "dodge" && p.dodgeStartTime) {
-      const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
-      const dodgeProgress = Math.min(1, dodgeAge / 0.2);
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.scale(zoom, zoom);
-      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress);
-      ctx.restore();
+    if (animState === "domain_prepare") {
+      if (!this._wasDomainPrep) {
+        this.domainPrepTime = 0;
+        this._wasDomainPrep = true;
+      }
+      const img = this.domainPrepFrames[4];
+      if (img && img.complete && img.naturalWidth > 0) {
+        const targetSize = 96 * spriteScale;
+        this.drawSprite(ctx, img, pos.x, pos.y - 54 * spriteScale, facing, targetSize);
+      }
+      if (p.alive) {
+        ctx.fillStyle = "#dce9ff";
+        ctx.font = "600 14px Rajdhani";
+        ctx.textAlign = "center";
+        ctx.fillText(p.name || "Gojo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+      }
+      return;
     }
 
     if (animState === "hit" && p.hitTime) {
@@ -132,25 +180,54 @@ export class GojoVisualSystem {
     }
 
     if (animState === "death" && p.deathTime) {
-      const deathAge = (Date.now() - p.deathTime) / 1000;
-      const progress = Math.min(1, deathAge / 1.5);
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.scale(spriteScale, spriteScale);
-      drawDeathPose(ctx, 0, 0, progress, this.time);
-      ctx.restore();
+      this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
       return;
     }
 
-    this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+    if (animState === "run") {
+      pos.y += Math.sin(this.time * 10) * 2.5;
+    }
+
+    this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
 
     if (!p.alive) return;
 
      ctx.fillStyle = "#dce9ff";
      ctx.font = "600 14px Rajdhani";
      ctx.textAlign = "center";
-     ctx.fillText(p.name || "Gojo", pos.x, pos.y - 70);
+     ctx.fillText(p.name || "Gojo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
 
+  }
+
+  getDomainPrepFrame() {
+    const total = this.domainPrepTimings.reduce((a, b) => a + b, 0);
+    if (this.domainPrepTime >= total) return 4;
+    let t = this.domainPrepTime;
+    for (let i = 0; i < this.domainPrepTimings.length; i++) {
+      if (t < this.domainPrepTimings[i]) return i;
+      t -= this.domainPrepTimings[i];
+    }
+    return 4;
+  }
+
+  drawSprite(ctx, img, x, y, facing, targetSize) {
+    const aspect = img.naturalWidth / img.naturalHeight;
+    let drawW, drawH;
+    if (img.naturalWidth >= img.naturalHeight) {
+      drawW = targetSize;
+      drawH = drawW / aspect;
+    } else {
+      drawH = targetSize;
+      drawW = drawH * aspect;
+    }
+    ctx.save();
+    if (facing < 0) {
+      ctx.translate(x, y);
+      ctx.scale(-1, 1);
+      ctx.translate(-x, -y);
+    }
+    ctx.drawImage(img, x - drawW / 2, y - drawH / 2, drawW, drawH);
+    ctx.restore();
   }
 
   renderEffects(ctx, camera) {

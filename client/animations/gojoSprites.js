@@ -1,29 +1,36 @@
 export const GOJO_ANIMATIONS = {
-  idle: { row: 0, frames: 4, speed: 6, loop: true },
-  walk: { row: 1, frames: 8, speed: 10, loop: true },
-  run: { row: 2, frames: 6, speed: 14, loop: true },
-  m1_1: { row: 3, frames: 5, speed: 18, loop: false },
-  m1_2: { row: 4, frames: 5, speed: 18, loop: false },
-  m1_3: { row: 5, frames: 5, speed: 18, loop: false },
-  dodge: { row: 6, frames: 5, speed: 24, loop: false },
-  hit: { row: 7, frames: 3, speed: 12, loop: false },
-  death: { row: 8, frames: 8, speed: 8, loop: false },
-  skill_blue: { row: 9, frames: 6, speed: 12, loop: false },
-  skill_red: { row: 10, frames: 6, speed: 14, loop: false },
-  skill_purple: { row: 11, frames: 10, speed: 10, loop: false },
-  teleport: { row: 12, frames: 5, speed: 20, loop: false },
-  domain: { row: 13, frames: 12, speed: 10, loop: false },
+  idle: { row: 0, frames: 4, speed: 2.4, loop: true },
+  walk: { row: 0, frames: 1, speed: 1, loop: true },
+  run: { row: 0, frames: 1, speed: 1, loop: true },
+  m1_1: { row: 1, frames: 3, speed: 7.2, loop: false },
+  m1_2: { row: 2, frames: 3, speed: 7.2, loop: false },
+  m1_3: { row: 3, frames: 3, speed: 7.2, loop: false },
+  m1_4: { row: 4, frames: 3, speed: 7.2, loop: false },
+  dodge: { row: 7, frames: 2, speed: 4, loop: false },
+  hit: { row: 5, frames: 3, speed: 4.8, loop: false },
+  death: { row: 6, frames: 7, speed: 4, loop: false },
+  skill_blue: { row: 0, frames: 1, speed: 1, loop: false },
+  skill_red: { row: 0, frames: 1, speed: 1, loop: false },
+  skill_purple: { row: 0, frames: 1, speed: 1, loop: false },
+  skill1: { row: 0, frames: 1, speed: 1, loop: false },
+  skill2: { row: 0, frames: 1, speed: 1, loop: false },
+  skill3: { row: 0, frames: 1, speed: 1, loop: false },
+  teleport: { row: 0, frames: 1, speed: 1, loop: false },
+  domain_prepare: { row: 8, frames: 3, speed: 4, loop: true },
+  domain: { row: 0, frames: 1, speed: 1, loop: false },
 };
 
 export const SPRITE_CONFIG = {
-  sheetWidth: 790,
-  sheetHeight: 1780,
-  frameWidth: 158,
-  frameHeight: 178,
-  scale: 1.0,
-  pivotX: 0,
-  pivotY: 20,
+  sheetWidth: 560,
+  sheetHeight: 720,
+  cellWidth: 80,
+  cellHeight: 80,
+  pivotX: 40,
+  pivotY: 65,
+  renderScale: 1.7,
 };
+
+export const GOJO_MANGA_SPRITE_PATH = "/assets/sprites/gojo_manga_spritesheet.png";
 
 export function mapServerStateToAnim(serverState) {
   const map = {

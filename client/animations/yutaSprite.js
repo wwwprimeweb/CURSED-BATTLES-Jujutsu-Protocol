@@ -1,4 +1,6 @@
+import { SpriteAnimator } from "./spriteAnimator.js";
 import { loadImage } from "./imageLoader.js";
+import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH } from "./yutaSprites.js";
 
 const DEFAULT_SIZE = 136;
 const DASH_SIZE = Math.round(DEFAULT_SIZE * (150 / 160));
@@ -6,55 +8,23 @@ const RIKA_SIZE = Math.round(DEFAULT_SIZE * 1.5);
 
 export class YutaSpriteRenderer {
   constructor() {
-    this.idleSprite = null;
-    this.dashSprite = null;
+    this.animator = new SpriteAnimator({
+      sheetPath: YUTA_SHEET_PATH,
+      cellWidth: YUTA_SPRITE_CONFIG.cellWidth,
+      cellHeight: YUTA_SPRITE_CONFIG.cellHeight,
+      pivotX: YUTA_SPRITE_CONFIG.pivotX,
+      pivotY: YUTA_SPRITE_CONFIG.pivotY,
+      offsetX: YUTA_SPRITE_CONFIG.offsetX,
+      renderScale: YUTA_SPRITE_CONFIG.renderScale,
+      animations: YUTA_ANIMATIONS,
+    });
     this.rikaSprite = null;
     this.domainPrepSprite = null;
     this.isLoaded = false;
     this.loadError = null;
     this.walkTime = 0;
-    this.loadIdleSprite();
-    this.loadDashSprite();
     this.loadRikaSprite();
     this.loadDomainPrepSprite();
-  }
-
-  async loadIdleSprite() {
-    const paths = [
-      "/assets/sprites/yuta.png",
-      "/client/assets/sprites/yuta.png",
-      "./assets/sprites/yuta.png",
-      "../client/assets/sprites/yuta.png",
-      "yuta.png",
-    ];
-    for (const path of paths) {
-      try {
-        this.idleSprite = await loadImage(path);
-        this.checkLoaded();
-        return;
-      } catch (e) {
-      }
-    }
-    console.error("[YutaSprite] All idle paths failed");
-  }
-
-  async loadDashSprite() {
-    const paths = [
-      "/assets/sprites/yuta-dash.png",
-      "/client/assets/sprites/yuta-dash.png",
-      "./assets/sprites/yuta-dash.png",
-      "../client/assets/sprites/yuta-dash.png",
-      "yuta-dash.png",
-    ];
-    for (const path of paths) {
-      try {
-        this.dashSprite = await loadImage(path);
-        this.checkLoaded();
-        return;
-      } catch (e) {
-      }
-    }
-    console.error("[YutaSprite] All dash paths failed");
   }
 
   async loadRikaSprite() {
@@ -95,46 +65,22 @@ export class YutaSpriteRenderer {
   }
 
   checkLoaded() {
-    if (this.idleSprite || this.dashSprite || this.rikaSprite || this.domainPrepSprite) {
+    if (this.rikaSprite || this.domainPrepSprite) {
       this.isLoaded = true;
     }
   }
 
   update(dt) {
     this.walkTime += dt;
+    this.animator.update(dt);
   }
 
-  render(ctx, x, y, state, facing = 1, _scale = 1) {
+  render(ctx, x, y, state, facing = 1, _scale = 1, playerId = "default") {
     const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
-    const isDomainPrep = state === "domain_prepare";
-    const isDash = state === "dash";
     const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2 : 0;
     const finalY = y + bobY;
 
-    if (isDomainPrep && this.domainPrepSprite) {
-      this.drawSprite(ctx, this.domainPrepSprite, x, finalY, facing, DEFAULT_SIZE * scale);
-      return;
-    }
-
-    if (isDash && this.dashSprite) {
-      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);
-      return;
-    }
-
-    if (this.idleSprite) {
-      this.drawSprite(ctx, this.idleSprite, x, finalY, facing, DEFAULT_SIZE * scale);
-      return;
-    }
-
-    if (this.dashSprite) {
-      this.drawSprite(ctx, this.dashSprite, x, finalY, facing, DASH_SIZE * scale);
-      return;
-    }
-
-    ctx.fillStyle = "rgba(255,150,200,0.5)";
-    ctx.beginPath();
-    ctx.arc(x, y, 20 * scale, 0, Math.PI * 2);
-    ctx.fill();
+    this.animator.render(ctx, x, finalY, state, facing, scale, playerId);
   }
 
   renderRika(ctx, x, y, facing = 1, floatPhase = 0, floatAmp = 2.2, _scale = 1) {

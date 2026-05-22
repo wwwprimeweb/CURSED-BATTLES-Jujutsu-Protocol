@@ -339,22 +339,43 @@ export class DomainVisualSystem {
 
         if (alpha < 0.01) continue;
 
-        const parallaxFactor = config.factor || config;
+        let effectiveOffset = LAYER_OFFSET[key] || { x: 0, y: 0 };
+        let effectiveScale = LAYER_SCALE[key];
+        let effectiveParallax = config ? (config.factor || config) : 0;
+
+        if (char === 'yuta') {
+          if (key === 'far') {
+            effectiveOffset = { x: 0.15, y: 0 };
+            effectiveParallax = 0.4;
+          } else if (key === 'mid') {
+            effectiveScale = 1.0;
+            effectiveOffset = { x: 0, y: 0.5 };
+            effectiveParallax = 0;
+          }
+        }
+
+        if (char === 'gojo' && key === 'mid') {
+          effectiveOffset = { x: 0.3, y: -0.3 };
+        }
+
         const camX = camera.x || 0;
         const camY = camera.y || 0;
-        const dx = (worldX - camX) * parallaxFactor * zoom;
-        const dy = (worldY - camY) * parallaxFactor * zoom;
+        const dx = (worldX - camX) * effectiveParallax * zoom;
+        const dy = (worldY - camY) * effectiveParallax * zoom;
 
         const layerKeyMap = { far: '3', mid: '2', close: '1' };
         const img = this.getLayerImage(char, layerKeyMap[key] || key);
         if (img && img.width && img.height) {
-          const lo = LAYER_OFFSET[key] || { x: 0, y: 0 };
+          const lo = effectiveOffset;
           const cx2 = p.x + lo.x * vz + dx;
           const cy2 = p.y + lo.y * vz + dy;
           ctx.save();
           ctx.translate(cx2, cy2);
+          if (char === 'gojo' && key === 'mid') {
+            ctx.rotate(this.rotationTime * 0.01);
+          }
           ctx.globalAlpha = alpha * (LAYER_ALPHA[key] ?? 1);
-          this.drawScaledImage(ctx, img, 0, 0, vz, 0, 0, LAYER_SCALE[key]);
+          this.drawScaledImage(ctx, img, 0, 0, vz, 0, 0, effectiveScale);
           ctx.globalAlpha = 1;
           ctx.restore();
           continue;
@@ -401,7 +422,7 @@ export class DomainVisualSystem {
             ctx.fill();
           }
           ctx.globalAlpha = 1;
-        } else if (key === 'close' && layerData.close) {
+        } else if (key === 'close' && layerData.close && char !== 'yuta') {
           ctx.globalAlpha = alpha;
           for (const d of layerData.close) {
             ctx.fillStyle = d.color;

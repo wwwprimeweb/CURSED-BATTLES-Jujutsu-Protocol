@@ -222,14 +222,14 @@ function handleEvents(events) {
 
         renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange, coneAngle);
       } else if (attackerCharacter === "gojo") {
-        renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo);
+        renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo, ev.playerId);
       } else {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 5, speed: 100, life: 0.12, size: 1.5 });
         particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#66c6ff", count: 4, life: 0.15 });
         if (combo === 3) {
           particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 150, life: 0.1, size: 1.8 });
         }
-        renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo);
+        renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo, ev.playerId);
       }
     } else if (ev.type === "kill" || ev.type === "enemyDeath") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff78a0", count: 16, speed: 220, life: 0.33, size: 2.8 });

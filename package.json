@@ -13,8 +13,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "canvas": "^3.2.3",
     "express": "^5.2.1",
     "node-fetch": "^3.3.2",
+    "sff-extractor": "^1.0.8",
     "ws": "^8.20.1"
   }
 }

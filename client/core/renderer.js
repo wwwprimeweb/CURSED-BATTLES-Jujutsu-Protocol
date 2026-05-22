@@ -711,14 +711,16 @@ export class Renderer {
         }
       }
 
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2 + now * 0.001;
-        const rx = p.x + Math.cos(a) * vz;
-        const ry = p.y + Math.sin(a) * vz;
-        ctx.fillStyle = isMine ? "rgba(220,240,255,0.8)" : "rgba(240,200,255,0.8)";
-        ctx.beginPath();
-        ctx.arc(rx, ry, 3 * z, 0, Math.PI * 2);
-        ctx.fill();
+      if (char !== 'yuta') {
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * Math.PI * 2 + now * 0.001;
+          const rx = p.x + Math.cos(a) * vz;
+          const ry = p.y + Math.sin(a) * vz;
+          ctx.fillStyle = isMine ? "rgba(220,240,255,0.8)" : "rgba(240,200,255,0.8)";
+          ctx.beginPath();
+          ctx.arc(rx, ry, 3 * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
       ctx.restore();
 
@@ -1269,6 +1271,7 @@ export class Renderer {
       this.renderPurpleCharges(this.ctx, this.camera);
       this.renderPurpleExplosions(this.ctx, this.camera);
       this.drawEnemies(interpolation.enemies);
+      this.drawM1PunchEffects();
       this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);
       this.yutaVisual.renderEffects(this.ctx, this.camera);

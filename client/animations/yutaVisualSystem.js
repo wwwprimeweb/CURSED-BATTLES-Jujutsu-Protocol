@@ -301,7 +301,7 @@ export class YutaVisualSystem {
     const spriteScale = zoom;
 
     if (animState === "domain_prepare") {
-      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
       return;
     }
 
@@ -326,7 +326,7 @@ export class YutaVisualSystem {
     }
 
      if (animState === "death" && p.deathTime) {
-       this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+       this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
        return;
      }
 
@@ -380,15 +380,15 @@ export class YutaVisualSystem {
         this.yutaSprite.renderRika(ctx, rikaX, rikaY, rikaFacing, floatPhase, floatAmp, spriteScale);
       }
 
-     // Render Yuta on top of Rika
-     this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
+      // Render Yuta on top of Rika
+      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
 
     if (!p.alive) return;
 
      ctx.fillStyle = "#ffe0f0";
      ctx.font = "600 14px Rajdhani";
      ctx.textAlign = "center";
-     ctx.fillText(p.name || "Yuta", pos.x, pos.y - 70);
+     ctx.fillText(p.name || "Yuta", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
 
   }
 

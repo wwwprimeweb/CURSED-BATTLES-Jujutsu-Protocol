@@ -846,7 +846,7 @@ class GameServer {
       return;
     }
     if (player.m1Timer > 0) {
-      player.animState = "m1";
+      player.animState = "m1_" + player.comboStep;
       player.statePriority = 7;
       return;
     }
@@ -899,7 +899,7 @@ class GameServer {
     const isYutaSlash = player.character === "yuta";
 
     player.m1Timer = kit.m1.cooldown;
-    player.comboStep = (player.comboStep % 3) + 1;
+    player.comboStep = (player.comboStep % 4) + 1;
     player.comboResetTimer = 0.9;
 
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
