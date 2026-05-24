@@ -231,6 +231,13 @@ function handleEvents(events) {
         }
         renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo, ev.playerId);
       }
+      if (ev.blackFlash) {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffff00", count: 20, speed: 250, life: 0.35, size: 3.5 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#000000", count: 12, speed: 180, life: 0.3, size: 2.5 });
+        particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#ffdd00", count: 8, life: 0.3, size: 3 });
+        renderer.triggerBlackFlash(ev.x, ev.y, dirX, dirY);
+        audio.play("skillRed");
+      }
     } else if (ev.type === "kill" || ev.type === "enemyDeath") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff78a0", count: 16, speed: 220, life: 0.33, size: 2.8 });
       audio.play("kill");

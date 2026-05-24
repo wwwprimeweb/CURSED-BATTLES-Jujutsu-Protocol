@@ -62,6 +62,8 @@ export class Renderer {
     this.blueImg.src = "/assets/habilit/blue.png";
     this.redImg = new Image();
     this.redImg.src = "/assets/habilit/red.png";
+    this.blackFlashes = [];
+    this.blackFlashDuration = 800;
 
     this.resize();
     window.addEventListener("resize", () => this.resize());
@@ -159,6 +161,58 @@ export class Renderer {
 
   addBlueExplosion({ x, y, radius = 200, ttl = 0.6 }) {
     this.blueExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
+  }
+
+  triggerBlackFlash(x, y, dirX = 0, dirY = -1) {
+    const seed = Math.random() * 10000;
+    const bolts = this._generateBolts(x, y, 8, seed, dirX, dirY);
+    this.blackFlashes.push({ x, y, dirX, dirY, startTime: performance.now(), bolts, seed });
+  }
+
+  _generateBolts(x, y, count, seed, dirX, dirY) {
+    const rng = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    const baseAngle = Math.atan2(dirY, dirX);
+    const bolts = [];
+    for (let i = 0; i < count; i++) {
+      const angle = baseAngle + (rng() - 0.5) * 2.4;
+      const len = 120 + rng() * 300;
+      const points = [{ x: 0, y: 0 }];
+      let cx = 0, cy = 0;
+      const segments = 5 + Math.floor(rng() * 5);
+      const segLen = len / segments;
+      let curAngle = angle;
+      for (let s = 0; s < segments; s++) {
+        curAngle += (rng() - 0.5) * 0.8;
+        cx += Math.cos(curAngle) * segLen;
+        cy += Math.sin(curAngle) * segLen;
+        points.push({ x: cx, y: cy });
+      }
+      // Branches
+      const branches = [];
+      for (let b = 0; b < 2 + Math.floor(rng() * 3); b++) {
+        const atSeg = Math.floor(rng() * (segments - 1));
+        const bp = points[atSeg];
+        const bAngle = curAngle + (rng() - 0.5) * 1.5;
+        const bLen = 50 + rng() * 120;
+        const bPoints = [{ x: bp.x, y: bp.y }];
+        let bcx = bp.x, bcy = bp.y;
+        const bSegs = 3 + Math.floor(rng() * 3);
+        const bSegLen = bLen / bSegs;
+        let ba = bAngle;
+        for (let s = 0; s < bSegs; s++) {
+          ba += (rng() - 0.5) * 0.6;
+          bcx += Math.cos(ba) * bSegLen;
+          bcy += Math.sin(ba) * bSegLen;
+          bPoints.push({ x: bcx, y: bcy });
+        }
+        branches.push(bPoints);
+      }
+      bolts.push({ points, branches, phase: rng() * 0.3 });
+    }
+    return bolts;
   }
 
   startPurpleCharge(ev) {
@@ -377,6 +431,13 @@ export class Renderer {
         this.blueExplosions.splice(i, 1);
       }
     }
+    for (let i = this.blackFlashes.length - 1; i >= 0; i -= 1) {
+      const bf = this.blackFlashes[i];
+      const elapsed = performance.now() - bf.startTime;
+      if (elapsed >= this.blackFlashDuration) {
+        this.blackFlashes.splice(i, 1);
+      }
+    }
   }
 
   drawMarkers() {
@@ -570,6 +631,193 @@ export class Renderer {
         ctx.fill();
       }
 
+      ctx.restore();
+    }
+  }
+
+  drawBlackFlashes() {
+    const ctx = this.ctx;
+    const z = this.camera.zoom || 1;
+    const now = performance.now();
+
+    for (let i = 0; i < this.blackFlashes.length; i += 1) {
+      const bf = this.blackFlashes[i];
+      const p = worldToScreen(this.camera, this.canvas, bf.x, bf.y);
+      const elapsed = now - bf.startTime;
+      const t = Math.min(1, elapsed / this.blackFlashDuration);
+      if (t >= 1) return;
+
+      const alpha = Math.min(1, (1 - t) * 2);
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      // Red shockwave ring (0-30% of animation)
+      if (t < 0.3) {
+        const swT = t / 0.3;
+        const radius = 20 + swT * 100;
+        const swAlpha = (1 - swT) * 0.8;
+
+        // Offset shockwave in attack direction
+        const dirLen = Math.sqrt(bf.dirX * bf.dirX + bf.dirY * bf.dirY) || 1;
+        const nx = bf.dirX / dirLen;
+        const ny = bf.dirY / dirLen;
+        const offset = 15 * swT;
+        const sx = p.x + nx * offset * z;
+        const sy = p.y + ny * offset * z;
+
+        // Outer ring with red glow
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur = 35 * z;
+        ctx.strokeStyle = `rgba(255,0,0,${swAlpha * 0.7})`;
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius * z, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner ring (brighter)
+        ctx.shadowBlur = 20 * z;
+        ctx.strokeStyle = `rgba(255,80,20,${swAlpha * 0.5})`;
+        ctx.lineWidth = 2 * z;
+        ctx.beginPath();
+        ctx.arc(sx, sy, (radius * 0.7) * z, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Core flash
+        ctx.shadowColor = "#ff2200";
+        ctx.shadowBlur = 50 * z;
+        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, (25 + swT * 15) * z);
+        coreGrad.addColorStop(0, `rgba(255,255,255,${(1 - swT) * 0.9})`);
+        coreGrad.addColorStop(0.4, `rgba(255,50,0,${(1 - swT) * 0.5})`);
+        coreGrad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, (25 + swT * 15) * z, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Lightning bolts (0-80% of animation)
+      if (t < 0.8) {
+      const boltT = Math.min(1, t * 2.5);
+      const bolts = bf.bolts;
+      for (let b = 0; b < bolts.length; b++) {
+        const bolt = bolts[b];
+        const delay = bolt.phase;
+        const localT = Math.max(0, Math.min(1, (t - delay * 0.3) * 3));
+        if (localT <= 0) continue;
+
+        const drawBolt = (points, wGlow, wBlack) => {
+          if (points.length < 2) return;
+          const totalLen = points.reduce((a, pt, idx) => {
+            if (idx === 0) return 0;
+            const prev = points[idx - 1];
+            return a + Math.sqrt((pt.x - prev.x) ** 2 + (pt.y - prev.y) ** 2);
+          }, 0);
+          const drawLen = totalLen * localT;
+
+          // Pass 1: red glow / border
+          ctx.shadowColor = "#ff0000";
+          ctx.shadowBlur = 22 * z;
+          ctx.strokeStyle = "rgba(255,0,0,0.7)";
+          ctx.lineWidth = wGlow * z;
+          ctx.beginPath();
+          ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
+          let acc = 0;
+          for (let pi = 1; pi < points.length; pi++) {
+            const prev = points[pi - 1];
+            const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
+            if (acc + seg >= drawLen) {
+              const frac = (drawLen - acc) / seg;
+              ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
+              break;
+            }
+            ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
+            acc += seg;
+          }
+          ctx.stroke();
+
+          // Pass 2: black core
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "rgba(0,0,0,0.6)";
+          ctx.lineWidth = wBlack * z;
+          ctx.beginPath();
+          ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
+          acc = 0;
+          for (let pi = 1; pi < points.length; pi++) {
+            const prev = points[pi - 1];
+            const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
+            if (acc + seg >= drawLen) {
+              const frac = (drawLen - acc) / seg;
+              ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
+              break;
+            }
+            ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
+            acc += seg;
+          }
+          ctx.stroke();
+        };
+
+        // Main bolt: glow thickness 4 → 2, black core 1.5 → 1
+        drawBolt(bolt.points, 4 - localT * 2, 1.5 - localT * 0.5);
+
+        // Branches: thinner
+        for (let br = 0; br < bolt.branches.length; br++) {
+          const branchT = Math.max(0, Math.min(1, (t - delay * 0.3 - 0.05) * 3.5));
+          if (branchT <= 0) continue;
+          const drawBoltBr = (points) => {
+            if (points.length < 2) return;
+            const totalLen = points.reduce((a, pt, idx) => {
+              if (idx === 0) return 0;
+              const prev = points[idx - 1];
+              return a + Math.sqrt((pt.x - prev.x) ** 2 + (pt.y - prev.y) ** 2);
+            }, 0);
+            const drawLen = totalLen * branchT;
+
+            ctx.shadowColor = "#ff0000";
+            ctx.shadowBlur = 14 * z;
+            ctx.strokeStyle = "rgba(255,0,0,0.5)";
+            ctx.lineWidth = 2.5 * z;
+            ctx.beginPath();
+            ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
+            let acc = 0;
+            for (let pi = 1; pi < points.length; pi++) {
+              const prev = points[pi - 1];
+              const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
+              if (acc + seg >= drawLen) {
+                const frac = (drawLen - acc) / seg;
+                ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
+                break;
+              }
+              ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
+              acc += seg;
+            }
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "rgba(0,0,0,0.6)";
+            ctx.lineWidth = 1 * z;
+            ctx.beginPath();
+            ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
+            acc = 0;
+            for (let pi = 1; pi < points.length; pi++) {
+              const prev = points[pi - 1];
+              const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
+              if (acc + seg >= drawLen) {
+                const frac = (drawLen - acc) / seg;
+                ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
+                break;
+              }
+              ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
+              acc += seg;
+            }
+            ctx.stroke();
+          };
+          drawBoltBr(bolt.branches[br]);
+        }
+      }
+      }
+
+      ctx.shadowBlur = 0;
       ctx.restore();
     }
   }
@@ -1267,6 +1515,7 @@ export class Renderer {
       this.drawMarkers();
       this.drawRedExplosions();
       this.drawBlueExplosions();
+      this.drawBlackFlashes();
       this.drawProjectiles(interpolation.projectiles);
       this.renderPurpleCharges(this.ctx, this.camera);
       this.renderPurpleExplosions(this.ctx, this.camera);

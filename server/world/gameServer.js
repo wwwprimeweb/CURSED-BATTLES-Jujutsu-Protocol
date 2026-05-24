@@ -905,6 +905,11 @@ class GameServer {
     const kit = this.getKit(player);
     const isYutaSlash = player.character === "yuta";
 
+    const baseM1Damage = kit.m1.damage * player.modifiers.m1DamageMul;
+    const blackFlashChance = player.character === "gojo" ? 0.01 : player.character === "yuji" ? 0.07 : 0.01;
+    const isBlackFlash = Math.random() < blackFlashChance;
+    const m1Damage = baseM1Damage * (isBlackFlash ? 10 : 1);
+
     player.m1Timer = kit.m1.cooldown;
     player.comboStep = (player.comboStep % 4) + 1;
     player.comboResetTimer = 0.9;
@@ -949,7 +954,7 @@ class GameServer {
         this.combat.applyDamage({
           target,
           source: player,
-          amount: kit.m1.damage * player.modifiers.m1DamageMul,
+          amount: m1Damage,
           kind: "m1",
           knockback: player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85),
           fromX: player.x,
@@ -966,7 +971,7 @@ class GameServer {
         this.combat.applyDamage({
           target: enemy,
           source: player,
-          amount: kit.m1.damage * player.modifiers.m1DamageMul,
+          amount: m1Damage,
           kind: "m1",
           knockback: player.comboStep === 3 ? (isYutaSlash ? 190 : 150) : (isYutaSlash ? 110 : 80),
           fromX: player.x,
@@ -986,6 +991,7 @@ class GameServer {
       character: player.character || "gojo",
       slashRange: isYutaSlash ? slashRange : undefined,
       coneAngle: isYutaSlash ? coneAngle : undefined,
+      blackFlash: isBlackFlash || undefined,
     });
     return true;
   }
