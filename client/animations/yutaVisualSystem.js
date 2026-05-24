@@ -1,6 +1,6 @@
 import { YutaSpriteRenderer } from "./yutaSprite.js";
 import { YutaSkillEffects } from "./proceduralYuta.js";
-import { drawHitReaction, drawDodgeEffect } from "./gojoEffects.js";
+import { drawHitReaction } from "./gojoEffects.js";
 import { drawRowOfKatanas, drawRikaAreaExplosion, drawRikaClawScratch, drawRikaShockwave, drawPinkSlashCuts, drawEnergyWaveTrail } from "./yutaEffects.js";
 import { SkillVFX } from "../particles/proceduralEffects.js";
 
@@ -297,7 +297,7 @@ export class YutaVisualSystem {
       x: (worldX - camera.x) * zoom + ctx.canvas.width * 0.5,
       y: (worldY - camera.y) * zoom + ctx.canvas.height * 0.5,
     };
-    const animState = state || p.animState || "idle";
+    const animState = p.animState === "dodge" ? "dodge" : (state || p.animState || "idle");
     const spriteScale = zoom;
 
     if (animState === "domain_prepare") {
@@ -305,14 +305,9 @@ export class YutaVisualSystem {
       return;
     }
 
-    if (animState === "dodge" && p.dodgeStartTime) {
-      const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
-      const dodgeProgress = Math.min(1, dodgeAge / 0.2);
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.scale(zoom, zoom);
-      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress);
-      ctx.restore();
+    if (animState === "dodge") {
+      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
+      return;
     }
 
     if (animState === "hit" && p.hitTime) {

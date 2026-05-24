@@ -345,8 +345,8 @@ export class DomainVisualSystem {
 
         if (char === 'yuta') {
           if (key === 'far') {
-            effectiveOffset = { x: 0.15, y: 0 };
-            effectiveParallax = 0.4;
+            effectiveOffset = { x: 0, y: 0.08 };
+            effectiveParallax = 0.221;
           } else if (key === 'mid') {
             effectiveScale = 1.0;
             effectiveOffset = { x: 0, y: 0.5 };

@@ -269,9 +269,11 @@ function handleEvents(events) {
       const oppY = ev.y - dirY * 60;
       particles.spawnLine({ x: oppX, y: oppY, dirX: -dirX, dirY: -dirY, color: "#b6e2ff", count: 12, life: 0.4 });
     } else if (ev.type === "teleportStart") {
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#bfe3ff", count: 9, speed: 130, life: 0.14, size: 1.9 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 6, speed: 100, life: 0.15, size: 1.2 });
+      renderer.gojoVisual.addTeleport(ev.x, ev.y);
     } else if (ev.type === "teleportEnd") {
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f1fbff", count: 12, speed: 165, life: 0.16, size: 2.1 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 120, life: 0.18, size: 1.5 });
+      renderer.gojoVisual.addTeleport(ev.x, ev.y);
     } else if (ev.type === "rika") {
       const dirX = Number.isFinite(ev.dirX) ? ev.dirX : (renderer.playerFacing.get(ev.playerId) || 1);
       const dirY = Number.isFinite(ev.dirY) ? ev.dirY : 0;

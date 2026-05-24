@@ -8,7 +8,7 @@ export const YUTA_ANIMATIONS = {
   m1_4: { row: 2, frames: 4, speed: 8, loop: false },
   domain_prepare: { row: 3, frames: 4, speed: 4, loop: false },
   domain: { row: 0, frames: 3, speed: 2.5, loop: true },
-  dodge: { row: 0, frames: 1, speed: 1, loop: false },
+  dodge: { row: 1, frames: 1, speed: 1, loop: false },
   hit: { row: 0, frames: 1, speed: 1, loop: false },
   death: { row: 0, frames: 1, speed: 1, loop: false },
   skill1: { row: 0, frames: 1, speed: 1, loop: false },

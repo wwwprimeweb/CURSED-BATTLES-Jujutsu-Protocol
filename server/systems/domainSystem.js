@@ -293,9 +293,10 @@ class DomainSystem {
     });
   }
 
-  damageBarrier(ownerId, amount) {
+  damageBarrier(ownerId, amount, sourceId = null) {
     const domain = this.domains.get(ownerId);
     if (!domain) return;
+    if (sourceId !== null && sourceId === ownerId) return;
     domain.barrierHp = Math.max(0, domain.barrierHp - amount);
     if (domain.barrierHp <= 0) {
       this.collapseDomain(ownerId, null, false);

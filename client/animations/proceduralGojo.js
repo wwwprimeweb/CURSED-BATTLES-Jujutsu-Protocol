@@ -474,15 +474,28 @@ export class GojoSkillEffects {
       const s = w2s(t.x, t.y);
       const prog = 1 - t.life / t.maxLife;
       ctx.save();
+
+      const appear = Math.min(1, prog / 0.25);
+      const fade = prog > 0.6 ? 1 - (prog - 0.6) / 0.4 : 1;
+      const alpha = appear * fade;
+      const open = prog < 0.5 ? prog / 0.5 : (1 - (prog - 0.5) / 0.5);
+      const spread = open * 8;
+
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 12;
+      ctx.globalAlpha = alpha * 0.65;
+      ctx.strokeStyle = "rgba(255,255,255,0.85)";
+      ctx.lineWidth = 1.5;
+
+      const height = 30;
       for (let i = 0; i < 3; i++) {
-        ctx.strokeStyle = `rgba(96,168,255,${(1 - prog) * (1 - i * 0.3)})`;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = C.blueGlow;
-        ctx.shadowBlur = 15;
+        const ox = (i - 1) * spread;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, (15 + i * 12) * prog, 0, Math.PI * 2);
+        ctx.moveTo(s.x + ox, s.y - height);
+        ctx.lineTo(s.x + ox, s.y + height);
         ctx.stroke();
       }
+
       ctx.restore();
     }
 

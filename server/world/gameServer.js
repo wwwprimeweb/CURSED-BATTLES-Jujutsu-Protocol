@@ -514,6 +514,7 @@ class GameServer {
       player.stunTimer = Math.max(0, player.stunTimer - dt);
       player.comboResetTimer = Math.max(0, player.comboResetTimer - dt);
       player.m1Timer = Math.max(0, player.m1Timer - dt);
+      player.dodgeTimer = Math.max(0, player.dodgeTimer - dt);
       if (player.rikaBuffTime > 0) {
         player.rikaBuffTime = Math.max(0, player.rikaBuffTime - dt);
       }
@@ -845,6 +846,11 @@ class GameServer {
       player.statePriority = 6;
       return;
     }
+    if (player.dodgeTimer > 0) {
+      player.animState = "dodge";
+      player.statePriority = 6;
+      return;
+    }
     if (player.m1Timer > 0) {
       player.animState = "m1_" + player.comboStep;
       player.statePriority = 7;
@@ -878,6 +884,7 @@ class GameServer {
 
     player.dodgeCooldown = player.dodgeCooldownBase;
     player.invulnTimer = Math.max(player.invulnTimer, 0.18);
+    player.dodgeTimer = 0.2;
     this.moveEntityWithCollisions(player, dirX * player.dodgeDistance, dirY * player.dodgeDistance, true);
 
     this.emitEventNear(player.x, player.y, {
@@ -1492,7 +1499,7 @@ class GameServer {
       barrierDamage = baseDamage * 0.75;
     }
     barrierDamage = Math.max(4, barrierDamage);
-    this.domainSystem.damageBarrier(barrierHit.domain.ownerId, barrierDamage);
+    this.domainSystem.damageBarrier(barrierHit.domain.ownerId, barrierDamage, projectile.ownerId);
 
     this.emitEventNear(barrierHit.x, barrierHit.y, {
       type: "domainBarrierHit",
@@ -2847,7 +2854,7 @@ class GameServer {
         const dx = endX - beam.x;
         const dy = endY - beam.y;
         beam.beamLength = Math.sqrt(dx * dx + dy * dy);
-        this.domainSystem.damageBarrier(barrierHit.domain.ownerId, damagePerTick * 0.45);
+        this.domainSystem.damageBarrier(barrierHit.domain.ownerId, damagePerTick * 0.45, ownerId);
       } else {
         if (beam.beamLength !== beam._fullLength) {
           beam.beamLength = beam._fullLength;

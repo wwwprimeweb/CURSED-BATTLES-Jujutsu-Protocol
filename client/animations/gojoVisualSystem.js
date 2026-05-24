@@ -22,7 +22,7 @@ export class GojoVisualSystem {
     this.gojoAttackSprite = new Image();
     this.gojoAttackSprite.src = "/assets/habilit/gojoattack.png";
     this.dashImage = new Image();
-    this.dashImage.src = "/assets/sprites/gojo_shinjuku/dash.png";
+    this.dashImage.src = "/assets/sprites/gojo-dash.png";
     this.domainPrepFrames = [];
     for (let i = 0; i < 5; i++) {
       const img = new Image();
@@ -138,8 +138,8 @@ export class GojoVisualSystem {
 
     if (animState === "dash") {
       if (this.dashImage.complete && this.dashImage.naturalWidth > 0) {
-        const targetSize = 110 * spriteScale;
-        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 34 * spriteScale, facing, targetSize);
+        const targetSize = 105 * spriteScale;
+        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 50 * spriteScale, facing, targetSize);
       }
       if (p.alive) {
         ctx.fillStyle = "#dce9ff";
