@@ -951,12 +951,15 @@ class GameServer {
         return;
       }
       if (canM1HitTarget(target)) {
+        const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85));
+        const knockbackCap = isBlackFlash ? 350 : 170;
         this.combat.applyDamage({
           target,
           source: player,
           amount: m1Damage,
           kind: "m1",
-          knockback: player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85),
+          knockback: knockbackVal,
+          knockbackDistanceCap: knockbackCap,
           fromX: player.x,
           fromY: player.y,
         });
@@ -968,12 +971,15 @@ class GameServer {
         return;
       }
       if (canM1HitTarget(enemy)) {
+        const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 190 : 150) : (isYutaSlash ? 110 : 80));
+        const knockbackCap = isBlackFlash ? 350 : 170;
         this.combat.applyDamage({
           target: enemy,
           source: player,
           amount: m1Damage,
           kind: "m1",
-          knockback: player.comboStep === 3 ? (isYutaSlash ? 190 : 150) : (isYutaSlash ? 110 : 80),
+          knockback: knockbackVal,
+          knockbackDistanceCap: knockbackCap,
           fromX: player.x,
           fromY: player.y,
         });
