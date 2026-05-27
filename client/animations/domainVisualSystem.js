@@ -315,7 +315,7 @@ export class DomainVisualSystem {
       ctx.clip();
 
       const layerData = this.getOrCreateParallaxData(ownerId, char);
-      const layers = ['far', 'close', 'mid'];
+      const layers = char === 'yuta' ? ['far', 'mid', 'close'] : ['far', 'close', 'mid'];
 
       for (const key of layers) {
         const config = PARALLAX_DEPTHS[key];
@@ -358,6 +358,29 @@ export class DomainVisualSystem {
           effectiveOffset = { x: 0.3, y: -0.3 };
         }
 
+        if (char === 'yuji' && key === 'mid') {
+          effectiveParallax = 0.25;
+          effectiveScale = 1.56;
+          effectiveOffset = {
+            x: 0.8,
+            y: 0.50,
+          };
+          const expandEntry = this.expanding.get(ownerId);
+          if (expandEntry) {
+            const elapsed = (performance.now() - expandEntry.startTime) / 1000;
+            if (elapsed >= 10) {
+              const t = Math.min(1, (elapsed - 10) / 3);
+              const slide = t * t;
+              if (slide >= 1) {
+                continue;
+              }
+              effectiveScale = 1.56 + slide * 2.08;
+              effectiveOffset.x = 0.8 + 2.0 * slide;
+              effectiveOffset.y = 0.50 + slide * 0.95;
+            }
+          }
+        }
+
         const camX = camera.x || 0;
         const camY = camera.y || 0;
         const dx = (worldX - camX) * effectiveParallax * zoom;
@@ -398,20 +421,22 @@ export class DomainVisualSystem {
           ctx.fill();
           ctx.globalAlpha = 1;
 
-          const innerR = vz * 0.95;
-          for (let i = 0; i < 80; i++) {
-            const seed = i * 137.508;
-            const angle = (seed % 360) * Math.PI / 180;
-            const dist = ((seed * 7919) % innerR);
-            const starX = p.x + Math.cos(angle) * dist + dx;
-            const starY = p.y + Math.sin(angle) * dist + dy;
-            const starSize = 0.5 + (seed % 3) * 0.5;
-            const twinkle = 0.5 + Math.sin(now * 0.003 + seed) * 0.5;
-            const starAlpha = twinkle * (0.6 + (seed % 40) * 0.01);
-            ctx.fillStyle = `rgba(255,255,255,${starAlpha})`;
-            ctx.beginPath();
-            ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
-            ctx.fill();
+          if (char === "gojo") {
+            const innerR = vz * 0.95;
+            for (let i = 0; i < 80; i++) {
+              const seed = i * 137.508;
+              const angle = (seed % 360) * Math.PI / 180;
+              const dist = ((seed * 7919) % innerR);
+              const starX = p.x + Math.cos(angle) * dist + dx;
+              const starY = p.y + Math.sin(angle) * dist + dy;
+              const starSize = 0.5 + (seed % 3) * 0.5;
+              const twinkle = 0.5 + Math.sin(now * 0.003 + seed) * 0.5;
+              const starAlpha = twinkle * (0.6 + (seed % 40) * 0.01);
+              ctx.fillStyle = `rgba(255,255,255,${starAlpha})`;
+              ctx.beginPath();
+              ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
+              ctx.fill();
+            }
           }
         } else if (key === 'mid' && layerData.mid) {
           ctx.globalAlpha = alpha;

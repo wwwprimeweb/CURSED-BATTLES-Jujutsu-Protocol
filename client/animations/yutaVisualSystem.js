@@ -300,16 +300,6 @@ export class YutaVisualSystem {
     const animState = p.animState === "dodge" ? "dodge" : (state || p.animState || "idle");
     const spriteScale = zoom;
 
-    if (animState === "domain_prepare") {
-      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
-      return;
-    }
-
-    if (animState === "dodge") {
-      this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
-      return;
-    }
-
     if (animState === "hit" && p.hitTime) {
       const hitAge = (Date.now() - p.hitTime) / 1000;
       const flashIntensity = Math.max(0, 1 - hitAge / 0.15);

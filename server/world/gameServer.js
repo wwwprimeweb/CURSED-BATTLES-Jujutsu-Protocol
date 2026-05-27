@@ -20,6 +20,10 @@ const {
 } = require("../utils/math");
 const { Rng } = require("../utils/rng");
 
+const YUJI_OWN_DOMAIN_BLACK_FLASH_BONUS = 0.10;
+const YUJI_OWN_DOMAIN_SPEED_MULTIPLIER = 1.30;
+const YUJI_OWN_DOMAIN_ENERGY_REGEN_MULTIPLIER = 1.15;
+
 class GameServer {
   constructor(config) {
     this.config = config;
@@ -397,6 +401,8 @@ class GameServer {
       player.aimX = spawn.x;
       player.aimY = spawn.y;
       player.cast = null;
+      player.dashSlash = null;
+      player.flyingKnee = null;
       player.invulnTimer = 0;
       player.stunTimer = 0;
       player.hitFlash = 0;
@@ -507,6 +513,17 @@ class GameServer {
     });
   }
 
+  isYujiInsideOwnDomain(player) {
+    if (!player || !player.alive || player.character !== "yuji") {
+      return false;
+    }
+    const ownDomain = this.domainSystem.domains.get(player.id);
+    if (!ownDomain) {
+      return false;
+    }
+    return distance(player.x, player.y, ownDomain.x, ownDomain.y) <= ownDomain.radius;
+  }
+
   updatePlayers(dt) {
     this.players.forEach((player) => {
       player.hitFlash = Math.max(0, player.hitFlash - dt);
@@ -518,15 +535,25 @@ class GameServer {
       if (player.rikaBuffTime > 0) {
         player.rikaBuffTime = Math.max(0, player.rikaBuffTime - dt);
       }
+      if (player.almaAbaladaTimer > 0) {
+        player.almaAbaladaTimer = Math.max(0, player.almaAbaladaTimer - dt);
+        if (player.almaAbaladaTimer <= 0) {
+          player.modifiers.energyRegenMul = 1;
+        }
+      }
 
       if (!player.alive) {
         player.respawnTimer = -1;
         return;
       }
 
+      const yujiOwnDomainRegenMul = this.isYujiInsideOwnDomain(player)
+        ? YUJI_OWN_DOMAIN_ENERGY_REGEN_MULTIPLIER
+        : 1;
+
       player.energy = Math.min(
         player.maxEnergy,
-        player.energy + player.energyRegen * player.modifiers.energyRegenMul * dt
+        player.energy + player.energyRegen * player.modifiers.energyRegenMul * yujiOwnDomainRegenMul * dt
       );
 
       Object.keys(player.cooldowns).forEach((key) => {
@@ -564,6 +591,7 @@ class GameServer {
       this.pureLoveBeams.delete(player.id);
     }
     player.dashSlash = null;
+    player.flyingKnee = null;
     this.emitEventToPlayer(player.id, {
       type: "respawn",
       x: player.x,
@@ -611,6 +639,14 @@ class GameServer {
       this.fireDomainCopy(player, cast);
     } else if (cast.type === "domainCopyFire") {
       this.fireDomainCopyFire(player, cast);
+    } else if (cast.type === "divergentFist") {
+      this.fireDivergentFist(player, cast);
+    } else if (cast.type === "flyingKnee") {
+      this.fireFlyingKnee(player, cast);
+    } else if (cast.type === "soulImpact") {
+      this.fireSoulImpact(player, cast);
+    } else if (cast.type === "taidoBeatdown") {
+      this.fireTaidoBeatdown(player, cast);
     }
   }
 
@@ -710,6 +746,63 @@ class GameServer {
       return;
     }
 
+    if (player.flyingKnee) {
+      player.aimX = input.aimX;
+      player.aimY = input.aimY;
+      const moveAmount = Math.min(player.flyingKnee.remainingDist, player.flyingKnee.speed * dt);
+      this.moveEntityWithCollisions(player, player.flyingKnee.dirX * moveAmount, player.flyingKnee.dirY * moveAmount);
+      player.flyingKnee.remainingDist -= moveAmount;
+      if (player.flyingKnee.remainingDist <= 0) {
+        const kit = this.getKit(player);
+        const radius = kit.flyingKnee.radius;
+        const damage = kit.flyingKnee.damage * player.modifiers.damageMul;
+        let hitTarget = null;
+        this.players.forEach((target) => {
+          if (target.id === player.id || !target.alive || hitTarget) return;
+          if (!this.config.match.friendlyFire && target.kind === "player") return;
+          if (distance(player.x, player.y, target.x, target.y) <= radius + target.radius) {
+            hitTarget = target;
+          }
+        });
+        if (!hitTarget) {
+          this.enemies.forEach((enemy) => {
+            if (!enemy.alive || hitTarget) return;
+            if (distance(player.x, player.y, enemy.x, enemy.y) <= radius + enemy.radius) {
+              hitTarget = enemy;
+            }
+          });
+        }
+        if (hitTarget) {
+          this.combat.applyDamage({
+            target: hitTarget,
+            source: player,
+            amount: damage,
+            kind: "flyingKnee",
+            knockback: 200,
+            fromX: player.flyingKnee.startX,
+            fromY: player.flyingKnee.startY,
+          });
+        }
+        this.emitEventNear(player.x, player.y, {
+          type: "flyingKnee",
+          x: player.x,
+          y: player.y,
+          playerId: player.id,
+          hit: !!hitTarget,
+        });
+        player.flyingKnee = null;
+      }
+      player.prevInput.m1 = input.m1;
+      player.prevInput.q = input.q;
+      player.prevInput.e = input.e;
+      player.prevInput.r = input.r;
+      player.prevInput.space = input.space;
+      player.prevInput.f = input.f;
+      player.prevInput.dodge = input.dodge;
+      player.lastProcessedInputSeq = input.seq;
+      return;
+    }
+
     player.aimX = input.aimX;
     player.aimY = input.aimY;
 
@@ -726,7 +819,10 @@ class GameServer {
     }
     const castSlow = isPureLoveCharging ? 0 : isCharging ? 0.72 : isDomainCasting ? 0 : 1;
     const domainSlow = this.domainSystem.getPlayerSlowFactor(player);
-    const moveSpeed = player.moveSpeed * player.modifiers.speedMul * castSlow * domainSlow;
+    const yujiOwnDomainSpeedMul = this.isYujiInsideOwnDomain(player)
+      ? YUJI_OWN_DOMAIN_SPEED_MULTIPLIER
+      : 1;
+    const moveSpeed = player.moveSpeed * player.modifiers.speedMul * yujiOwnDomainSpeedMul * castSlow * domainSlow;
     player.vx = moveNorm.x * moveSpeed;
     player.vy = moveNorm.y * moveSpeed;
 
@@ -751,17 +847,45 @@ class GameServer {
     if (!player.cast && !skillLockedAtTickStart && player.domainExhaustionTimer <= 0) {
       const chara = player.character || "gojo";
       if (chara === "yuta" || chara === "megumi") {
-        if (qPressed) this.tryCastRika(player);
-        if (ePressed) this.tryCastFullRika(player);
-        if (rPressed) this.tryCastPureLove(player);
-        if (spacePressed) this.tryCastDashSlash(player);
-        if (fPressed) this.tryCastDomain(player);
+        if (qPressed) {
+          this.tryCastRika(player);
+        } else if (ePressed) {
+          this.tryCastFullRika(player);
+        } else if (rPressed) {
+          this.tryCastPureLove(player);
+        } else if (spacePressed) {
+          this.tryCastDashSlash(player);
+        } else if (fPressed) {
+          if (chara === "yuta" && this.domainSystem.hasActiveDomain(player.id)) {
+            this.tryCastDomainCopy(player);
+          } else {
+            this.tryCastDomain(player);
+          }
+        }
+      } else if (chara === "yuji") {
+        if (qPressed) {
+          this.tryCastDivergentFist(player);
+        } else if (ePressed) {
+          this.tryCastSoulImpact(player);
+        } else if (rPressed) {
+          this.tryCastTaidoBeatdown(player);
+        } else if (spacePressed) {
+          this.tryCastFlyingKnee(player);
+        } else if (fPressed) {
+          this.tryCastDomain(player);
+        }
       } else {
-        if (qPressed) this.tryCastBlue(player);
-        if (ePressed) this.tryCastRed(player);
-        if (rPressed) this.tryCastPurple(player);
-        if (spacePressed) this.tryCastTeleport(player);
-        if (fPressed) this.tryCastDomain(player);
+        if (qPressed) {
+          this.tryCastBlue(player);
+        } else if (ePressed) {
+          this.tryCastRed(player);
+        } else if (rPressed) {
+          this.tryCastPurple(player);
+        } else if (spacePressed) {
+          this.tryCastTeleport(player);
+        } else if (fPressed) {
+          this.tryCastDomain(player);
+        }
       }
     }
 
@@ -793,7 +917,6 @@ class GameServer {
     if (this.domainSystem.domains.has(player.id)) {
       player.animState = "domain";
       player.statePriority = 2;
-      return;
     }
 
     if (player.cast && player.cast.type === "pureLove") {
@@ -821,6 +944,11 @@ class GameServer {
       player.statePriority = 4;
       return;
     }
+    if (player.cast && player.cast.type === "soulImpact") {
+      player.animState = "skill2";
+      player.statePriority = 4;
+      return;
+    }
     if (player.cast && player.cast.type === "rika") {
       player.animState = "skill1";
       player.statePriority = 5;
@@ -829,6 +957,21 @@ class GameServer {
     if (player.cast && player.cast.type === "blue") {
       player.animState = "skill1";
       player.statePriority = 5;
+      return;
+    }
+    if (player.cast && player.cast.type === "divergentFist") {
+      player.animState = "skill1";
+      player.statePriority = 5;
+      return;
+    }
+    if (player.cast && player.cast.type === "taidoBeatdown") {
+      player.animState = "skill3_prepare";
+      player.statePriority = 3;
+      return;
+    }
+    if (player.cast && player.cast.type === "taidoBeatdownAttack") {
+      player.animState = "skill3";
+      player.statePriority = 3;
       return;
     }
     if (player.cast && player.cast.type === "dashSlash") {
@@ -842,6 +985,16 @@ class GameServer {
       return;
     }
     if (player.cast && player.cast.type === "teleport") {
+      player.animState = "teleport";
+      player.statePriority = 6;
+      return;
+    }
+    if (player.cast && player.cast.type === "flyingKnee") {
+      player.animState = "teleport";
+      player.statePriority = 6;
+      return;
+    }
+    if (player.flyingKnee) {
       player.animState = "teleport";
       player.statePriority = 6;
       return;
@@ -906,9 +1059,10 @@ class GameServer {
     const isYutaSlash = player.character === "yuta";
 
     const baseM1Damage = kit.m1.damage * player.modifiers.m1DamageMul;
-    const blackFlashChance = player.character === "gojo" ? 0.01 : player.character === "yuji" ? 0.07 : 0.01;
-    const isBlackFlash = Math.random() < blackFlashChance;
-    const m1Damage = baseM1Damage * (isBlackFlash ? 10 : 1);
+    const baseBlackFlashChance = player.character === "gojo" ? 0.01 : player.character === "yuji" ? 0.07 : 0.01;
+    const blackFlashChance = this.isYujiInsideOwnDomain(player)
+      ? Math.min(1, baseBlackFlashChance + YUJI_OWN_DOMAIN_BLACK_FLASH_BONUS)
+      : baseBlackFlashChance;
 
     player.m1Timer = kit.m1.cooldown;
     player.comboStep = (player.comboStep % 4) + 1;
@@ -943,6 +1097,7 @@ class GameServer {
       return inRange && facing;
     };
 
+    const playerTargets = [];
     this.players.forEach((target) => {
       if (target.id === player.id || !target.alive) {
         return;
@@ -951,39 +1106,52 @@ class GameServer {
         return;
       }
       if (canM1HitTarget(target)) {
-        const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85));
-        const knockbackCap = isBlackFlash ? 350 : 170;
-        this.combat.applyDamage({
-          target,
-          source: player,
-          amount: m1Damage,
-          kind: "m1",
-          knockback: knockbackVal,
-          knockbackDistanceCap: knockbackCap,
-          fromX: player.x,
-          fromY: player.y,
-        });
+        playerTargets.push(target);
       }
     });
 
+    const enemyTargets = [];
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) {
         return;
       }
       if (canM1HitTarget(enemy)) {
-        const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 190 : 150) : (isYutaSlash ? 110 : 80));
-        const knockbackCap = isBlackFlash ? 350 : 170;
-        this.combat.applyDamage({
-          target: enemy,
-          source: player,
-          amount: m1Damage,
-          kind: "m1",
-          knockback: knockbackVal,
-          knockbackDistanceCap: knockbackCap,
-          fromX: player.x,
-          fromY: player.y,
-        });
+        enemyTargets.push(enemy);
       }
+    });
+
+    const hitEnemy = enemyTargets.length > 0;
+    const isBlackFlash = hitEnemy && Math.random() < blackFlashChance;
+    const m1Damage = baseM1Damage * (isBlackFlash ? 10 : 1);
+
+    playerTargets.forEach((target) => {
+      const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85));
+      const knockbackCap = isBlackFlash ? 350 : 170;
+      this.combat.applyDamage({
+        target,
+        source: player,
+        amount: m1Damage,
+        kind: "m1",
+        knockback: knockbackVal,
+        knockbackDistanceCap: knockbackCap,
+        fromX: player.x,
+        fromY: player.y,
+      });
+    });
+
+    enemyTargets.forEach((enemy) => {
+      const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 190 : 150) : (isYutaSlash ? 110 : 80));
+      const knockbackCap = isBlackFlash ? 350 : 170;
+      this.combat.applyDamage({
+        target: enemy,
+        source: player,
+        amount: m1Damage,
+        kind: "m1",
+        knockback: knockbackVal,
+        knockbackDistanceCap: knockbackCap,
+        fromX: player.x,
+        fromY: player.y,
+      });
     });
 
     this.emitEventNear(player.x, player.y, {
@@ -1215,323 +1383,134 @@ class GameServer {
     });
   }
 
-  findTeleportDestination(player, desiredX, desiredY) {
-    const samples = 24;
-    let best = { x: player.x, y: player.y };
-    for (let i = 1; i <= samples; i += 1) {
-      const t = i / samples;
-      const x = player.x + (desiredX - player.x) * t;
-      const y = player.y + (desiredY - player.y) * t;
-      const candidate = {
-        x: clamp(x, player.radius, this.map.width - player.radius),
-        y: clamp(y, player.radius, this.map.height - player.radius),
-      };
-      if (
-        !this.isCollidingAnyObstacle(candidate.x, candidate.y, player.radius) &&
-        !this.isBlockedByDomainWalls(player, player.x, player.y, candidate.x, candidate.y)
-      ) {
-        best = candidate;
-      } else {
-        break;
-      }
-    }
-    return best;
-  }
-
-  tryCastDomain(player) {
-    if (!player.alive) {
-      return false;
-    }
-
-    if (player.character === "yuta") {
-      const domain = this.domainSystem.domains.get(player.id);
-      if (domain && distance(player.x, player.y, domain.x, domain.y) <= domain.radius) {
-        const kit = this.getKit(player);
-        player.cast = {
-          type: "domainCopy",
-          timer: (kit.domainCopy || {}).startup || 0.2,
-        };
-        return true;
-      }
-    }
-
+  tryCastDivergentFist(player) {
     const kit = this.getKit(player);
-    const cooldownKey = "f";
-    if (player.cooldowns[cooldownKey] > 0) {
+    if (!this.canUseSkill(player, kit.divergentFist.energy, "q", kit.divergentFist.cooldown)) {
       return false;
     }
-    if (player.energy < kit.domain.energyInitial) {
-      return false;
-    }
-
-    player.energy -= kit.domain.energyInitial;
-    player.cooldowns[cooldownKey] = kit.domain.cooldown * player.modifiers.cooldownMul;
-    player.cast = {
-      type: "domain",
-      timer: kit.domain.startup,
-    };
-    return true;
-  }
-
-  fireDomain(player) {
-    this.domainSystem.activateDomain(player);
-  }
-
-  fireDomainCopy(player, cast) {
-    const domain = this.domainSystem.domains.get(player.id);
-    if (!domain) return;
-
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
-
-    let copyType = null;
-    let sourceKit = null;
-    let sourceChar = domain.copiedCharacter;
-
-    if (sourceChar) {
-      sourceKit = CHARACTER_REGISTRY[sourceChar];
-      if (sourceKit) {
-        const isStandard = sourceChar !== "yuta" && sourceChar !== "megumi";
-        copyType = isStandard ? "purple" : "pureLove";
-      }
-    }
-    if (!copyType) {
-      sourceKit = CHARACTER_REGISTRY.yuta;
-      sourceChar = "yuta";
-      copyType = "pureLove";
-    }
-
-    const startup = copyType === "purple"
-      ? (sourceKit.purple?.charge || 0.5)
-      : (sourceKit.pureLove?.startup || 2.0);
-
     player.cast = {
-      type: "domainCopyFire",
-      timer: startup,
-      copyType,
+      type: "divergentFist",
+      timer: kit.divergentFist.startup,
       dirX: aim.x,
       dirY: aim.y,
-      _sourceChar: sourceChar,
     };
-
-    if (copyType === "pureLove") {
-      const offset = 30;
-      this.emitEventNear(player.x, player.y, {
-        type: "pureLoveCharge",
-        x: player.x + aim.x * offset,
-        y: player.y + aim.y * offset,
-        playerId: player.id,
-        dirX: aim.x,
-        dirY: aim.y,
-        duration: startup,
-      });
-    } else {
-      this.emitEventNear(player.x, player.y, {
-        type: "purpleCharge",
-        x: player.x,
-        y: player.y,
-        ownerId: player.id,
-        delay: startup,
-      });
-    }
-  }
-
-  fireDomainCopyFire(player, cast) {
-    const sourceKit = CHARACTER_REGISTRY[cast._sourceChar] || CHARACTER_REGISTRY.yuta;
-    const aim = { x: cast.dirX, y: cast.dirY };
-
-    if (cast.copyType === "purple") {
-      this.fireCopiedPurple(player, aim, sourceKit);
-    } else {
-      this.fireCopiedPureLove(player, aim, sourceKit);
-    }
-  }
-
-  fireCopiedPurple(player, aim, sourceKit) {
-    const p = sourceKit.purple;
-    const beam = createProjectile({
-      id: `cp${this.nextProjectileId++}`,
-      type: "purple",
-      ownerId: player.id,
-      ownerKind: "player",
-      x: player.x,
-      y: player.y,
-      vx: aim.x,
-      vy: aim.y,
-      speed: p.speed,
-      radius: 0,
-      lifetime: p.length / p.speed + 0.08,
-      damage: p.damage * (player.modifiers.purpleDamageMul || 1),
-      penetration: true,
-      width: p.width * (player.modifiers.purpleWidthMul || 1),
-      length: p.length * (player.modifiers.purpleLengthMul || 1),
-      color: "#9b5cff",
-      meta: { startX: player.x, startY: player.y },
-    });
-    if (this.domainSystem.hasActiveDomain(player.id)) {
-      beam.sureHit = true;
-      beam.homingStrength = 3.0;
-    }
-    this.projectiles.set(beam.id, beam);
-    this.emitEventNear(player.x, player.y, {
-      type: "skillPurple",
-      x: player.x,
-      y: player.y,
-      ownerId: player.id,
-      dirX: aim.x,
-      dirY: aim.y,
-      width: beam.width,
-      length: beam.length,
-    });
-  }
-
-  fireCopiedPureLove(player, aim, sourceKit) {
-    const pl = sourceKit.pureLove;
-    const dir = normalize(aim.x, aim.y);
-    const width = pl.radius * (player.modifiers.pureLoveRadiusMul || 1);
-    const offset = pl.beamOffset || 60;
-
-    this.pureLoveBeams.set(player.id, {
-      x: player.x + dir.x * offset,
-      y: player.y + dir.y * offset,
-      dirX: dir.x,
-      dirY: dir.y,
-      width,
-      lifetime: pl.duration || 4,
-      totalLifetime: pl.duration || 4,
-      beamLength: pl.beamLength || 960,
-      ownerId: player.id,
-      hitTimes: new Map(),
-      redirectSpeed: pl.redirectSpeed || 0,
-      damage: pl.damage * (player.modifiers.pureLoveDamageMul || 1),
-      knockback: (pl.knockback || 600) * (player.modifiers.pureLoveKnockbackMul || 1),
-      _domainCopy: true,
-    });
-    this.emitEventNear(player.x, player.y, {
-      type: "pureLoveBeam",
-      x: player.x + dir.x * offset,
-      y: player.y + dir.y * offset,
-      playerId: player.id,
-      dirX: dir.x,
-      dirY: dir.y,
-      width,
-      lifetime: pl.duration || 4,
-      beamLength: pl.beamLength || 960,
-    });
-  }
-
-  spawnEnemyProjectile(data) {
-    const projectile = createProjectile({
-      id: `pr${this.nextProjectileId++}`,
-      type: data.type,
-      ownerId: data.ownerId || "enemy",
-      ownerKind: "enemy",
-      x: data.x,
-      y: data.y,
-      vx: data.dirX,
-      vy: data.dirY,
-      speed: data.speed,
-      radius: data.radius,
-      lifetime: data.lifetime,
-      damage: data.damage,
-      knockback: data.knockback || 120,
-      color: "#ffae62",
-    });
-    this.projectiles.set(projectile.id, projectile);
-  }
-
-  findFirstDomainBarrierIntersection(fromX, fromY, toX, toY, padding = 0) {
-    if (!this.domainSystem || this.domainSystem.domains.size === 0) {
-      return null;
-    }
-
-    const vx = toX - fromX;
-    const vy = toY - fromY;
-    const a = vx * vx + vy * vy;
-    if (a < 0.000001) {
-      return null;
-    }
-
-    let best = null;
-    const epsilon = 0.0001;
-
-    this.domainSystem.domains.forEach((domain) => {
-      const r = Math.max(1, domain.radius + padding);
-      const fx = fromX - domain.x;
-      const fy = fromY - domain.y;
-
-      const b = 2 * (fx * vx + fy * vy);
-      const c = fx * fx + fy * fy - r * r;
-      const disc = b * b - 4 * a * c;
-      if (disc < 0) {
-        return;
-      }
-
-      const sqrtDisc = Math.sqrt(disc);
-      const inv2a = 1 / (2 * a);
-      const t1 = (-b - sqrtDisc) * inv2a;
-      const t2 = (-b + sqrtDisc) * inv2a;
-      const candidates = [t1, t2];
-
-      for (let i = 0; i < candidates.length; i += 1) {
-        const t = candidates[i];
-        if (!Number.isFinite(t) || t <= epsilon || t > 1 + epsilon) {
-          continue;
-        }
-        const clampedT = clamp(t, 0, 1);
-        const x = fromX + vx * clampedT;
-        const y = fromY + vy * clampedT;
-
-        if (!best || clampedT < best.t) {
-          best = {
-            domain,
-            t: clampedT,
-            x,
-            y,
-          };
-        }
-      }
-    });
-
-    return best;
-  }
-
-  breakProjectileOnBarrier(projectile, barrierHit) {
-    if (!projectile || !barrierHit || !barrierHit.domain) {
-      return false;
-    }
-
-    projectile.x = barrierHit.x;
-    projectile.y = barrierHit.y;
-
-    const baseDamage = Number.isFinite(projectile.damage) ? projectile.damage : 10;
-    let barrierDamage = baseDamage * 0.45;
-    if (projectile.type === "red") {
-      barrierDamage = baseDamage * 0.55;
-    } else if (projectile.type === "purple") {
-      barrierDamage = baseDamage * 0.75;
-    }
-    barrierDamage = Math.max(4, barrierDamage);
-    this.domainSystem.damageBarrier(barrierHit.domain.ownerId, barrierDamage, projectile.ownerId);
-
-    this.emitEventNear(barrierHit.x, barrierHit.y, {
-      type: "domainBarrierHit",
-      x: barrierHit.x,
-      y: barrierHit.y,
-      ownerId: barrierHit.domain.ownerId,
-      projectileType: projectile.type,
-      attackerKind: projectile.ownerKind,
-    });
-
-    this.projectiles.delete(projectile.id);
     return true;
   }
 
-  handleProjectileDomainBarrier(projectile, fromX, fromY, toX, toY, padding = 0) {
-    const hit = this.findFirstDomainBarrierIntersection(fromX, fromY, toX, toY, padding);
-    if (!hit) {
+  fireDivergentFist(player, cast) {
+    const kit = this.getKit(player);
+    const { range, width, damage, delayedDamage, delay, stunDuration } = kit.divergentFist;
+    const { dirX, dirY } = cast;
+    const toX = player.x + dirX * range;
+    const toY = player.y + dirY * range;
+    const hitTargets = [];
+
+    const canHit = (target) => {
+      const dx = target.x - player.x;
+      const dy = target.y - player.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > range + target.radius + width * 0.5) return false;
+      const forward = dx * dirX + dy * dirY;
+      if (forward < -target.radius || forward > range + target.radius + width * 0.5) return false;
+      const cutDist = distancePointToSegment(target.x, target.y, player.x, player.y, toX, toY);
+      return cutDist <= target.radius + width * 0.5;
+    };
+
+    const processTarget = (target) => {
+      if (!target.alive) return;
+      if (target.id === player.id) return;
+      if (!this.config.match.friendlyFire && target.kind === "player") return;
+      if (!canHit(target)) return;
+      this.combat.applyDamage({
+        target,
+        source: player,
+        amount: damage * player.modifiers.damageMul,
+        kind: "divergentFist",
+        knockback: 80,
+        fromX: player.x,
+        fromY: player.y,
+      });
+      hitTargets.push(target);
+    };
+
+    this.players.forEach(processTarget);
+    this.enemies.forEach(processTarget);
+
+    this.emitEventNear(player.x, player.y, {
+      type: "divergentFist",
+      x: player.x,
+      y: player.y,
+      playerId: player.id,
+      dirX,
+      dirY,
+      range,
+      width,
+    });
+
+    if (hitTargets.length > 0) {
+      this.queueDelayedAction(delay, () => {
+        hitTargets.forEach((target) => {
+          if (!target.alive) return;
+          this.combat.applyDamage({
+            target,
+            source: player,
+            amount: delayedDamage * player.modifiers.damageMul,
+            kind: "divergentFistDelayed",
+            knockback: 150,
+            fromX: player.x,
+            fromY: player.y,
+          });
+          target.stunTimer = Math.max(target.stunTimer || 0, stunDuration);
+          this.emitEventNear(target.x, target.y, {
+            type: "divergentFistDelayed",
+            x: target.x,
+            y: target.y,
+            playerId: player.id,
+          });
+        });
+      });
+    }
+  }
+
+  tryCastFlyingKnee(player) {
+    const kit = this.getKit(player);
+    if (!this.canUseSkill(player, kit.flyingKnee.energy, "space", kit.flyingKnee.cooldown)) {
       return false;
     }
-    return this.breakProjectileOnBarrier(projectile, hit);
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    player.cast = {
+      type: "flyingKnee",
+      timer: kit.flyingKnee.startup,
+      dirX: aim.x,
+      dirY: aim.y,
+    };
+    return true;
+  }
+
+  fireFlyingKnee(player, cast) {
+    const kit = this.getKit(player);
+    const { distance, speed, radius, damage } = kit.flyingKnee;
+    const { dirX, dirY } = cast;
+    player.flyingKnee = {
+      dirX,
+      dirY,
+      remainingDist: distance,
+      speed,
+      startX: player.x,
+      startY: player.y,
+    };
+    player.aimX = player.x + dirX * 100;
+    player.aimY = player.y + dirY * 100;
+
+    this.emitEventNear(player.x, player.y, {
+      type: "flyingKneeStart",
+      x: player.x,
+      y: player.y,
+      playerId: player.id,
+      dirX,
+      dirY,
+    });
   }
 
   updateProjectiles(dt) {
@@ -2641,7 +2620,6 @@ class GameServer {
     const dirY = cast.dirY;
     const dist = kit.dashSlash.distance * player.modifiers.dashSlashRangeMul;
 
-    // Start sliding dash (no damage at cast time)
     player.dashSlash = {
       dirX,
       dirY,
@@ -3375,6 +3353,424 @@ class GameServer {
     return h;
   }
 
+  tryCastDomain(player) {
+    const kit = this.getKit(player);
+    if (!this.canUseSkill(player, kit.domain.energyInitial, "f", kit.domain.cooldown)) {
+      return false;
+    }
+    player.cast = {
+      type: "domain",
+      timer: kit.domain.startup,
+    };
+    return true;
+  }
+
+  fireDomain(player) {
+    this.domainSystem.activateDomain(player);
+  }
+
+  findTeleportDestination(player, dirX, dirY, distance) {
+    const baseSpeed = 1;
+    const stepSize = 6;
+    const steps = Math.ceil(distance / stepSize);
+    let lastPassable = { x: player.x, y: player.y };
+
+    for (let i = 1; i <= steps; i += 1) {
+      const dist = i * stepSize;
+      const nx = player.x + dirX * dist;
+      const ny = player.y + dirY * dist;
+
+      if (nx < player.radius || nx > this.map.width - player.radius) break;
+      if (ny < player.radius || ny > this.map.height - player.radius) break;
+
+      if (this.isCollidingAnyObstacle(nx, ny, player.radius)) break;
+
+      lastPassable = { x: nx, y: ny };
+    }
+
+    return lastPassable;
+  }
+
+  handleProjectileDomainBarrier(projectile, fromX, fromY, toX, toY) {
+    const hit = this.findFirstDomainBarrierIntersection(fromX, fromY, toX, toY);
+    if (hit) {
+      this.breakProjectileOnBarrier(projectile, hit);
+      return true;
+    }
+    return false;
+  }
+
+  findFirstDomainBarrierIntersection(fromX, fromY, toX, toY) {
+    if (!this.domainSystem || this.domainSystem.domains.size === 0) {
+      return null;
+    }
+    let closest = null;
+    let closestDist = Infinity;
+
+    const lineLen = distance(fromX, fromY, toX, toY);
+    if (lineLen < 0.0001) return null;
+    const dirX = (toX - fromX) / lineLen;
+    const dirY = (toY - fromY) / lineLen;
+
+    this.domainSystem.domains.forEach((domain) => {
+      const ox = fromX - domain.x;
+      const oy = fromY - domain.y;
+      const b = 2 * (ox * dirX + oy * dirY);
+      const c = ox * ox + oy * oy - domain.radius * domain.radius;
+      const disc = b * b - 4 * c;
+      if (disc < 0) return;
+
+      const sqrtDisc = Math.sqrt(disc);
+      const t1 = (-b - sqrtDisc) / 2;
+      const t2 = (-b + sqrtDisc) / 2;
+      let t = -1;
+      if (c < 0) {
+        if (t2 >= 0 && t2 <= lineLen) t = t2;
+      } else {
+        if (t1 >= 0 && t1 <= lineLen) t = t1;
+        else if (t2 >= 0 && t2 <= lineLen) t = t2;
+      }
+      if (t < 0) return;
+
+      const hitX = fromX + dirX * t;
+      const hitY = fromY + dirY * t;
+      if (t < closestDist) {
+        closestDist = t;
+        closest = { x: hitX, y: hitY, domain };
+      }
+    });
+
+    return closest;
+  }
+
+  breakProjectileOnBarrier(projectile, hit) {
+    if (projectile.type === "purple") {
+      this.domainSystem.damageBarrier(hit.domain.ownerId, projectile.damage, projectile.ownerId);
+    }
+    this.projectiles.delete(projectile.id);
+  }
+
+  fireCopiedPureLove(player, cast) {
+    const playerKit = this.getKit(player);
+    const kit = YUTA.pureLove;
+    const dir = normalize(cast.dirX, cast.dirY);
+    const width = kit.radius;
+
+    this.pureLoveBeams.set(player.id, {
+      x: player.x + dir.x * 60,
+      y: player.y + dir.y * 60,
+      dirX: dir.x,
+      dirY: dir.y,
+      width: width,
+      beamLength: kit.beamLength,
+      lifetime: 4.0,
+      totalLifetime: 4.0,
+      ownerId: player.id,
+      hitTimes: new Map(),
+      _domainCopy: true,
+    });
+  }
+
+  fireCopiedPurple(player, cast) {
+    const aim = normalize(cast.dirX, cast.dirY);
+    const kit = { damage: GOJO.purple.damage * 0.7, speed: GOJO.purple.speed, length: GOJO.purple.length, width: GOJO.purple.width };
+    this.projectiles.set(crypto.randomUUID(), {
+      id: crypto.randomUUID(),
+      type: "purple",
+      x: player.x,
+      y: player.y,
+      prevX: player.x,
+      prevY: player.y,
+      ownerId: player.id,
+      ownerKind: "player",
+      vx: aim.x,
+      vy: aim.y,
+      speed: kit.speed,
+      damage: kit.damage,
+      radius: 10,
+      width: kit.width,
+      length: kit.length,
+      lifetime: kit.length / kit.speed + 0.2,
+      age: 0,
+      traveled: 0,
+      tickTimer: 0,
+      hitTargets: new Set(),
+      pullRadius: 0,
+      pullStrength: 0,
+      tickRate: 999,
+      sureHit: true,
+      homingStrength: 4.0,
+      meta: {
+        startX: player.x,
+        startY: player.y,
+      },
+    });
+  }
+
+  spawnEnemyProjectile(owner, type, x, y, dirX, dirY) {
+    this.projectiles.set(crypto.randomUUID(), {
+      id: crypto.randomUUID(),
+      type,
+      x,
+      y,
+      prevX: x,
+      prevY: y,
+      ownerId: owner ? owner.id : null,
+      ownerKind: "enemy",
+      vx: dirX,
+      vy: dirY,
+      speed: 140,
+      damage: 18,
+      radius: 8,
+      width: 8,
+      length: Infinity,
+      lifetime: 8,
+      age: 0,
+      traveled: 0,
+      tickTimer: 0,
+      hitTargets: new Set(),
+      pullRadius: 0,
+      pullStrength: 0,
+      tickRate: 999,
+      sureHit: false,
+      homingStrength: 0,
+      meta: {},
+    });
+  }
+
+  fireDomainCopy(player, cast) {
+    const kit = this.getKit(player);
+    player.cast = {
+      type: "domainCopyFire",
+      timer: kit.pureLove.startup,
+      dirX: cast.dirX,
+      dirY: cast.dirY,
+    };
+    const chargeOffset = 150;
+    this.emitEventNear(player.x, player.y, {
+      type: "pureLoveCharge",
+      x: player.x + cast.dirX * chargeOffset,
+      y: player.y + cast.dirY * chargeOffset,
+      playerId: player.id,
+      dirX: cast.dirX,
+      dirY: cast.dirY,
+      duration: kit.pureLove.startup,
+    });
+  }
+
+  fireDomainCopyFire(player, cast) {
+    const kit = this.getKit(player);
+    const dir = normalize(cast.dirX, cast.dirY);
+    const width = kit.pureLove.radius * player.modifiers.pureLoveRadiusMul;
+    const offset = kit.pureLove.beamOffset || 60;
+
+    this.pureLoveBeams.set(player.id, {
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      dirX: dir.x,
+      dirY: dir.y,
+      width: width,
+      beamLength: kit.pureLove.beamLength,
+      lifetime: 4.0,
+      totalLifetime: 4.0,
+      ownerId: player.id,
+      hitTimes: new Map(),
+      _domainCopy: true,
+    });
+
+    this.emitEventNear(player.x, player.y, {
+      type: "pureLoveBeam",
+      playerId: player.id,
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      dirX: dir.x,
+      dirY: dir.y,
+      width: width,
+      lifetime: 4.0,
+    });
+  }
+
+  tryCastSoulImpact(player) {
+    const kit = this.getKit(player);
+    if (!this.canUseSkill(player, kit.soulImpact.energy, "e", kit.soulImpact.cooldown)) {
+      return false;
+    }
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    player.cast = {
+      type: "soulImpact",
+      timer: kit.soulImpact.startup,
+      dirX: aim.x,
+      dirY: aim.y,
+    };
+    return true;
+  }
+
+  fireSoulImpact(player, cast) {
+    const kit = this.getKit(player);
+    const { damage, range } = kit.soulImpact;
+    const dirX = cast.dirX;
+    const dirY = cast.dirY;
+
+    let hitTarget = null;
+    this.players.forEach((target) => {
+      if (target.id === player.id || !target.alive) return;
+      if (!this.config.match.friendlyFire && target.kind === "player") return;
+      const toTarget = normalize(target.x - player.x, target.y - player.y);
+      const facing = dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2;
+      const inRange = distance(player.x, player.y, target.x, target.y) <= range + target.radius;
+      if (inRange && facing) {
+        hitTarget = target;
+      }
+    });
+
+    this.enemies.forEach((enemy) => {
+      if (!enemy.alive) return;
+      const toTarget = normalize(enemy.x - player.x, enemy.y - player.y);
+      const facing = dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2;
+      const inRange = distance(player.x, player.y, enemy.x, enemy.y) <= range + enemy.radius;
+      if (inRange && facing) {
+        hitTarget = enemy;
+      }
+    });
+
+    if (hitTarget) {
+      this.combat.applyDamage({
+        target: hitTarget,
+        source: player,
+        amount: damage * player.modifiers.damageMul,
+        kind: "soulImpact",
+        knockback: 200,
+        fromX: player.x,
+        fromY: player.y,
+      });
+    }
+
+    this.emitEventNear(player.x, player.y, {
+      type: "soulImpact",
+      x: player.x,
+      y: player.y,
+      playerId: player.id,
+      miss: !hitTarget,
+    });
+  }
+
+  tryCastTaidoBeatdown(player) {
+    const kit = this.getKit(player);
+    if (!this.canUseSkill(player, kit.taidoBeatdown.energy, "r", kit.taidoBeatdown.cooldown)) {
+      return false;
+    }
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    player.cast = {
+      type: "taidoBeatdown",
+      timer: kit.taidoBeatdown.startup,
+      dirX: aim.x,
+      dirY: aim.y,
+    };
+    return true;
+  }
+
+  fireTaidoBeatdown(player, cast) {
+    const kit = this.getKit(player);
+    const { hits, damagePerHit, finalDamage, finalKnockback, range, blackFlashMult, hitDelay } = kit.taidoBeatdown;
+    const dirX = cast.dirX;
+    const dirY = cast.dirY;
+
+    const canHit = (target) => {
+      if (!target.alive) return false;
+      if (target.id === player.id) return false;
+      if (!this.config.match.friendlyFire && target.kind === "player") return false;
+      return distance(player.x, player.y, target.x, target.y) <= range + target.radius;
+    };
+
+    const hitTargets = [];
+    this.players.forEach((target) => { if (canHit(target)) hitTargets.push(target); });
+    this.enemies.forEach((target) => { if (canHit(target)) hitTargets.push(target); });
+
+    for (let i = 0; i < hits; i += 1) {
+      this.queueDelayedAction(i * hitDelay, () => {
+        hitTargets.forEach((target) => {
+          if (!target.alive) return;
+          this.combat.applyDamage({
+            target,
+            source: player,
+            amount: damagePerHit * player.modifiers.damageMul,
+            kind: "taidoBeatdown",
+            knockback: 30,
+            fromX: player.x,
+            fromY: player.y,
+          });
+          this.emitEventNear(target.x, target.y, {
+            type: "taidoBeatdownHit",
+            x: target.x,
+            y: target.y,
+            playerId: player.id,
+            hitNum: i,
+          });
+        });
+      });
+    }
+
+    this.queueDelayedAction(hits * hitDelay, () => {
+      hitTargets.forEach((target) => {
+        if (!target.alive) return;
+        this.combat.applyDamage({
+          target,
+          source: player,
+          amount: finalDamage * player.modifiers.damageMul,
+          kind: "taidoBeatdown",
+          knockback: finalKnockback,
+          fromX: player.x,
+          fromY: player.y,
+        });
+        this.emitEventNear(target.x, target.y, {
+          type: "taidoBeatdownHit",
+          x: target.x,
+          y: target.y,
+          playerId: player.id,
+          hitNum: hits,
+          final: true,
+        });
+      });
+    });
+
+    this.emitEventNear(player.x, player.y, {
+      type: "taidoBeatdown",
+      x: player.x,
+      y: player.y,
+      playerId: player.id,
+      dirX,
+      dirY,
+      hitCount: hitTargets.length,
+    });
+
+    // Keep attack animation active during the hit sequence
+    const attackDuration = hits * hitDelay + hitDelay;
+    player.cast = { type: "taidoBeatdownAttack", timer: attackDuration };
+  }
+
+  tryCastDomainCopy(player) {
+    if (!player.alive) return false;
+    const kit = this.getKit(player);
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    player.cast = {
+      type: "domainCopy",
+      timer: (kit.domainCopy || kit.domain).startup,
+      dirX: aim.x,
+      dirY: aim.y,
+    };
+    const chargeOffset = 150;
+    this.emitEventNear(player.x, player.y, {
+      type: "pureLoveCharge",
+      x: player.x + aim.x * chargeOffset,
+      y: player.y + aim.y * chargeOffset,
+      playerId: player.id,
+      dirX: aim.x,
+      dirY: aim.y,
+      duration: kit.domainCopy.startup,
+    });
+    return true;
+  }
+
   broadcastSnapshots() {
     const world = this.buildFullWorldState();
 
@@ -3451,6 +3847,57 @@ class GameServer {
 
       player.socket.send(JSON.stringify(payload));
     });
+  }
+
+  buildSnapshot(player) {
+    const playersDelta = this.collectPlayersDelta();
+    const enemiesDelta = this.collectEnemiesDelta();
+    const projectilesDelta = this.collectProjectilesDelta();
+    const domainsDelta = this.collectDomainsDelta();
+    const payload = {
+      removed: {
+        players: playersDelta.removed,
+        enemies: enemiesDelta.removed,
+        projectiles: projectilesDelta.removed,
+        domains: domainsDelta.removed,
+      },
+        events: player._eventQueue ? player._eventQueue.splice(0) : [],
+        you: {
+          id: player.id,
+          character: player.character || "gojo",
+          x: Math.round(player.x),
+          y: Math.round(player.y),
+          hp: Number(player.hp.toFixed(1)),
+          maxHp: player.maxHp,
+          energy: Number(player.energy.toFixed(1)),
+          maxEnergy: player.maxEnergy,
+          level: player.level,
+          xp: Math.floor(player.xp),
+          xpToNext: player.xpToNext,
+          kills: player.kills,
+          deaths: player.deaths,
+          cooldowns: {
+            q: Math.round(player.cooldowns.q * 100) / 100,
+            e: Math.round(player.cooldowns.e * 100) / 100,
+            r: Math.round(player.cooldowns.r * 100) / 100,
+            space: Math.round(player.cooldowns.space * 100) / 100,
+            f: Math.round(player.cooldowns.f * 100) / 100,
+            dodge: Math.round(player.dodgeCooldown * 100) / 100,
+          },
+          alive: player.alive,
+          ackSeq: player.lastProcessedInputSeq,
+          pendingChoices: player.pendingUpgrades
+            ? player.pendingUpgrades.map((item) => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                rarity: item.rarity,
+              }))
+            : null,
+          skillLock: this.domainSystem.isSkillLockedForPlayer(player),
+        },
+      };
+      return payload;
   }
 }
 
