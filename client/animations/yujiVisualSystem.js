@@ -68,7 +68,6 @@ export class YujiVisualSystem {
   }
 
   triggerDivergentFist(x, y, dirX, dirY, range, width) {
-    if (this.divergentFistEffects.length > 24) this.divergentFistEffects.splice(0, 8);
     const impactX = x + dirX * range;
     const impactY = y + dirY * range;
     this.divergentFistEffects.push({
@@ -81,7 +80,6 @@ export class YujiVisualSystem {
   }
 
   triggerDivergentFistDelayed(x, y, radius) {
-    if (this.divergentFistEffects.length > 24) this.divergentFistEffects.splice(0, 8);
     this.divergentFistEffects.push({
       x,
       y,
@@ -93,7 +91,6 @@ export class YujiVisualSystem {
   }
 
   triggerFlyingKnee(x, y, dirX, dirY, hit) {
-    if (this.flyingKneeEffects.length > 12) this.flyingKneeEffects.splice(0, 4);
     this.flyingKneeEffects.push({
       x, y,
       dirX, dirY,
@@ -103,17 +100,14 @@ export class YujiVisualSystem {
   }
 
   triggerSoulImpact(x, y) {
-    if (this.soulImpactEffects.length > 12) this.soulImpactEffects.splice(0, 4);
     this.soulImpactEffects.push({ x, y, life: 0.76 });
   }
 
   triggerTaidoBeatdownHit(x, y, hitNum) {
-    if (this.taidoBeatdownEffects.length > 24) this.taidoBeatdownEffects.splice(0, 8);
     this.taidoBeatdownEffects.push({ x, y, hitNum, life: 0.16, final: false });
   }
 
   triggerTaidoBeatdownFinal(x, y, hitNum, blackFlash) {
-    if (this.taidoBeatdownEffects.length > 24) this.taidoBeatdownEffects.splice(0, 8);
     this.taidoBeatdownEffects.push({ x, y, hitNum, life: 0.62, final: true, blackFlash });
   }
 
@@ -125,7 +119,7 @@ export class YujiVisualSystem {
     this.dodgeEffects.set(Date.now(), { x, y, facing, life: 0.25 });
   }
 
-  renderPlayer(ctx, camera, entry, _isYou, facing, state, renderX, renderY) {
+  renderPlayer(ctx, camera, entry, _isYou, facing, state, renderX, renderY, _dt = 1 / 60) {
     const p = entry.raw;
     const worldX = Number.isFinite(renderX) ? renderX : p.x;
     const worldY = Number.isFinite(renderY) ? renderY : p.y;

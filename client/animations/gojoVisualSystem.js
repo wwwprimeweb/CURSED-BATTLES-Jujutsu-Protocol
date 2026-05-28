@@ -60,7 +60,9 @@ export class GojoVisualSystem {
 
       // Trail sprites — 1 por frame na posição exata do sprite principal
       const range = 85;
-      const spriteDist = range * 1.15 * 0.7;
+      const progress = 1 - slash.life / slash.maxLife;
+      const moveIn = Math.min(0.8, progress * 5);
+      const spriteDist = range * 1.15 * moveIn;
       const offsetMap = { 1: 0, 2: 35, 3: 18 };
       const offsetVal = offsetMap[slash.comboStep] || 0;
       const perpX = -slash.dirY;
@@ -80,11 +82,10 @@ export class GojoVisualSystem {
   }
 
   triggerM1(worldX, worldY, dirX, dirY, comboStep, playerId) {
-    if (this.m1Slashes.length > 16) this.m1Slashes.splice(0, 4);
     this.m1Slashes.push({
       worldX: worldX - dirX * 35,
       worldY: worldY - 35,
-      dirX, dirY, comboStep, life: 0.5,
+      dirX, dirY, comboStep, life: 0.2, maxLife: 0.2,
     });
   }
 
@@ -121,7 +122,7 @@ export class GojoVisualSystem {
     this.effects.addDomain(x, y, radius, ownerId, myId);
   }
 
-  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY) {
+  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY, _dt = 1 / 60) {
     const p = entry.raw;
     const worldX = Number.isFinite(renderX) ? renderX : p.x;
     const worldY = Number.isFinite(renderY) ? renderY : p.y;

@@ -44,8 +44,9 @@ export class ParticleEmitter {
         continue;
       }
       p.vy += p.gravity * dt;
-      p.vx *= p.friction;
-      p.vy *= p.friction;
+      const damp = Math.pow(p.friction, dt * 60);
+      p.vx *= damp;
+      p.vy *= damp;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
     }
@@ -104,9 +105,10 @@ export class AuraSystem {
         continue;
       }
       const t = 1 - p.life / p.maxLife;
-      p.x += (p.targetX - p.x) * 0.05;
-      p.y += (p.targetY - p.y) * 0.05;
-      p.size *= 0.98;
+      const auraLerp = 1 - Math.pow(1 - 0.05, dt * 60);
+      p.x += (p.targetX - p.x) * auraLerp;
+      p.y += (p.targetY - p.y) * auraLerp;
+      p.size *= Math.pow(0.98, dt * 60);
     }
   }
 

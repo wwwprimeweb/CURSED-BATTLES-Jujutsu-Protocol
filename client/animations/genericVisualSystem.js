@@ -33,7 +33,7 @@ export class GenericVisualSystem {
     this.dodgeEffects.set(Date.now(), { x, y, facing, life: 0.25 });
   }
 
-  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY) {
+  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY, _dt = 1 / 60) {
     const p = entry.raw;
     const worldX = Number.isFinite(renderX) ? renderX : p.x;
     const worldY = Number.isFinite(renderY) ? renderY : p.y;

@@ -208,7 +208,6 @@ export class DomainVisualSystem {
 
     const shards = this.generateShards(radius);
 
-    if (this.shattering.length > 8) this.shattering.splice(0, 4);
     this.shattering.push({
       x,
       y,
@@ -402,6 +401,7 @@ export class DomainVisualSystem {
             ctx.rotate(this.rotationTime * 0.01);
           }
           ctx.globalAlpha = alpha * (LAYER_ALPHA[key] ?? 1);
+          if (char === 'yuji' && key === 'far') ctx.filter = 'blur(1.5px)';
           this.drawScaledImage(ctx, img, 0, 0, vz, 0, 0, effectiveScale);
           ctx.globalAlpha = 1;
           ctx.restore();
@@ -460,6 +460,22 @@ export class DomainVisualSystem {
             ctx.fill();
           }
           ctx.globalAlpha = 1;
+        }
+      }
+
+      if (char === 'yuji') {
+        const overlay = this.getLayerImage('yuji', '1');
+        if (overlay && overlay.width) {
+          const overlayAlpha = Math.min(0.4, expandProgress * 2.5);
+          if (overlayAlpha > 0.01) {
+            const parallax = 0.06;
+            const dx = (worldX - camX) * parallax * zoom;
+            const dy = (worldY - camY) * parallax * zoom;
+            ctx.save();
+            ctx.globalAlpha = overlayAlpha;
+            this.drawScaledImage(ctx, overlay, p.x + dx, p.y + dy, vz, 0, 0, 1.2);
+            ctx.restore();
+          }
         }
       }
     } catch (e) {

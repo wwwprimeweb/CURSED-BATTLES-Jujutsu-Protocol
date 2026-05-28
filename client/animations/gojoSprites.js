@@ -1,5 +1,5 @@
 export const GOJO_ANIMATIONS = {
-  idle: { row: 0, frames: 4, speed: 2.4, loop: true },
+  idle: { row: 0, frames: 4, speed: 7.2, loop: true },
   walk: { row: 0, frames: 1, speed: 1, loop: true },
   run: { row: 0, frames: 1, speed: 1, loop: true },
   m1_1: { row: 1, frames: 3, speed: 7.2, loop: false },

@@ -1,5 +1,5 @@
 export const YUJI_ANIMATIONS = {
-  idle: { row: 0, frames: 4, speed: 2.6, loop: true },
+  idle: { row: 0, frames: 4, speed: 7.8, loop: true },
   walk: { row: 0, frames: 1, speed: 1, loop: true },
   run: { row: 0, frames: 1, speed: 1, loop: true },
   m1_1: { row: 2, frames: 4, speed: 8.2, loop: false },

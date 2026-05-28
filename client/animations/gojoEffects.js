@@ -143,7 +143,7 @@ export function drawGojoM1Sprite(ctx, x, y, dirX, dirY, progress, comboStep, spr
 
   const angle = Math.atan2(dirY, dirX);
   const range = 85;
-  const moveIn = 0.7;
+  const moveIn = Math.min(0.8, progress * 5);
   const spriteDist = range * 1.15 * moveIn;
   const perpX = -dirY;
   const perpY = dirX;

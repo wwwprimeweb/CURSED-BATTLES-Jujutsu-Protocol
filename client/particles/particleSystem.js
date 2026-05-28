@@ -66,8 +66,9 @@ export class ParticleSystem {
       }
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vx *= 0.92;
-      p.vy *= 0.92;
+      const damp = Math.pow(0.92, dt * 60);
+      p.vx *= damp;
+      p.vy *= damp;
     }
   }
 

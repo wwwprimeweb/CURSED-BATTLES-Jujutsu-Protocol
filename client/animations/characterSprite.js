@@ -81,7 +81,7 @@ export class CharacterSprite {
     const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
     const isDomainPrep = state === "domain_prepare";
     const isDash = state === "dash";
-    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2 : 0;
+    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 40) * 2 : 0;
     const finalY = y + bobY;
 
     if (isDomainPrep && this.domainPrepSprite) {

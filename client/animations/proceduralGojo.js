@@ -72,7 +72,7 @@ export class ProceduralGojo {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.life -= dt;
-      p.size *= 0.98;
+      p.size *= Math.pow(0.98, dt * 60);
       if (p.life <= 0) this.auraParticles.splice(i, 1);
     }
   }
@@ -399,62 +399,66 @@ export class GojoSkillEffects {
   }
 
   addBlue(x, y, vx, vy) {
-    if (this.projectiles.length > 24) this.projectiles.splice(0, 8);
     this.projectiles.push({ type: "blue", x, y, vx, vy, life: 3.5, maxLife: 3.5, radius: 22 });
   }
 
   addRed(x, y, vx, vy) {
-    if (this.projectiles.length > 24) this.projectiles.splice(0, 8);
     this.projectiles.push({ type: "red", x, y, vx, vy, life: 0.8, maxLife: 0.8, radius: 18 });
   }
 
   addPurpleBeam(x1, y1, x2, y2) {
-    if (this.beams.length > 8) this.beams.splice(0, 4);
     this.beams.push({ x1, y1, x2, y2, life: 0.6, maxLife: 0.6 });
   }
 
   addExplosion(x, y, type, radius = 100) {
-    if (this.explosions.length > 16) this.explosions.splice(0, 4);
     this.explosions.push({ x, y, type, radius, life: 0.5, maxLife: 0.5 });
   }
 
   addTeleport(x, y) {
-    if (this.teleports.length > 16) this.teleports.splice(0, 4);
     this.teleports.push({ x, y, life: 0.35, maxLife: 0.35 });
   }
 
   addAfterimage(x, y, facing) {
-    if (this.afterimages.length > 16) this.afterimages.splice(0, 4);
     this.afterimages.push({ x, y, facing, life: 0.3, maxLife: 0.3 });
   }
 
   addDomain(x, y, radius, ownerId, myId) {
-    if (this.domains.length > 8) this.domains.splice(0, 2);
     this.domains.push({ x, y, radius, ownerId, myId, life: 10, maxLife: 10 });
   }
 
   update(dt) {
-    for (const p of this.projectiles) {
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.life -= dt;
+      if (p.life <= 0) this.projectiles.splice(i, 1);
     }
-    this.projectiles = this.projectiles.filter(p => p.life > 0);
 
-    for (const b of this.beams) b.life -= dt;
-    this.beams = this.beams.filter(b => b.life > 0);
+    for (let i = this.beams.length - 1; i >= 0; i--) {
+      this.beams[i].life -= dt;
+      if (this.beams[i].life <= 0) this.beams.splice(i, 1);
+    }
 
-    for (const e of this.explosions) e.life -= dt;
-    this.explosions = this.explosions.filter(e => e.life > 0);
+    for (let i = this.explosions.length - 1; i >= 0; i--) {
+      this.explosions[i].life -= dt;
+      if (this.explosions[i].life <= 0) this.explosions.splice(i, 1);
+    }
 
-    for (const t of this.teleports) t.life -= dt;
-    this.teleports = this.teleports.filter(t => t.life > 0);
+    for (let i = this.teleports.length - 1; i >= 0; i--) {
+      this.teleports[i].life -= dt;
+      if (this.teleports[i].life <= 0) this.teleports.splice(i, 1);
+    }
 
-    for (const a of this.afterimages) a.life -= dt;
-    this.afterimages = this.afterimages.filter(a => a.life > 0);
+    for (let i = this.afterimages.length - 1; i >= 0; i--) {
+      this.afterimages[i].life -= dt;
+      if (this.afterimages[i].life <= 0) this.afterimages.splice(i, 1);
+    }
 
-    for (const d of this.domains) d.life -= dt;
-    this.domains = this.domains.filter(d => d.life > 0);
+    for (let i = this.domains.length - 1; i >= 0; i--) {
+      this.domains[i].life -= dt;
+      if (this.domains[i].life <= 0) this.domains.splice(i, 1);
+    }
   }
 
   render(ctx, camera) {

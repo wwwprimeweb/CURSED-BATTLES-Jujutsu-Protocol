@@ -66,6 +66,9 @@ export class Renderer {
     this.blackFlashes = [];
     this.blackFlashDuration = 800;
 
+    this._renderDt = 1 / 60;
+    this._lastRenderTime = 0;
+
     this.resize();
     window.addEventListener("resize", () => this.resize());
   }
@@ -88,7 +91,7 @@ export class Renderer {
     this.localVisualPos = null;
   }
 
-  updateCamera(targetX, targetY) {
+  updateCamera(targetX, targetY, dt = 1 / 60) {
     if (!this.map) {
       return;
     }
@@ -103,8 +106,9 @@ export class Renderer {
       this.advanceZoomSeq();
     }
 
-    this.camera.x += (targetX - this.camera.x) * 0.12;
-    this.camera.y += (targetY - this.camera.y) * 0.12;
+    const camAlpha = 1 - Math.pow(1 - 0.12, dt * 60);
+    this.camera.x += (targetX - this.camera.x) * camAlpha;
+    this.camera.y += (targetY - this.camera.y) * camAlpha;
 
     const halfW = (this.canvas.clientWidth * 0.5) / this.camera.zoom;
     const halfH = (this.canvas.clientHeight * 0.5) / this.camera.zoom;
@@ -153,22 +157,18 @@ export class Renderer {
   }
 
   addMarker({ x, y, radius = 60, color = "rgba(255,136,170,0.4)", ttl = 0.8 }) {
-    if (this.markers.length > 24) this.markers.splice(0, 8);
     this.markers.push({ x, y, radius, color, ttl, life: ttl });
   }
 
   addRedExplosion({ x, y, radius = 110, ttl = 0.5 }) {
-    if (this.redExplosions.length > 12) this.redExplosions.splice(0, 4);
     this.redExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
   }
 
   addBlueExplosion({ x, y, radius = 200, ttl = 0.6 }) {
-    if (this.blueExplosions.length > 12) this.blueExplosions.splice(0, 4);
     this.blueExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
   }
 
   triggerBlackFlash(x, y, dirX = 0, dirY = -1) {
-    if (this.blackFlashes.length > 8) this.blackFlashes.splice(0, 3);
     const seed = Math.random() * 10000;
     const bolts = this._generateBolts(x, y, 8, seed, dirX, dirY);
     this.blackFlashes.push({ x, y, dirX, dirY, startTime: performance.now(), bolts, seed });
@@ -231,7 +231,6 @@ export class Renderer {
 
   triggerPurpleExplosion(ev) {
     this.purpleCharges.delete(ev.ownerId);
-    if (this.purpleExplosions.length > 4) this.purpleExplosions.splice(0, 2);
     this.purpleExplosions.push({
       x: ev.x,
       y: ev.y,
@@ -473,9 +472,6 @@ export class Renderer {
     this.yutaVisual.effects.katanaSlashes = [];
     this.yutaVisual.effects.rikas = new Map();
     this.domainVisual.shattering = [];
-    this.purpleCharges = new Map();
-    this.dashVisuals = new Map();
-    this.dashTweens = new Map();
   }
 
   drawMarkers() {
@@ -1023,7 +1019,8 @@ export class Renderer {
 
     this.domainVisual.cleanupExpanding(activeOwnerIds);
 
-    this.domainOverlayAlpha += ((insideDomain ? 1 : 0) - this.domainOverlayAlpha) * 0.08;
+    const alphaLerp = 1 - Math.pow(1 - 0.08, this._renderDt * 60);
+    this.domainOverlayAlpha += ((insideDomain ? 1 : 0) - this.domainOverlayAlpha) * alphaLerp;
     if (this.domainOverlayAlpha > 0.01) {
       ctx.fillStyle = `rgba(5,10,30,${0.12 * this.domainOverlayAlpha})`;
       ctx.fillRect(0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
@@ -1420,8 +1417,9 @@ export class Renderer {
           this.localVisualPos.y = localPred.y;
         } else {
           const follow = dist > 28 ? 0.52 : 0.38;
-          this.localVisualPos.x += dx * follow;
-          this.localVisualPos.y += dy * follow;
+          const frameFollow = 1 - Math.pow(1 - follow, this._renderDt * 60);
+          this.localVisualPos.x += dx * frameFollow;
+          this.localVisualPos.y += dy * frameFollow;
         }
         rx = this.localVisualPos.x;
         ry = this.localVisualPos.y;
@@ -1450,7 +1448,7 @@ export class Renderer {
         ctx.globalAlpha = 0.35;
       }
 
-      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx, ry);
+      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx, ry, this._renderDt);
 
       ctx.restore();
     });
@@ -1462,7 +1460,7 @@ export class Renderer {
       const slash = this.gojoVisual.m1Slashes[i];
       if (slash.life <= 0) continue;
       const pos = worldToScreen(this.camera, this.canvas, slash.worldX, slash.worldY);
-      const progress = 1 - slash.life / 0.5;
+      const progress = 1 - slash.life / slash.maxLife;
       const sprite = this.gojoVisual.gojoAttackSprite;
 
       // Trail sprites
@@ -1533,6 +1531,9 @@ export class Renderer {
   }
 
   render({ interpolation, youId, you, localPred }) {
+    const now = performance.now();
+    this._renderDt = this._lastRenderTime ? Math.min((now - this._lastRenderTime) / 1000, 0.05) : 1 / 60;
+    this._lastRenderTime = now;
     this.interpolationRef = interpolation || this.interpolationRef;
     if (typeof window._diagRender === 'undefined') {
       window._diagRender = 0;

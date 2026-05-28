@@ -52,15 +52,17 @@ export class InterpolationBuffer {
       const dy = entry.ty - entry.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const a = dist > 30 ? fastAlpha : alpha;
-      entry.x += dx * a;
-      entry.y += dy * a;
+      const frameAlpha = 1 - Math.pow(1 - a, dt * 60);
+      entry.x += dx * frameAlpha;
+      entry.y += dy * frameAlpha;
     });
     this.enemies.forEach((entry) => {
       const dx = entry.tx - entry.x;
       const dy = entry.ty - entry.y;
       const a = Math.sqrt(dx * dx + dy * dy) > 30 ? fastAlpha : alpha;
-      entry.x += dx * a;
-      entry.y += dy * a;
+      const frameAlpha = 1 - Math.pow(1 - a, dt * 60);
+      entry.x += dx * frameAlpha;
+      entry.y += dy * frameAlpha;
     });
     this.projectiles.forEach((entry) => {
       entry.x += (entry.tx - entry.x) * Math.min(1, 12 * dt);

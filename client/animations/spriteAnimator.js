@@ -9,6 +9,7 @@ export class SpriteAnimator {
     this.image.src = config.sheetPath;
 
     this.players = new Map();
+    this.walkTime = 0;
   }
 
   getOrCreate(id) {
@@ -24,6 +25,7 @@ export class SpriteAnimator {
   }
 
   update(dt) {
+    this.walkTime += dt;
     for (const [, player] of this.players) {
       const anim = this.config.animations[player.currentState];
       if (!anim || player.done) continue;
@@ -64,7 +66,8 @@ export class SpriteAnimator {
 
     const effectivePivotX = this.config.pivotX - (this.config.offsetX || 0);
     const dx = x - effectivePivotX * renderScale;
-    const dy = y - this.config.pivotY * renderScale;
+    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 40) * 2 : 0;
+    const dy = y - this.config.pivotY * renderScale + bobY;
     const dw = sw * renderScale;
     const dh = sh * renderScale;
 

@@ -77,10 +77,8 @@ export class YutaSpriteRenderer {
 
   render(ctx, x, y, state, facing = 1, _scale = 1, playerId = "default") {
     const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
-    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 10) * 2 : 0;
-    const finalY = y + bobY;
 
-    this.animator.render(ctx, x, finalY, state, facing, scale, playerId);
+    this.animator.render(ctx, x, y, state, facing, scale, playerId);
   }
 
   renderRika(ctx, x, y, facing = 1, floatPhase = 0, floatAmp = 2.2, _scale = 1) {

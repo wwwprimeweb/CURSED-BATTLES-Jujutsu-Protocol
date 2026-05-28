@@ -75,7 +75,7 @@ export class YutaVisualSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.vx += p.wobblePhase * Math.sin(t * Math.PI * 8) * dt * 0.3;
-      p.size *= 0.995;
+      p.size *= Math.pow(0.995, dt * 60);
     }
 
     // Emit beam particles
@@ -92,7 +92,6 @@ export class YutaVisualSystem {
         const px = this.pureLoveBeam.originX + (endX - this.pureLoveBeam.originX) * t + perpX * spread;
         const py = this.pureLoveBeam.originY + (endY - this.pureLoveBeam.originY) * t + perpY * spread;
         const speed = 80 + Math.random() * 120;
-        if (this.beamParticles.length > 60) this.beamParticles.splice(0, 30);
         this.beamParticles.push({
           x: px,
           y: py,
@@ -158,7 +157,6 @@ export class YutaVisualSystem {
     const range = 140;
     const nx = Number.isFinite(dirX) ? dirX : 1;
     const ny = Number.isFinite(dirY) ? dirY : 0;
-    if (this.rikaAttacks.length > 12) this.rikaAttacks.splice(0, 4);
     this.rikaAttacks.push({
       x,
       y,
@@ -184,7 +182,6 @@ export class YutaVisualSystem {
 
     if (isHeavy) {
       const impactRadius = Number.isFinite(radius) ? Math.max(70, radius) : 170;
-      if (this.rikaHeavyImpacts.length > 8) this.rikaHeavyImpacts.splice(0, 4);
       this.rikaHeavyImpacts.push({
         x,
         y,
@@ -202,7 +199,6 @@ export class YutaVisualSystem {
   }
 
   triggerDashSlash(startX, startY, endX, endY, radius) {
-    if (this.dashSlashes.length > 12) this.dashSlashes.splice(0, 4);
     this.dashSlashes.push({
       startX, startY,
       endX, endY,
@@ -213,7 +209,6 @@ export class YutaVisualSystem {
   }
 
   triggerRikaDash(startX, startY, endX, endY) {
-    if (this.rikaDashes.length > 12) this.rikaDashes.splice(0, 4);
     this.rikaDashes.push({
       startX, startY,
       endX, endY,
@@ -223,7 +218,6 @@ export class YutaVisualSystem {
   }
 
   triggerRikaImpulse(x, y, radius) {
-    if (this.rikaImpulses.length > 8) this.rikaImpulses.splice(0, 4);
     this.rikaImpulses.push({
       x, y,
       radius: radius || 180,
@@ -234,7 +228,6 @@ export class YutaVisualSystem {
   }
 
   triggerSlashCuts(x, y) {
-    if (this.slashCuts.length > 16) this.slashCuts.splice(0, 8);
     this.slashCuts.push({
       x, y,
       startTime: this.time,
@@ -295,7 +288,7 @@ export class YutaVisualSystem {
     this.domainKatanas.set(Date.now(), { x, y, life: 0.8 });
   }
 
-  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY) {
+  renderPlayer(ctx, camera, entry, isYou, facing, state, renderX, renderY, dt = 1 / 60) {
     const p = entry.raw;
     const worldX = Number.isFinite(renderX) ? renderX : p.x;
     const worldY = Number.isFinite(renderY) ? renderY : p.y;
@@ -349,8 +342,9 @@ export class YutaVisualSystem {
               smooth.y = targetY;
             } else {
               const follow = dist > 65 ? 0.32 : dist > 22 ? 0.24 : 0.18;
-              smooth.x += dx * follow;
-              smooth.y += dy * follow;
+              const frameFollow = 1 - Math.pow(1 - follow, dt * 60);
+              smooth.x += dx * frameFollow;
+              smooth.y += dy * frameFollow;
             }
           }
           const cam = camera;

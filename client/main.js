@@ -626,14 +626,24 @@ function sendInputIfNeeded(nowMs) {
 
 let _diagLoopFrames = 0;
 let _lastFrameTime = 0;
+let _accumulator = 0;
+const FIXED_DT = 1 / 60;
 
 function loop(nowMs) {
   requestAnimationFrame(loop);
 
-  const dt = _lastFrameTime ? Math.min((nowMs - _lastFrameTime) / 1000, 0.05) : 1 / 60;
+  const rawDt = _lastFrameTime ? Math.min((nowMs - _lastFrameTime) / 1000, 0.05) : FIXED_DT;
   _lastFrameTime = nowMs;
 
-  const prevCamX = renderer.camera.x;
+  _accumulator += rawDt;
+  if (_accumulator > 0.2) _accumulator = 0.2;
+
+  while (_accumulator >= FIXED_DT) {
+    interpolation.updateSmoothing(FIXED_DT);
+    particles.update(FIXED_DT);
+    renderer.updateEffects(FIXED_DT);
+    _accumulator -= FIXED_DT;
+  }
 
   if (state.spectating && state.spectateTargetId) {
     let target = null;
@@ -643,15 +653,11 @@ function loop(nowMs) {
       });
     }
     if (target && target.raw) {
-      renderer.updateCamera(target.raw.x, target.raw.y);
+      renderer.updateCamera(target.raw.x, target.raw.y, rawDt);
     }
   } else if (state.joined && state.you) {
-    renderer.updateCamera(state.localPred.x, state.localPred.y);
+    renderer.updateCamera(state.localPred.x, state.localPred.y, rawDt);
   }
-
-  interpolation.updateSmoothing(dt);
-  particles.update(dt);
-  renderer.updateEffects(dt);
 
   if (_diagLoopFrames < 30 && state.joined) {
     console.log(`[DIAG] loop #${_diagLoopFrames}: joined=${state.joined}, connected=${state.connected}, you=${!!state.you}, camera=(${renderer.camera.x.toFixed(0)},${renderer.camera.y.toFixed(0)}), localPred=(${state.localPred.x.toFixed(0)},${state.localPred.y.toFixed(0)})`);

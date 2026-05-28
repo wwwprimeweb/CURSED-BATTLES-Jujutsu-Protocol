@@ -1,5 +1,5 @@
 export const YUTA_ANIMATIONS = {
-  idle: { row: 0, frames: 3, speed: 2.5, loop: true },
+  idle: { row: 0, frames: 3, speed: 7.5, loop: true },
   dash: { row: 1, frames: 7, speed: 12, loop: true },
   m1: { row: 2, frames: 4, speed: 8, loop: false },
   m1_1: { row: 2, frames: 4, speed: 8, loop: false },
