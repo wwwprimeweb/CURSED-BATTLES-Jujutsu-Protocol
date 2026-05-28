@@ -25,9 +25,9 @@ const CHARACTER_SKILLS = {
   ],
   yuji: [
     { key: "q", hotkey: "Q", icon: "Df", name: "Divergent Fist", cost: 30, baseCooldown: 8, tag: "controle" },
-    { key: "e", hotkey: "E", icon: "Bf", name: "Black Flash", cost: 40, baseCooldown: 12, tag: "burst" },
-    { key: "r", hotkey: "R", icon: "Dw", name: "Death Painting", cost: 75, baseCooldown: 20, tag: "beam" },
-    { key: "space", hotkey: "Space", icon: "Rs", name: "Rush", cost: 30, baseCooldown: 8, tag: "mobilidade" },
+    { key: "e", hotkey: "E", icon: "Si", name: "Soul Impact", cost: 40, baseCooldown: 12, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Td", name: "Taido Beatdown", cost: 50, baseCooldown: 15, tag: "burst" },
+    { key: "space", hotkey: "Space", icon: "Fk", name: "Flying Knee", cost: 30, baseCooldown: 8, tag: "mobilidade" },
     { key: "f", hotkey: "F", icon: "Dm", name: "Self-Embodiment", cost: 75, baseCooldown: 65, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
@@ -59,6 +59,14 @@ const RARITY_LABELS = {
   rare: "raro",
   epic: "epico",
   legendary: "lendario",
+};
+
+const BUFF_DEFS = {
+  stunTimer: { label: "STN", name: "Atordoado", type: "debuff" },
+  almaAbaladaTimer: { label: "ALM", name: "Alma Abalada", type: "debuff" },
+  invulnTimer: { label: "INV", name: "Invulnerável", type: "buff" },
+  rikaBuffTime: { label: "RIK", name: "Rika Ativa", type: "buff" },
+  domainExhaustionTimer: { label: "DOM", name: "Exaustão de Domínio", type: "debuff" },
 };
 
 function clamp(value, min, max) {
@@ -127,57 +135,110 @@ function createBarsHtml(stats, flags) {
   const hpState = hpPercent <= 18 ? "critical" : hpPercent <= 35 ? "low" : hpPercent <= 65 ? "mid" : "high";
   const energyDry = energyPercent <= 18;
 
+  const chara = stats.character || "gojo";
+  const namesMap = {
+    gojo: "Satoru Gojo",
+    sukuna: "Ryomen Sukuna",
+    yuji: "Yuji Itadori",
+    yuta: "Yuta Okkotsu",
+    megumi: "Megumi Fushiguro",
+    hakari: "Kinji Hakari"
+  };
+  const charaLabel = namesMap[chara] || chara.toUpperCase();
+  const portraitUrl = `/assets/${chara}-icon.png`;
+
   return `
-    <div class="hud-panel bars-panel ${flags.tookDamage ? "is-hit" : ""} hp-${hpState}">
-      <div class="bar-block health-block">
-        <div class="bar-head">
-          <span class="bar-label">Vida</span>
-          <span class="bar-value">${Math.ceil(stats.hp)}</span>
+    <div class="player-hud-core-panel ${flags.tookDamage ? "is-hit" : ""} hp-${hpState}">
+      <!-- Portrait & Level Badge -->
+      <div class="portrait-outer-ring char-border-${chara}">
+        <div class="portrait-image-wrapper">
+          <img class="char-portrait-img" src="${portraitUrl}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+          <div class="portrait-fallback-badge">${chara.slice(0, 2).toUpperCase()}</div>
         </div>
-        <div class="track hp-track"><div class="fill hp" style="width:${hpPercent}%"></div></div>
+        <div class="hud-level-badge">Lv.${stats.level}</div>
       </div>
 
-      <div class="bar-block energy-block ${energyDry ? "is-dry" : ""}">
-        <div class="bar-head compact">
-          <span class="bar-label">Energia Amaldicoada</span>
-          <span class="bar-value">${Math.ceil(stats.energy)}</span>
+      <!-- Bars Block -->
+      <div class="bars-block-wrapper">
+        <div class="bar-row-block health-block">
+          <div class="bar-row-header">
+            <span class="bar-row-label">${charaLabel}</span>
+            <span class="bar-row-value">${Math.ceil(stats.hp)} <span class="bar-max-val">/ ${stats.maxHp}</span></span>
+          </div>
+          <div class="track hp-track">
+            <div class="fill hp-lag-fill" style="width:${hpPercent}%"></div>
+            <div class="fill hp" style="width:${hpPercent}%"></div>
+            ${stats.shield ? `<div class="fill shield-fill" style="width:${pct(stats.shield, stats.maxHp)}%"></div>` : ""}
+          </div>
         </div>
-        <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%"></div></div>
-      </div>
 
-      <div class="xp-strip">
-        <span>Lv ${stats.level}</span>
-        <div class="track xp-track"><div class="fill xp" style="width:${xpPercent}%"></div></div>
-        <span>${Math.floor(xpPercent)}%</span>
+        <div class="bar-row-block energy-block ${energyDry ? "is-dry" : ""}">
+          <div class="bar-row-header compact">
+            <span class="bar-row-label">Energia Amaldiçoada</span>
+            <span class="bar-row-value">${Math.ceil(stats.energy)} <span class="bar-max-val">/ ${stats.maxEnergy}</span></span>
+          </div>
+          <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%"></div></div>
+        </div>
       </div>
+    </div>
+
+    <!-- XP strip underneath -->
+    <div class="xp-strip-wrapper">
+      <span class="xp-label-pct">${Math.floor(xpPercent)}% XP</span>
+      <div class="track xp-track"><div class="fill xp" style="width:${xpPercent}%"></div></div>
     </div>
   `;
 }
 
-function createSkillHtml(cooldowns, energy, skills) {
+function buildSkillSlotsHtml(skills, energy) {
   return skills.map((skill) => {
+    const costText = skill.cost > 0 ? `${skill.cost}` : "";
+    return `
+      <div class="skill-slot-wrapper">
+        <div class="skill-slot slot-key-${skill.key}" data-key="${skill.key}" style="--cooldown:0deg">
+          <div class="skill-cd-sweep"></div>
+          <div class="skill-diamond-inner">
+            <span class="skill-key-badge">${skill.hotkey}</span>
+            <span class="skill-icon-face">${skill.icon}</span>
+            ${costText ? `<span class="skill-cost-badge">${costText}</span>` : ""}
+            <div class="skill-radial-countdown" style="display:none">0.0</div>
+          </div>
+        </div>
+        <div class="skill-hover-tooltip">
+          <strong>${skill.name}</strong>
+          <span>Custo: ${skill.cost > 0 ? skill.cost + " Energia" : "Sem Custo"}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateDockCooldowns(container, cooldowns, energy, skills) {
+  skills.forEach((skill) => {
+    const slot = container.querySelector(`.skill-slot[data-key="${skill.key}"]`);
+    if (!slot) return;
+
     const value = Math.max(0, cooldowns[skill.key] || 0);
     const ratio = skill.baseCooldown > 0 ? clamp(value / skill.baseCooldown, 0, 1) : 0;
     const ready = value <= 0.01;
     const dry = ready && skill.cost > 0 && energy < skill.cost;
-    const state = dry ? "is-dry" : ready ? "is-ready" : "is-cooling";
-    const status = dry ? "energia" : ready ? "pronto" : value.toFixed(1);
-    const costText = skill.cost > 0 ? `${skill.cost} EN` : "sem custo";
 
-    return `
-      <div class="skill-slot ${state}" style="--cooldown:${ratio * 360}deg">
-        <div class="skill-ring">
-          <span class="skill-icon">${skill.icon}</span>
-        </div>
-        <div class="skill-meta">
-          <span class="skill-key">${skill.hotkey}</span>
-          <span class="skill-name">${skill.name}</span>
-        </div>
-        <div class="skill-status">${status}</div>
-        <div class="skill-cost">${costText}</div>
-      </div>
-    `;
-  }).join("");
+    slot.style.setProperty('--cooldown', `${ratio * 360}deg`);
+    slot.classList.remove('is-ready', 'is-cooling', 'is-dry');
+    if (dry) slot.classList.add('is-dry');
+    else if (ready) slot.classList.add('is-ready');
+    else slot.classList.add('is-cooling');
+
+    const countdown = slot.querySelector('.skill-radial-countdown');
+    if (countdown) {
+      if (!ready) {
+        countdown.textContent = value.toFixed(1);
+        countdown.style.display = '';
+      } else {
+        countdown.style.display = 'none';
+      }
+    }
+  });
 }
 
 function findBoss(interpolation) {
@@ -204,13 +265,14 @@ export class Hud {
   constructor() {
     this.hudLayer = document.getElementById("hud-layer");
     this.barsEl = document.getElementById("bars");
-    this.cooldownsEl = document.getElementById("cooldowns");
-    this.m1El = document.getElementById("m1-indicator");
+    this.quickAccessEl = document.getElementById("quick-access");
+    this.mainSkillsEl = document.getElementById("main-skills");
     this.topRightEl = document.getElementById("top-right");
     this.timerEl = document.getElementById("match-timer");
     this.minimapEl = document.getElementById("minimap");
     this.alertsEl = document.getElementById("center-alerts");
     this.bossBarEl = document.getElementById("boss-bar");
+    this.buffsEl = document.getElementById("buffs-debuffs");
     this.overlayEl = document.getElementById("upgrade-overlay");
     this.gameoverEl = document.getElementById("gameover-overlay");
     this.spectateEl = document.getElementById("spectate-overlay");
@@ -225,12 +287,14 @@ export class Hud {
     this.suppressChoiceKey = "";
     this._barsHtml = "";
     this._cooldownsHtml = "";
-    this._m1Html = "";
     this._timerHtml = "";
     this._topRightHtml = "";
     this._bossBarHtml = "";
+    this._buffsHtml = "";
     this._minimapHtml = "";
     this._prevChar = "";
+    this._prevSkillLock = false;
+    this._prevBoss = false;
   }
 
   _updateInner(el, html) {
@@ -257,21 +321,49 @@ export class Hud {
     }
 
     const skills = getSkills(chara);
-    const cooldownsHtml = createSkillHtml(you.cooldowns || {}, you.energy || 0, skills);
-    if (cooldownsHtml !== this._cooldownsHtml || chara !== this._prevChar) {
-      this._cooldownsHtml = cooldownsHtml;
-      this.cooldownsEl.innerHTML = cooldownsHtml;
+    
+    // Separate skills into quick-access (m1, dodge) and main-skills (q, e, r, space, f)
+    const quickAccessSkills = skills.filter(s => s.key === 'dodge');
+    const mainSkillsAll = skills.filter(s => s.key !== 'dodge');
+    
+    // Reorder main skills: q, e, space, r, f (mobility between combat and ult)
+    const skillOrder = ['q', 'e', 'space', 'r', 'f'];
+    const mainSkills = skillOrder
+      .map(key => mainSkillsAll.find(s => s.key === key))
+      .filter(Boolean);
+
+    // Only re-render DOM on character change (preserves hover state)
+    if (chara !== this._prevChar) {
+      const m1Html = `
+        <div class="skill-slot-wrapper">
+          <div class="skill-slot slot-key-m1" data-key="m1" style="--cooldown:0deg">
+            <div class="skill-diamond-inner">
+              <span class="skill-key-badge">M1</span>
+              <span class="skill-icon-face">Atq</span>
+            </div>
+          </div>
+          <div class="skill-hover-tooltip">
+            <strong>Ataque Básico</strong>
+            <span>Sem Custo</span>
+          </div>
+        </div>
+      `;
+      if (this.quickAccessEl) {
+        this.quickAccessEl.innerHTML = m1Html + buildSkillSlotsHtml(quickAccessSkills, you.energy || 0);
+      }
+      if (this.mainSkillsEl) {
+        this.mainSkillsEl.innerHTML = buildSkillSlotsHtml(mainSkills, you.energy || 0);
+      }
     }
 
-    const m1Html = `
-      <div class="m1-chip ${energyDrop ? "is-active" : ""}">
-        <span>M1</span>
-        <small>Ataque basico</small>
-      </div>
-    `;
-    if (m1Html !== this._m1Html) {
-      this._m1Html = m1Html;
-      this.m1El.innerHTML = m1Html;
+    // Update cooldowns every frame via DOM (no HTML re-render)
+    updateDockCooldowns(this.quickAccessEl, you.cooldowns || {}, you.energy || 0, quickAccessSkills);
+    updateDockCooldowns(this.mainSkillsEl, you.cooldowns || {}, you.energy || 0, mainSkills);
+
+    // M1 active state (energy drop flash)
+    const m1Slot = this.quickAccessEl ? this.quickAccessEl.querySelector('.slot-key-m1') : null;
+    if (m1Slot) {
+      m1Slot.classList.toggle('is-active', energyDrop);
     }
 
     const timerHtml = `
@@ -302,6 +394,8 @@ export class Hud {
     this.hudLayer.classList.toggle("hud-domain", Boolean(you.skillLock));
     this.hudLayer.classList.toggle("hud-boss", Boolean(boss));
 
+    this.updateBuffs(you.status || {});
+
     if (you.alive && hpPercent <= 18 && now - this.lastCriticalNoticeAt > 5500) {
       this.pushNotice("Vida critica", "danger", "recuar ou finalizar rapido");
       this.lastCriticalNoticeAt = now;
@@ -315,6 +409,18 @@ export class Hud {
     this.prevHp = you.hp;
     this.prevEnergy = you.energy;
     this._prevChar = chara;
+
+    if (you.skillLock && !this._prevSkillLock) {
+      this.pushNotice("Expansão de Dominio", "domain", "barreira liberada");
+    } else if (!you.skillLock && this._prevSkillLock) {
+      this.pushNotice("Dominio dissipado", "info", "");
+    }
+    this._prevSkillLock = Boolean(you.skillLock);
+
+    if (boss && !this._prevBoss) {
+      this.pushNotice("Boss surgiu", "danger", "prepare-se");
+    }
+    this._prevBoss = Boolean(boss);
   }
 
   updateBossBar(interpolation) {
@@ -535,5 +641,33 @@ export class Hud {
 
   hideSpectate() {
     if (this.spectateEl) this.spectateEl.classList.add("hidden");
+  }
+
+  updateBuffs(status) {
+    const active = Object.entries(status)
+      .filter(([, val]) => val > 0)
+      .map(([key, val]) => {
+        const def = BUFF_DEFS[key];
+        if (!def) return null;
+        const pct = key === "rikaBuffTime" ? Math.min(val / 3 * 100, 100) :
+          key === "almaAbaladaTimer" ? Math.min(val / 3 * 100, 100) :
+          key === "stunTimer" ? Math.min(val / 0.5 * 100, 100) :
+          key === "domainExhaustionTimer" ? Math.min(val / 60 * 100, 100) : 50;
+        return `
+          <div class="buff-item" data-key="${key}">
+            <div class="buff-icon is-${def.type}">
+              ${def.label}
+              <div class="buff-timer-fill" style="width:${pct}%"></div>
+            </div>
+            <span class="buff-timer-text">${val.toFixed(1)}s</span>
+          </div>
+        `;
+      })
+      .filter(Boolean)
+      .join("");
+    if (active !== this._buffsHtml) {
+      this._buffsHtml = active;
+      if (this.buffsEl) this.buffsEl.innerHTML = active;
+    }
   }
 }

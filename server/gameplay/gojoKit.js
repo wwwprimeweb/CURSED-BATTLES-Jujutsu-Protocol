@@ -4,7 +4,7 @@ const GOJO = {
   m1: {
     name: "Cursed Jab Combo",
     damage: 22,
-    range: 85,
+    range: 100,
     cooldown: 0.1875,
     startup: 0.08,
     active: 0.1,

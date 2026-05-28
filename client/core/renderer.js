@@ -1,5 +1,6 @@
 import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
 import { YutaVisualSystem } from "../animations/yutaVisualSystem.js";
+import { YujiVisualSystem } from "../animations/yujiVisualSystem.js";
 import { GenericVisualSystem } from "../animations/genericVisualSystem.js";
 import { DomainVisualSystem } from "../animations/domainVisualSystem.js";
 import { drawGojoM1Sprite } from "../animations/gojoEffects.js";
@@ -24,7 +25,7 @@ export class Renderer {
     this.gojoVisual = new GojoVisualSystem();
     this.yutaVisual = new YutaVisualSystem();
     this.sukunaVisual = new GenericVisualSystem("sukuna");
-    this.yujiVisual = new GenericVisualSystem("yuji");
+    this.yujiVisual = new YujiVisualSystem();
     this.megumiVisual = new GenericVisualSystem("megumi");
     this.hakariVisual = new GenericVisualSystem("hakari");
     this.domainVisual = new DomainVisualSystem();

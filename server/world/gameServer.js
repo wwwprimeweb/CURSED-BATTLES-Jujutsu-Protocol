@@ -1357,9 +1357,7 @@ class GameServer {
 
   fireTeleport(player, cast) {
     const distanceValue = GOJO.teleport.distance * player.modifiers.teleportDistanceMul;
-    const desiredX = player.x + cast.dirX * distanceValue;
-    const desiredY = player.y + cast.dirY * distanceValue;
-    const dest = this.findTeleportDestination(player, desiredX, desiredY);
+    const dest = this.findTeleportDestination(player, cast.dirX, cast.dirY, distanceValue);
 
     this.emitEventNear(player.x, player.y, {
       type: "teleportStart",
@@ -3643,6 +3641,11 @@ class GameServer {
         fromX: player.x,
         fromY: player.y,
       });
+      if (hitTarget.kind === "player") {
+        const { debuffDuration, debuffPenalty } = kit.soulImpact;
+        hitTarget.almaAbaladaTimer = Math.max(hitTarget.almaAbaladaTimer || 0, debuffDuration);
+        hitTarget.modifiers.energyRegenMul = 1 - debuffPenalty;
+      }
     }
 
     this.emitEventNear(player.x, player.y, {
@@ -3838,6 +3841,13 @@ class GameServer {
               }))
             : null,
           skillLock: this.domainSystem.isSkillLockedForPlayer(player),
+          status: {
+            stunTimer: Number((player.stunTimer || 0).toFixed(1)),
+            invulnTimer: Number((player.invulnTimer || 0).toFixed(1)),
+            almaAbaladaTimer: Number((player.almaAbaladaTimer || 0).toFixed(1)),
+            rikaBuffTime: Number((player.rikaBuffTime || 0).toFixed(1)),
+            domainExhaustionTimer: Number((player.domainExhaustionTimer || 0).toFixed(1)),
+          },
         },
       };
 
@@ -3895,6 +3905,13 @@ class GameServer {
               }))
             : null,
           skillLock: this.domainSystem.isSkillLockedForPlayer(player),
+          status: {
+            stunTimer: Number((player.stunTimer || 0).toFixed(1)),
+            invulnTimer: Number((player.invulnTimer || 0).toFixed(1)),
+            almaAbaladaTimer: Number((player.almaAbaladaTimer || 0).toFixed(1)),
+            rikaBuffTime: Number((player.rikaBuffTime || 0).toFixed(1)),
+            domainExhaustionTimer: Number((player.domainExhaustionTimer || 0).toFixed(1)),
+          },
         },
       };
       return payload;

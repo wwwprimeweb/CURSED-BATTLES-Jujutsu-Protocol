@@ -3,6 +3,8 @@ export class AudioSystem {
     this.ctx = null;
     this.masterGain = null;
     this.enabled = false;
+    this.buffers = {};
+    this._pendingBuffers = [];
   }
 
   unlock() {
@@ -16,6 +18,39 @@ export class AudioSystem {
       this.ctx.resume();
     }
     this.enabled = true;
+    this._pendingBuffers.forEach(async ({ key, arrayBuffer }) => {
+      try {
+        this.buffers[key] = await this.ctx.decodeAudioData(arrayBuffer);
+      } catch (e) {
+        console.warn(`AudioSystem: failed to decode ${key}`, e);
+      }
+    });
+    this._pendingBuffers = [];
+  }
+
+  async loadSound(url, key) {
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      if (this.ctx) {
+        this.buffers[key] = await this.ctx.decodeAudioData(arrayBuffer);
+      } else {
+        this._pendingBuffers.push({ key, arrayBuffer });
+      }
+    } catch (e) {
+      console.warn(`AudioSystem: failed to load ${url}`, e);
+    }
+  }
+
+  playBuffer(key, volume = 0.5) {
+    if (!this.enabled || !this.ctx || !this.buffers[key]) return;
+    const source = this.ctx.createBufferSource();
+    const gain = this.ctx.createGain();
+    source.buffer = this.buffers[key];
+    gain.gain.value = volume;
+    source.connect(gain);
+    gain.connect(this.masterGain);
+    source.start(0);
   }
 
   tone(freq, duration = 0.08, type = "sine", gain = 0.35) {
@@ -56,7 +91,11 @@ export class AudioSystem {
         this.tone(120, 0.2, "sawtooth", 0.18);
         break;
       case "domainStart":
-        this.tone(100, 0.3, "sine", 0.16);
+        if (this.buffers.domainStart) {
+          this.playBuffer("domainStart", 2.0);
+        } else {
+          this.tone(100, 0.3, "sine", 0.16);
+        }
         break;
       default:
         break;

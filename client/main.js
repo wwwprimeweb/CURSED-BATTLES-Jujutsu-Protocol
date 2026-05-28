@@ -53,6 +53,7 @@ const renderer = new Renderer(canvas, particles);
 const input = new InputManager(canvas);
 const hud = new Hud();
 const audio = new AudioSystem();
+audio.loadSound("/assets/sounds/domain_entrancesound.mp3", "domainStart");
 const interpolation = new InterpolationBuffer();
 const animation = new AnimationStateMachine();
 
@@ -281,6 +282,45 @@ function handleEvents(events) {
     } else if (ev.type === "teleportEnd") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 120, life: 0.18, size: 1.5 });
       renderer.gojoVisual.addTeleport(ev.x, ev.y);
+    } else if (ev.type === "divergentFist") {
+      const dfDirX = ev.dirX || 1;
+      const dfDirY = ev.dirY || 0;
+      const dfRange = ev.range || 130;
+      const dfImpactX = ev.x + dfDirX * dfRange;
+      const dfImpactY = ev.y + dfDirY * dfRange;
+      renderer.yujiVisual.triggerDivergentFist(ev.x, ev.y, dfDirX, dfDirY, dfRange, ev.width || 80);
+      particles.spawnBurst({ x: dfImpactX, y: dfImpactY, color: "#4488ff", count: 20, speed: 250, life: 0.3, size: 3 });
+      particles.spawnBurst({ x: dfImpactX, y: dfImpactY, color: "#ffffff", count: 10, speed: 160, life: 0.2, size: 2 });
+      particles.spawnLine({ x: ev.x, y: ev.y, dirX: dfDirX, dirY: dfDirY, color: "#66aaff", count: 12, life: 0.25, size: 2.5 });
+    } else if (ev.type === "divergentFistDelayed") {
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#3388ff", count: 30, speed: 300, life: 0.4, size: 3.5 });
+    } else if (ev.type === "flyingKneeStart") {
+      particles.spawnLine({ x: ev.x, y: ev.y, dirX: ev.dirX, dirY: ev.dirY, color: "#ffaa44", count: 15, life: 0.3 });
+    } else if (ev.type === "flyingKnee") {
+      renderer.yujiVisual.triggerFlyingKnee(ev.x, ev.y, 0, 0, ev.hit);
+      if (ev.hit) {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffaa44", count: 20, speed: 250, life: 0.3, size: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 150, life: 0.2, size: 2 });
+      }
+    } else if (ev.type === "soulImpact") {
+      renderer.yujiVisual.triggerSoulImpact(ev.x, ev.y);
+      if (!ev.miss) {
+        renderer.triggerBlackFlash(ev.x, ev.y, 0, 1);
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff0000", count: 30, speed: 300, life: 0.5, size: 4 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 200, life: 0.35, size: 2.5 });
+      }
+    } else if (ev.type === "taidoBeatdownHit") {
+      renderer.yujiVisual.triggerTaidoBeatdownHit(ev.x, ev.y, ev.hitNum);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffaa66", count: 12, speed: 150, life: 0.15, size: 2 });
+    } else if (ev.type === "taidoBeatdownFinal") {
+      renderer.yujiVisual.triggerTaidoBeatdownFinal(ev.x, ev.y, ev.hitNum, ev.blackFlash);
+      if (ev.blackFlash) {
+        renderer.triggerBlackFlash(ev.x, ev.y, 0, 1);
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffff00", count: 25, speed: 280, life: 0.4, size: 3.5 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#000000", count: 15, speed: 200, life: 0.35, size: 2.5 });
+      } else {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6633", count: 20, speed: 220, life: 0.3, size: 3 });
+      }
     } else if (ev.type === "rika") {
       const dirX = Number.isFinite(ev.dirX) ? ev.dirX : (renderer.playerFacing.get(ev.playerId) || 1);
       const dirY = Number.isFinite(ev.dirY) ? ev.dirY : 0;

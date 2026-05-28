@@ -16,7 +16,17 @@ export const YUTA_SKILLS = {
   f: "Pure Love",
 };
 
+export const YUJI_SKILLS = {
+  m1: "Black Flash Combo",
+  q: "Divergent Fist",
+  e: "Soul Impact",
+  r: "Taido Beatdown",
+  space: "Flying Knee",
+  f: "Self-Embodiment",
+};
+
 export function getSkillsForCharacter(character) {
   if (character === "yuta") return YUTA_SKILLS;
+  if (character === "yuji") return YUJI_SKILLS;
   return GOJO_SKILLS;
 }
