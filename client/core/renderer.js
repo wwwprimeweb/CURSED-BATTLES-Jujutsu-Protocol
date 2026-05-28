@@ -153,18 +153,22 @@ export class Renderer {
   }
 
   addMarker({ x, y, radius = 60, color = "rgba(255,136,170,0.4)", ttl = 0.8 }) {
+    if (this.markers.length > 24) this.markers.splice(0, 8);
     this.markers.push({ x, y, radius, color, ttl, life: ttl });
   }
 
   addRedExplosion({ x, y, radius = 110, ttl = 0.5 }) {
+    if (this.redExplosions.length > 12) this.redExplosions.splice(0, 4);
     this.redExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
   }
 
   addBlueExplosion({ x, y, radius = 200, ttl = 0.6 }) {
+    if (this.blueExplosions.length > 12) this.blueExplosions.splice(0, 4);
     this.blueExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
   }
 
   triggerBlackFlash(x, y, dirX = 0, dirY = -1) {
+    if (this.blackFlashes.length > 8) this.blackFlashes.splice(0, 3);
     const seed = Math.random() * 10000;
     const bolts = this._generateBolts(x, y, 8, seed, dirX, dirY);
     this.blackFlashes.push({ x, y, dirX, dirY, startTime: performance.now(), bolts, seed });
@@ -227,6 +231,7 @@ export class Renderer {
 
   triggerPurpleExplosion(ev) {
     this.purpleCharges.delete(ev.ownerId);
+    if (this.purpleExplosions.length > 4) this.purpleExplosions.splice(0, 2);
     this.purpleExplosions.push({
       x: ev.x,
       y: ev.y,
@@ -439,6 +444,38 @@ export class Renderer {
         this.blackFlashes.splice(i, 1);
       }
     }
+  }
+
+  clearEffects() {
+    this.markers = [];
+    this.redExplosions = [];
+    this.blueExplosions = [];
+    this.purpleExplosions = [];
+    this.blackFlashes = [];
+    this.gojoVisual.m1Slashes = [];
+    this.gojoVisual.effects.projectiles = [];
+    this.gojoVisual.effects.beams = [];
+    this.gojoVisual.effects.explosions = [];
+    this.gojoVisual.effects.teleports = [];
+    this.gojoVisual.effects.afterimages = [];
+    this.yujiVisual.divergentFistEffects = [];
+    this.yujiVisual.flyingKneeEffects = [];
+    this.yujiVisual.soulImpactEffects = [];
+    this.yujiVisual.taidoBeatdownEffects = [];
+    this.yutaVisual.rikaAttacks = [];
+    this.yutaVisual.rikaHeavyImpacts = [];
+    this.yutaVisual.beamParticles = [];
+    this.yutaVisual.dashSlashes = [];
+    this.yutaVisual.slashCuts = [];
+    this.yutaVisual.rikaImpulses = [];
+    this.yutaVisual.rikaDashes = [];
+    this.yutaVisual.effects.pureLoves = [];
+    this.yutaVisual.effects.katanaSlashes = [];
+    this.yutaVisual.effects.rikas = new Map();
+    this.domainVisual.shattering = [];
+    this.purpleCharges = new Map();
+    this.dashVisuals = new Map();
+    this.dashTweens = new Map();
   }
 
   drawMarkers() {

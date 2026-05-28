@@ -80,6 +80,7 @@ export class GojoVisualSystem {
   }
 
   triggerM1(worldX, worldY, dirX, dirY, comboStep, playerId) {
+    if (this.m1Slashes.length > 16) this.m1Slashes.splice(0, 4);
     this.m1Slashes.push({
       worldX: worldX - dirX * 35,
       worldY: worldY - 35,

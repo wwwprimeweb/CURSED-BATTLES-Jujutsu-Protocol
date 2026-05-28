@@ -625,9 +625,13 @@ function sendInputIfNeeded(nowMs) {
 }
 
 let _diagLoopFrames = 0;
+let _lastFrameTime = 0;
 
 function loop(nowMs) {
   requestAnimationFrame(loop);
+
+  const dt = _lastFrameTime ? Math.min((nowMs - _lastFrameTime) / 1000, 0.05) : 1 / 60;
+  _lastFrameTime = nowMs;
 
   const prevCamX = renderer.camera.x;
 
@@ -645,9 +649,9 @@ function loop(nowMs) {
     renderer.updateCamera(state.localPred.x, state.localPred.y);
   }
 
-  interpolation.updateSmoothing(1 / 60);
-  particles.update(1 / 60);
-  renderer.updateEffects(1 / 60);
+  interpolation.updateSmoothing(dt);
+  particles.update(dt);
+  renderer.updateEffects(dt);
 
   if (_diagLoopFrames < 30 && state.joined) {
     console.log(`[DIAG] loop #${_diagLoopFrames}: joined=${state.joined}, connected=${state.connected}, you=${!!state.you}, camera=(${renderer.camera.x.toFixed(0)},${renderer.camera.y.toFixed(0)}), localPred=(${state.localPred.x.toFixed(0)},${state.localPred.y.toFixed(0)})`);
@@ -744,6 +748,15 @@ document.addEventListener("keydown", (event) => {
     cycleSpectateNext();
   } else if (event.key === "[" || event.code === "BracketLeft") {
     cycleSpectatePrev();
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    _lastFrameTime = 0;
+  } else {
+    renderer.clearEffects();
+    particles.clear();
   }
 });
 

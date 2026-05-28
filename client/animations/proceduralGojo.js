@@ -399,30 +399,37 @@ export class GojoSkillEffects {
   }
 
   addBlue(x, y, vx, vy) {
+    if (this.projectiles.length > 24) this.projectiles.splice(0, 8);
     this.projectiles.push({ type: "blue", x, y, vx, vy, life: 3.5, maxLife: 3.5, radius: 22 });
   }
 
   addRed(x, y, vx, vy) {
+    if (this.projectiles.length > 24) this.projectiles.splice(0, 8);
     this.projectiles.push({ type: "red", x, y, vx, vy, life: 0.8, maxLife: 0.8, radius: 18 });
   }
 
   addPurpleBeam(x1, y1, x2, y2) {
+    if (this.beams.length > 8) this.beams.splice(0, 4);
     this.beams.push({ x1, y1, x2, y2, life: 0.6, maxLife: 0.6 });
   }
 
   addExplosion(x, y, type, radius = 100) {
+    if (this.explosions.length > 16) this.explosions.splice(0, 4);
     this.explosions.push({ x, y, type, radius, life: 0.5, maxLife: 0.5 });
   }
 
   addTeleport(x, y) {
+    if (this.teleports.length > 16) this.teleports.splice(0, 4);
     this.teleports.push({ x, y, life: 0.35, maxLife: 0.35 });
   }
 
   addAfterimage(x, y, facing) {
+    if (this.afterimages.length > 16) this.afterimages.splice(0, 4);
     this.afterimages.push({ x, y, facing, life: 0.3, maxLife: 0.3 });
   }
 
   addDomain(x, y, radius, ownerId, myId) {
+    if (this.domains.length > 8) this.domains.splice(0, 2);
     this.domains.push({ x, y, radius, ownerId, myId, life: 10, maxLife: 10 });
   }
 

@@ -208,6 +208,7 @@ export class DomainVisualSystem {
 
     const shards = this.generateShards(radius);
 
+    if (this.shattering.length > 8) this.shattering.splice(0, 4);
     this.shattering.push({
       x,
       y,

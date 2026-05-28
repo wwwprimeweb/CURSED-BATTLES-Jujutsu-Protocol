@@ -31,10 +31,12 @@ export class YutaSkillEffects {
   }
 
   addRikaStart(x, y, duration) {
+    if (this.rikas.size > 8) this.rikas.clear();
     this.rikas.set(Date.now(), { x, y, life: duration });
   }
 
   addRikaAttack(x, y, dirX = 1, dirY = 0, options = {}) {
+    if (this.katanaSlashes.length > 24) this.katanaSlashes.splice(0, 8);
     let fx = dirX;
     let fy = dirY;
     const valid = Number.isFinite(fx) && Number.isFinite(fy) && Math.hypot(fx, fy) > 0.001;
@@ -60,10 +62,12 @@ export class YutaSkillEffects {
   }
 
   addPureLove(x, y, radius) {
+    if (this.pureLoves.length > 8) this.pureLoves.splice(0, 4);
     this.pureLoves.push({ x, y, radius, life: 0.8 });
   }
 
   addKatanaSlash(x, y, dirX, dirY, combo, options = {}) {
+    if (this.katanaSlashes.length > 24) this.katanaSlashes.splice(0, 8);
     const range = Number.isFinite(options.range) ? Math.max(85, options.range) : 160;
     const coneAngle = Number.isFinite(options.coneAngle) ? Math.max(0.5, options.coneAngle) : 0.6;
 
@@ -82,6 +86,7 @@ export class YutaSkillEffects {
   }
 
   addCursedWave(x, y, dirX, dirY, range = 300, width = 120) {
+    if (this.katanaSlashes.length > 24) this.katanaSlashes.splice(0, 8);
     this.katanaSlashes.push({
       type: "cursedWave",
       x,

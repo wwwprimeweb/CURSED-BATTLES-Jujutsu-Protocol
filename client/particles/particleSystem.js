@@ -71,6 +71,12 @@ export class ParticleSystem {
     }
   }
 
+  clear() {
+    while (this.active.length > 0) {
+      this.pool.push(this.active.pop());
+    }
+  }
+
   render(ctx, camera) {
     const zoom = camera.zoom || 1;
     ctx.save();
