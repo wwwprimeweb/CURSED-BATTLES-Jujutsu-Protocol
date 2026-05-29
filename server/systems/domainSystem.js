@@ -43,6 +43,8 @@ class DomainSystem {
       conflict: false,
       barrierHp: 100,
       barrierMaxHp: 100,
+      hitTimer: 0,
+      copyUsed: false,
     };
 
     if (domain.character === "yuta") {
@@ -124,6 +126,12 @@ class DomainSystem {
       if (durationMul > 1) {
         domain.energy += (durationMul - 1) * 0.75 * dt;
       }
+
+      domain.hitTimer += dt;
+      domain.shouldHit = domain.character === "yuji" && domain.hitTimer >= 1;
+      if (domain.shouldHit) {
+        domain.hitTimer -= 1;
+      }
     });
 
     const list = Array.from(this.domains.values());
@@ -175,21 +183,39 @@ class DomainSystem {
         if (!owner || !owner.alive) return;
         const d = distance(targetPlayer.x, targetPlayer.y, domain.x, domain.y);
         if (d <= domain.radius) {
-          targetPlayer.vx *= 0.5;
-          targetPlayer.vy *= 0.5;
-          this.server.combat.applyDamage({
-            target: targetPlayer,
-            source: owner,
-            amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
-            kind: "domainFreeze",
-            fromX: domain.x,
-            fromY: domain.y,
-          });
-          this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
-            type: "freezeTick",
-            x: targetPlayer.x,
-            y: targetPlayer.y,
-          });
+          if (domain.character === "yuji") {
+            if (domain.shouldHit) {
+              this.server.combat.applyDamage({
+                target: targetPlayer,
+                source: owner,
+                amount: this.getKitByDomain(domain).freezeDps * 2,
+                kind: "domainFreeze",
+                fromX: domain.x,
+                fromY: domain.y,
+              });
+              this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
+                type: "yujiDomainHit",
+                x: targetPlayer.x,
+                y: targetPlayer.y,
+              });
+            }
+          } else {
+            targetPlayer.vx *= 0.5;
+            targetPlayer.vy *= 0.5;
+            this.server.combat.applyDamage({
+              target: targetPlayer,
+              source: owner,
+              amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
+              kind: "domainFreeze",
+              fromX: domain.x,
+              fromY: domain.y,
+            });
+            this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
+              type: "freezeTick",
+              x: targetPlayer.x,
+              y: targetPlayer.y,
+            });
+          }
         }
       });
     });
@@ -224,16 +250,35 @@ class DomainSystem {
       }
 
       const kit = this.getKitByDomain(sourceDomain);
-      enemy.freezeTimer = Math.max(enemy.freezeTimer, kit.freezePersistSec || 0);
       const owner = this.server.players.get(sourceDomain.ownerId) || null;
-      this.server.combat.applyDamage({
-        target: enemy,
-        source: owner,
-        amount: (kit.freezeDps || 0) * dt,
-        kind: "domainFreeze",
-        fromX: sourceDomain.x,
-        fromY: sourceDomain.y,
-      });
+
+      if (sourceDomain.character === "yuji") {
+        if (sourceDomain.shouldHit) {
+          this.server.combat.applyDamage({
+            target: enemy,
+            source: owner,
+            amount: kit.freezeDps * 2,
+            kind: "domainFreeze",
+            fromX: sourceDomain.x,
+            fromY: sourceDomain.y,
+          });
+          this.server.emitEventNear(enemy.x, enemy.y, {
+            type: "yujiDomainHit",
+            x: enemy.x,
+            y: enemy.y,
+          });
+        }
+      } else {
+        enemy.freezeTimer = Math.max(enemy.freezeTimer, kit.freezePersistSec || 0);
+        this.server.combat.applyDamage({
+          target: enemy,
+          source: owner,
+          amount: (kit.freezeDps || 0) * dt,
+          kind: "domainFreeze",
+          fromX: sourceDomain.x,
+          fromY: sourceDomain.y,
+        });
+      }
 
       const barrierDamage = (enemy.type === "boss" ? 6 : enemy.type === "elite" ? 3 : 1) * dt;
       this.damageBarrier(sourceDomain.ownerId, barrierDamage);

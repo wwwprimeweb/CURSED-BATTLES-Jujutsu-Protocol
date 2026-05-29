@@ -457,7 +457,6 @@ export class Renderer {
     this.gojoVisual.effects.explosions = [];
     this.gojoVisual.effects.teleports = [];
     this.gojoVisual.effects.afterimages = [];
-    this.yujiVisual.divergentFistEffects = [];
     this.yujiVisual.flyingKneeEffects = [];
     this.yujiVisual.soulImpactEffects = [];
     this.yujiVisual.taidoBeatdownEffects = [];

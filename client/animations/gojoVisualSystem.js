@@ -57,27 +57,6 @@ export class GojoVisualSystem {
       if (slash.life <= 0) {
         this.m1Slashes.splice(i, 1);
       }
-
-      // Trail sprites — 1 por frame na posição exata do sprite principal
-      const range = 85;
-      const progress = 1 - slash.life / slash.maxLife;
-      const moveIn = Math.min(0.8, progress * 5);
-      const spriteDist = range * 1.15 * moveIn;
-      const offsetMap = { 1: 0, 2: 35, 3: 18 };
-      const offsetVal = offsetMap[slash.comboStep] || 0;
-      const perpX = -slash.dirY;
-      const perpY = slash.dirX;
-      const tx = slash.worldX + slash.dirX * spriteDist + perpX * offsetVal;
-      const ty = slash.worldY + slash.dirY * spriteDist + perpY * offsetVal;
-      if (!slash.trail) slash.trail = [];
-      slash.trail.push({ x: tx, y: ty, life: 0.4 });
-
-      if (slash.trail) {
-        for (let t = slash.trail.length - 1; t >= 0; t--) {
-          slash.trail[t].life -= dt;
-          if (slash.trail[t].life <= 0) slash.trail.splice(t, 1);
-        }
-      }
     }
   }
 

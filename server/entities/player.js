@@ -64,6 +64,7 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
     comboStep: 0,
     comboResetTimer: 0,
     m1Timer: 0,
+    animLockTimer: 0,
     dodgeTimer: 0,
     cast: null,
     flyingKnee: null,

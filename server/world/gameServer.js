@@ -9,6 +9,7 @@ const { ProgressionSystem } = require("../systems/progressionSystem");
 const { DomainSystem } = require("../systems/domainSystem");
 const { GOJO } = require("../gameplay/gojoKit");
 const { YUTA } = require("../gameplay/yutaKit");
+const { YUJI } = require("../gameplay/yujiKit");
 const { CHARACTER_REGISTRY } = require("../gameplay/characterRegistry");
 const {
   clamp,
@@ -531,6 +532,7 @@ class GameServer {
       player.stunTimer = Math.max(0, player.stunTimer - dt);
       player.comboResetTimer = Math.max(0, player.comboResetTimer - dt);
       player.m1Timer = Math.max(0, player.m1Timer - dt);
+      player.animLockTimer = Math.max(0, player.animLockTimer - dt);
       player.dodgeTimer = Math.max(0, player.dodgeTimer - dt);
       if (player.rikaBuffTime > 0) {
         player.rikaBuffTime = Math.max(0, player.rikaBuffTime - dt);
@@ -752,43 +754,52 @@ class GameServer {
       const moveAmount = Math.min(player.flyingKnee.remainingDist, player.flyingKnee.speed * dt);
       this.moveEntityWithCollisions(player, player.flyingKnee.dirX * moveAmount, player.flyingKnee.dirY * moveAmount);
       player.flyingKnee.remainingDist -= moveAmount;
-      if (player.flyingKnee.remainingDist <= 0) {
-        const kit = this.getKit(player);
-        const radius = kit.flyingKnee.radius;
-        const damage = kit.flyingKnee.damage * player.modifiers.damageMul;
-        let hitTarget = null;
-        this.players.forEach((target) => {
-          if (target.id === player.id || !target.alive || hitTarget) return;
-          if (!this.config.match.friendlyFire && target.kind === "player") return;
-          if (distance(player.x, player.y, target.x, target.y) <= radius + target.radius) {
-            hitTarget = target;
+
+      const kit = this.getKit(player);
+      const radius = kit.flyingKnee.radius;
+      const damage = kit.flyingKnee.damage * player.modifiers.damageMul;
+      let hitTarget = null;
+      this.players.forEach((target) => {
+        if (hitTarget || target.id === player.id || !target.alive) return;
+        if (!this.config.match.friendlyFire && target.kind === "player") return;
+        if (distance(player.x, player.y, target.x, target.y) <= radius + target.radius) {
+          hitTarget = target;
+        }
+      });
+      if (!hitTarget) {
+        this.enemies.forEach((enemy) => {
+          if (hitTarget || !enemy.alive) return;
+          if (distance(player.x, player.y, enemy.x, enemy.y) <= radius + enemy.radius) {
+            hitTarget = enemy;
           }
         });
-        if (!hitTarget) {
-          this.enemies.forEach((enemy) => {
-            if (!enemy.alive || hitTarget) return;
-            if (distance(player.x, player.y, enemy.x, enemy.y) <= radius + enemy.radius) {
-              hitTarget = enemy;
-            }
-          });
-        }
-        if (hitTarget) {
-          this.combat.applyDamage({
-            target: hitTarget,
-            source: player,
-            amount: damage,
-            kind: "flyingKnee",
-            knockback: 200,
-            fromX: player.flyingKnee.startX,
-            fromY: player.flyingKnee.startY,
-          });
-        }
+      }
+
+      if (hitTarget) {
+        this.combat.applyDamage({
+          target: hitTarget,
+          source: player,
+          amount: damage,
+          kind: "flyingKnee",
+          knockback: 200,
+          fromX: player.flyingKnee.startX,
+          fromY: player.flyingKnee.startY,
+        });
         this.emitEventNear(player.x, player.y, {
           type: "flyingKnee",
           x: player.x,
           y: player.y,
           playerId: player.id,
-          hit: !!hitTarget,
+          hit: true,
+        });
+        player.flyingKnee = null;
+      } else if (player.flyingKnee.remainingDist <= 0) {
+        this.emitEventNear(player.x, player.y, {
+          type: "flyingKnee",
+          x: player.x,
+          y: player.y,
+          playerId: player.id,
+          hit: false,
         });
         player.flyingKnee = null;
       }
@@ -960,13 +971,8 @@ class GameServer {
       return;
     }
     if (player.cast && player.cast.type === "divergentFist") {
-      player.animState = "skill1";
+      player.animState = "q";
       player.statePriority = 5;
-      return;
-    }
-    if (player.cast && player.cast.type === "taidoBeatdown") {
-      player.animState = "skill3_prepare";
-      player.statePriority = 3;
       return;
     }
     if (player.cast && player.cast.type === "taidoBeatdownAttack") {
@@ -1002,6 +1008,9 @@ class GameServer {
     if (player.dodgeTimer > 0) {
       player.animState = "dodge";
       player.statePriority = 6;
+      return;
+    }
+    if (player.animLockTimer > 0) {
       return;
     }
     if (player.m1Timer > 0) {
@@ -1074,8 +1083,15 @@ class GameServer {
 
     const slashDirX = isYutaSlash && Math.abs(m1DirX) < 0.001 && Math.abs(m1DirY) < 0.001 ? 1 : m1DirX;
     const slashDirY = isYutaSlash && Math.abs(m1DirX) < 0.001 && Math.abs(m1DirY) < 0.001 ? 0 : m1DirY;
-    const slashRange = kit.m1.range;
+    let slashRange = kit.m1.range;
     const coneAngle = isYutaSlash ? (kit.m1.coneAngle || 1.4) : 0;
+
+    let coneThreshold = 0.2;
+    if (player.character === "yuji") {
+      const step = (player.comboStep - 1) % 4;
+      slashRange = (kit.m1.stepRanges || [])[step] ?? kit.m1.range;
+      coneThreshold = (kit.m1.stepCones || [])[step] ?? 0.2;
+    }
 
     const canM1HitTarget = (target) => {
       if (isYutaSlash) {
@@ -1093,7 +1109,7 @@ class GameServer {
 
       const toTarget = normalize(target.x - player.x, target.y - player.y);
       const inRange = distance(player.x, player.y, target.x, target.y) <= slashRange + target.radius;
-      const facing = dot(m1DirX, m1DirY, toTarget.x, toTarget.y) > 0.2;
+      const facing = dot(m1DirX, m1DirY, toTarget.x, toTarget.y) > coneThreshold;
       return inRange && facing;
     };
 
@@ -1398,21 +1414,25 @@ class GameServer {
 
   fireDivergentFist(player, cast) {
     const kit = this.getKit(player);
-    const { range, width, damage, delayedDamage, delay, stunDuration } = kit.divergentFist;
+    const { damage, delayedDamage, delay, stunDuration, delayedKnockback, range, width } = kit.divergentFist;
     const { dirX, dirY } = cast;
-    const toX = player.x + dirX * range;
-    const toY = player.y + dirY * range;
     const hitTargets = [];
 
+    const closeX = player.x + dirX * 35;
+    const closeY = player.y + dirY * 35;
+    const cursorX = player.x + dirX * 80;
+    const cursorY = player.y + dirY * 80;
+
     const canHit = (target) => {
-      const dx = target.x - player.x;
-      const dy = target.y - player.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > range + target.radius + width * 0.5) return false;
-      const forward = dx * dirX + dy * dirY;
-      if (forward < -target.radius || forward > range + target.radius + width * 0.5) return false;
-      const cutDist = distancePointToSegment(target.x, target.y, player.x, player.y, toX, toY);
-      return cutDist <= target.radius + width * 0.5;
+      const dx1 = target.x - closeX;
+      const dy1 = target.y - closeY;
+      if (Math.hypot(dx1, dy1) <= 45 + target.radius) return true;
+
+      const dx2 = target.x - cursorX;
+      const dy2 = target.y - cursorY;
+      if (Math.hypot(dx2, dy2) <= 50 + target.radius) return true;
+
+      return false;
     };
 
     const processTarget = (target) => {
@@ -1435,18 +1455,22 @@ class GameServer {
     this.players.forEach(processTarget);
     this.enemies.forEach(processTarget);
 
-    this.emitEventNear(player.x, player.y, {
-      type: "divergentFist",
-      x: player.x,
-      y: player.y,
-      playerId: player.id,
-      dirX,
-      dirY,
-      range,
-      width,
-    });
+    player.animLockTimer = 0.6;
 
     if (hitTargets.length > 0) {
+      hitTargets.forEach((target) => {
+        this.emitEventNear(target.x, target.y, {
+          type: "yujiDivergentPunch",
+          x: target.x,
+          y: target.y,
+          playerId: player.id,
+          dirX,
+          dirY,
+          range,
+          width,
+        });
+      });
+
       this.queueDelayedAction(delay, () => {
         hitTargets.forEach((target) => {
           if (!target.alive) return;
@@ -1455,7 +1479,7 @@ class GameServer {
             source: player,
             amount: delayedDamage * player.modifiers.damageMul,
             kind: "divergentFistDelayed",
-            knockback: 150,
+            knockback: delayedKnockback,
             fromX: player.x,
             fromY: player.y,
           });
@@ -3537,23 +3561,44 @@ class GameServer {
   }
 
   fireDomainCopy(player, cast) {
-    const kit = this.getKit(player);
-    player.cast = {
-      type: "domainCopyFire",
-      timer: kit.pureLove.startup,
-      dirX: cast.dirX,
-      dirY: cast.dirY,
-    };
-    const chargeOffset = 150;
-    this.emitEventNear(player.x, player.y, {
-      type: "pureLoveCharge",
-      x: player.x + cast.dirX * chargeOffset,
-      y: player.y + cast.dirY * chargeOffset,
-      playerId: player.id,
-      dirX: cast.dirX,
-      dirY: cast.dirY,
-      duration: kit.pureLove.startup,
-    });
+    const domain = this.domainSystem.domains.get(player.id);
+    const copiedChar = domain ? domain.copiedCharacter : null;
+
+    if (copiedChar === "yuji") {
+      const { range } = YUJI.taidoBeatdown;
+      let hasTarget = false;
+      const canHit = (t) => {
+        if (!t.alive || t.id === player.id) return false;
+        if (!this.config.match.friendlyFire && t.kind === "player") return false;
+        return distance(player.x, player.y, t.x, t.y) <= range + t.radius;
+      };
+      this.players.forEach((t) => { if (!hasTarget && canHit(t)) hasTarget = true; });
+      this.enemies.forEach((t) => { if (!hasTarget && canHit(t)) hasTarget = true; });
+
+      if (!hasTarget) {
+        this.emitEventToPlayer(player.id, {
+          type: "skillNoTarget",
+          skill: "Taido Beatdown (cópia)",
+        });
+        return;
+      }
+
+      if (domain) domain.copyUsed = true;
+      const originalChar = player.character;
+      player.character = "yuji";
+      this.fireTaidoBeatdown(player, cast);
+      player.character = originalChar;
+      return;
+    }
+
+    if (domain) domain.copyUsed = true;
+
+    if (copiedChar === "gojo" || copiedChar === "sukuna" || copiedChar === "hakari") {
+      this.firePurple(player, cast);
+      return;
+    }
+
+    this.fireCopiedPureLove(player, cast);
   }
 
   fireDomainCopyFire(player, cast) {
@@ -3654,11 +3699,32 @@ class GameServer {
       y: player.y,
       playerId: player.id,
       miss: !hitTarget,
+      dirX,
+      dirY,
     });
   }
 
   tryCastTaidoBeatdown(player) {
     const kit = this.getKit(player);
+    const range = kit.taidoBeatdown.range;
+
+    let hasTarget = false;
+    const canHit = (t) => {
+      if (!t.alive || t.id === player.id) return false;
+      if (!this.config.match.friendlyFire && t.kind === "player") return false;
+      return distance(player.x, player.y, t.x, t.y) <= range + t.radius;
+    };
+    this.players.forEach((t) => { if (!hasTarget && canHit(t)) hasTarget = true; });
+    this.enemies.forEach((t) => { if (!hasTarget && canHit(t)) hasTarget = true; });
+
+    if (!hasTarget) {
+      this.emitEventToPlayer(player.id, {
+        type: "skillNoTarget",
+        skill: "Taido Beatdown",
+      });
+      return false;
+    }
+
     if (!this.canUseSkill(player, kit.taidoBeatdown.energy, "r", kit.taidoBeatdown.cooldown)) {
       return false;
     }
@@ -3691,6 +3757,9 @@ class GameServer {
 
     for (let i = 0; i < hits; i += 1) {
       this.queueDelayedAction(i * hitDelay, () => {
+        const m1States = ["m1_1", "m1_2", "m1_3", "m1_4"];
+        player.animState = m1States[i % 4];
+        player.animLockTimer = hitDelay + 0.05;
         hitTargets.forEach((target) => {
           if (!target.alive) return;
           this.combat.applyDamage({
@@ -3714,6 +3783,8 @@ class GameServer {
     }
 
     this.queueDelayedAction(hits * hitDelay, () => {
+      player.animState = "m1_4";
+      player.animLockTimer = hitDelay + 0.15;
       hitTargets.forEach((target) => {
         if (!target.alive) return;
         this.combat.applyDamage({
@@ -3732,6 +3803,8 @@ class GameServer {
           playerId: player.id,
           hitNum: hits,
           final: true,
+          dirX,
+          dirY,
         });
       });
     });
@@ -3753,6 +3826,11 @@ class GameServer {
 
   tryCastDomainCopy(player) {
     if (!player.alive) return false;
+    const domain = this.domainSystem.domains.get(player.id);
+    if (domain && domain.copyUsed) {
+      this.emitEventToPlayer(player.id, { type: "domainCopyUsed" });
+      return false;
+    }
     const kit = this.getKit(player);
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
@@ -3761,16 +3839,6 @@ class GameServer {
       dirX: aim.x,
       dirY: aim.y,
     };
-    const chargeOffset = 150;
-    this.emitEventNear(player.x, player.y, {
-      type: "pureLoveCharge",
-      x: player.x + aim.x * chargeOffset,
-      y: player.y + aim.y * chargeOffset,
-      playerId: player.id,
-      dirX: aim.x,
-      dirY: aim.y,
-      duration: kit.domainCopy.startup,
-    });
     return true;
   }
 

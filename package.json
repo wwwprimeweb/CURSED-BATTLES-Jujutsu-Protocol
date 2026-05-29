@@ -1,6 +1,6 @@
 {
   "name": "cursed-battles",
-  "version": "1.0.0",
+  "version": "0.91.0",
   "description": "Authoritative multiplayer web roguelike arena survival",
   "main": "server/index.js",
   "scripts": {

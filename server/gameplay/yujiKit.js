@@ -9,6 +9,8 @@ const YUJI = {
     startup: 0.06,
     active: 0.08,
     recovery: 0.1,
+    stepRanges: [80, 100, 85, 110],
+    stepCones: [0.35, 0.25, 0.1, 0.25],
   },
   passive: {
     radius: 100,
@@ -25,6 +27,7 @@ const YUJI = {
     delay: 2.3,
     stunDuration: 0.5,
     startup: 0.25,
+    delayedKnockback: 300,
   },
   flyingKnee: {
     energy: 30,

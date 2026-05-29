@@ -7,6 +7,13 @@ const IMPACT_FRAME_W = 132;
 const IMPACT_FRAME_H = 96;
 const IMPACT_FRAMES = 21;
 
+const DOMAIN_SHEET_PATH = "/assets/sprites/yuji_shinjuku/domain_sheet.png";
+const DOMAIN_FRAME_W = 110;
+const DOMAIN_FRAME_H = 125;
+const DOMAIN_FRAMES = 12;
+
+
+
 export class YujiVisualSystem {
   constructor() {
     this.yujiSprite = new SpriteAnimator({
@@ -22,14 +29,18 @@ export class YujiVisualSystem {
     this.impactSheet = new Image();
     this.impactSheet.src = IMPACT_SHEET_PATH;
 
+    this.domainSheet = new Image();
+    this.domainSheet.src = DOMAIN_SHEET_PATH;
+
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
     this.time = 0;
+    this.qStartTimes = new Map();
 
-    this.divergentFistEffects = [];
     this.flyingKneeEffects = [];
     this.soulImpactEffects = [];
     this.taidoBeatdownEffects = [];
+    this.cutLines = [];
   }
 
   update(dt) {
@@ -46,11 +57,6 @@ export class YujiVisualSystem {
       if (effect.life <= 0) this.dodgeEffects.delete(id);
     });
 
-    for (let i = this.divergentFistEffects.length - 1; i >= 0; i -= 1) {
-      this.divergentFistEffects[i].life -= dt;
-      if (this.divergentFistEffects[i].life <= 0) this.divergentFistEffects.splice(i, 1);
-    }
-
     for (let i = this.flyingKneeEffects.length - 1; i >= 0; i -= 1) {
       this.flyingKneeEffects[i].life -= dt;
       if (this.flyingKneeEffects[i].life <= 0) this.flyingKneeEffects.splice(i, 1);
@@ -65,29 +71,11 @@ export class YujiVisualSystem {
       this.taidoBeatdownEffects[i].life -= dt;
       if (this.taidoBeatdownEffects[i].life <= 0) this.taidoBeatdownEffects.splice(i, 1);
     }
-  }
 
-  triggerDivergentFist(x, y, dirX, dirY, range, width) {
-    const impactX = x + dirX * range;
-    const impactY = y + dirY * range;
-    this.divergentFistEffects.push({
-      x: impactX,
-      y: impactY,
-      radius: width * 0.5,
-      life: 0.28,
-      delayed: false,
-    });
-  }
-
-  triggerDivergentFistDelayed(x, y, radius) {
-    this.divergentFistEffects.push({
-      x,
-      y,
-      radius,
-      life: 0.5,
-      delayed: true,
-      impactStart: Math.floor(Math.random() * 5),
-    });
+    for (let i = this.cutLines.length - 1; i >= 0; i -= 1) {
+      this.cutLines[i].life -= dt;
+      if (this.cutLines[i].life <= 0) this.cutLines.splice(i, 1);
+    }
   }
 
   triggerFlyingKnee(x, y, dirX, dirY, hit) {
@@ -109,6 +97,17 @@ export class YujiVisualSystem {
 
   triggerTaidoBeatdownFinal(x, y, hitNum, blackFlash) {
     this.taidoBeatdownEffects.push({ x, y, hitNum, life: 0.62, final: true, blackFlash });
+  }
+
+  addCutLine(x, y) {
+    const angle = Math.random() * Math.PI * 2;
+    this.cutLines.push({
+      x, y,
+      dirX: Math.cos(angle),
+      dirY: Math.sin(angle),
+      life: 0.35,
+      maxLife: 0.35,
+    });
   }
 
   triggerHit(x, y, intensity = 1) {
@@ -169,6 +168,47 @@ export class YujiVisualSystem {
 
     this.yujiSprite.render(ctx, pos.x, drawY, animState, facing, zoom, entry.id);
 
+    if (animState === "q") {
+      if (!this.qStartTimes.has(entry.id)) {
+        this.qStartTimes.set(entry.id, this.time);
+      }
+      const elapsed = this.time - this.qStartTimes.get(entry.id);
+      const progress = Math.min(1, elapsed / 0.6);
+      const domainIdx = Math.min(DOMAIN_FRAMES - 1, Math.floor(progress * DOMAIN_FRAMES));
+
+      const qPhase = Math.min(3, Math.floor(progress * 4));
+      const frameOffsets = [
+        { x: 10, y: -70 },
+        { x: 35, y: -75 },
+        { x: 60, y: -80 },
+        { x: 35, y: -75 },
+      ];
+      const offset = frameOffsets[qPhase] || frameOffsets[0];
+      const fistX = pos.x + facing * offset.x * zoom;
+      const fistY = pos.y + offset.y * zoom;
+
+      if (this.domainSheet.complete && this.domainSheet.naturalWidth > 0) {
+        const sx = domainIdx * DOMAIN_FRAME_W;
+        const targetW = DOMAIN_FRAME_W * zoom * 1.1;
+        const targetH = DOMAIN_FRAME_H * zoom * 1.1;
+
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+
+        ctx.translate(fistX, fistY);
+        ctx.rotate(facing > 0 ? -Math.PI / 2 : Math.PI / 2);
+        ctx.drawImage(
+          this.domainSheet,
+          sx, 0, DOMAIN_FRAME_W, DOMAIN_FRAME_H,
+          -targetW * 0.5, -targetH * 0.5,
+          targetW, targetH,
+        );
+        ctx.restore();
+      }
+    } else {
+      this.qStartTimes.delete(entry.id);
+    }
+
     if (!p.alive) return;
 
     ctx.fillStyle = "#f2f6ff";
@@ -197,38 +237,6 @@ export class YujiVisualSystem {
 
   renderEffects(ctx, camera) {
     const zoom = camera.zoom || 1;
-
-    this.divergentFistEffects.forEach((e) => {
-      const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
-      const screenY = (e.y - camera.y) * zoom + ctx.canvas.height * 0.5;
-      const radius = (e.radius || 90) * zoom;
-
-      if (e.delayed) {
-        const t = 1 - e.life / 0.5;
-        const alpha = Math.max(0, Math.min(1, e.life / 0.5));
-        const frame = e.impactStart + Math.floor(t * 8);
-        this.drawImpactFrame(ctx, screenX, screenY, zoom, frame, alpha, 0.75 + t * 0.1);
-      } else {
-        // Expanding repulsion ring
-        const t = 1 - e.life / 0.28;
-        const ringRadius = radius * (0.3 + t * 0.7);
-        const alpha = Math.max(0, (1 - t) * 0.6);
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.strokeStyle = "rgba(80,170,255,0.7)";
-        ctx.lineWidth = 3 * zoom * (1 - t * 0.5);
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, ringRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        // Inner glow fill
-        ctx.globalAlpha = alpha * 0.15;
-        ctx.fillStyle = "rgba(60,140,255,0.2)";
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, ringRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    });
 
     this.flyingKneeEffects.forEach((e) => {
       const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
@@ -282,6 +290,44 @@ export class YujiVisualSystem {
         const alpha = Math.min(1, e.life / 0.16);
         this.drawImpactFrame(ctx, screenX, screenY, zoom, (e.hitNum || 0) % 8, alpha, 0.55);
       }
+    });
+
+    this.cutLines.forEach((e) => {
+      const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
+      const screenY = (e.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+      const progress = 1 - e.life / e.maxLife;
+      const alpha = Math.min(1, progress * 4) * Math.max(0, 1 - progress * 1.2);
+      if (alpha <= 0.01) return;
+
+      const slashLen = 120 * zoom;
+      const startX = screenX - e.dirX * slashLen * 0.5;
+      const startY = screenY - e.dirY * slashLen * 0.5;
+      const endX = screenX + e.dirX * slashLen * 0.5;
+      const endY = screenY + e.dirY * slashLen * 0.5;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineCap = "round";
+
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 25 * zoom;
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.lineWidth = 8 * zoom * alpha;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      ctx.shadowBlur = 10 * zoom;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3 * zoom * alpha;
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      ctx.restore();
     });
 
     this.hitFlashes.forEach((flash) => {
