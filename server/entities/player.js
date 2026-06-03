@@ -105,6 +105,7 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
       dodge: false,
     },
     lastInputAt: now,
+    lastAttackAt: -Infinity,
     inputBurstCount: 0,
     inputBurstWindowStart: now,
     lastProcessedInputSeq: 0,

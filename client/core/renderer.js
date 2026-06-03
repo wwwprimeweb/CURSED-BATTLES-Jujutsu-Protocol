@@ -65,6 +65,13 @@ export class Renderer {
     this.redImg.src = "/assets/habilit/red.png";
     this.blackFlashes = [];
     this.blackFlashDuration = 800;
+    this.energyRecoverImg = new Image();
+    this.energyRecoverImg.src = "/assets/energyrecover/energyspritesheet.png";
+    this._erFrames = 19;
+    this._erCols = 6;
+    this._erFrameW = 136;
+    this._erFrameH = 292;
+    this._erFramesCache = {};
 
     this._renderDt = 1 / 60;
     this._lastRenderTime = 0;
@@ -255,13 +262,13 @@ export class Renderer {
 
       ctx.save();
 
-      ctx.shadowColor = "#9040dd";
+      ctx.shadowColor = "#00d4b0";
       ctx.shadowBlur = 30 + easeScale * 60;
       ctx.globalAlpha = 0.4 + easeScale * 0.6;
 
       const auraGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, imgSize * 2);
-      auraGrad.addColorStop(0, `rgba(200,130,255,${0.15 * easeScale})`);
-      auraGrad.addColorStop(0.5, `rgba(120,50,200,${0.06 * easeScale})`);
+      auraGrad.addColorStop(0, `rgba(0, 230, 190,${0.15 * easeScale})`);
+      auraGrad.addColorStop(0.5, `rgba(0, 170, 150,${0.06 * easeScale})`);
       auraGrad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = auraGrad;
       ctx.beginPath();
@@ -312,13 +319,13 @@ export class Renderer {
       ctx.save();
       ctx.globalAlpha = Math.min(1, alpha * 1.3);
 
-      ctx.shadowColor = "#9040dd";
+      ctx.shadowColor = "#00d4b0";
       ctx.shadowBlur = 100 * alpha * z;
 
       const flashGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 800 * t * z);
-      flashGrad.addColorStop(0, `rgba(255,255,255,${alpha * 0.8})`);
-      flashGrad.addColorStop(0.1, `rgba(250,220,255,${alpha * 0.5})`);
-      flashGrad.addColorStop(0.3, `rgba(200,140,255,${alpha * 0.2})`);
+      flashGrad.addColorStop(0, `rgba(0, 230, 190,${alpha * 0.8})`);
+      flashGrad.addColorStop(0.1, `rgba(0, 200, 170,${alpha * 0.5})`);
+      flashGrad.addColorStop(0.3, `rgba(0, 170, 150,${alpha * 0.2})`);
       flashGrad.addColorStop(0.6, `rgba(120,50,220,${alpha * 0.1})`);
       flashGrad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = flashGrad;
@@ -1074,13 +1081,13 @@ export class Renderer {
 
         ctx.save();
 
-        ctx.shadowColor = "#9040dd";
+        ctx.shadowColor = "#00d4b0";
         ctx.shadowBlur = 65;
         const bgGrad = ctx.createRadialGradient(px, py, 0, px, py, sphereR * pulse * 2);
-        bgGrad.addColorStop(0, "rgba(255,255,255,0.15)");
-        bgGrad.addColorStop(0.15, "rgba(220,180,255,0.12)");
-        bgGrad.addColorStop(0.4, "rgba(150,80,240,0.08)");
-        bgGrad.addColorStop(0.7, "rgba(100,40,200,0.04)");
+        bgGrad.addColorStop(0, "rgba(0,230,190,0.15)");
+        bgGrad.addColorStop(0.15, "rgba(0,200,170,0.12)");
+        bgGrad.addColorStop(0.4, "rgba(0,170,150,0.08)");
+        bgGrad.addColorStop(0.7, "rgba(0,140,130,0.04)");
         bgGrad.addColorStop(1, "rgba(60,10,150,0)");
         ctx.fillStyle = bgGrad;
         ctx.beginPath();
@@ -1114,7 +1121,6 @@ export class Renderer {
         ctx.shadowBlur = 50;
         const spriteSize = sphereR * 2.3 * pulse;
         if (this.hollowPurpleImg.complete && this.hollowPurpleImg.naturalWidth > 0) {
-          ctx.shadowColor = "#9040dd";
           ctx.drawImage(this.hollowPurpleImg, px - spriteSize / 2, py - spriteSize / 2, spriteSize, spriteSize);
         } else {
           ctx.shadowBlur = 30;
@@ -1447,10 +1453,115 @@ export class Renderer {
         ctx.globalAlpha = 0.35;
       }
 
+      if (p.recoveryActive && p.alive) {
+        const sp = worldToScreen(this.camera, this.canvas, rx, ry);
+        if (this.energyRecoverImg.complete && this.energyRecoverImg.naturalWidth > 0) {
+          const frameIdx = Math.floor(now * 0.009) % this._erFrames;
+          const col = frameIdx % this._erCols;
+          const row = Math.floor(frameIdx / this._erCols);
+          const drawW = 140;
+          const drawH = this._erFrameH * (drawW / this._erFrameW);
+
+          this._processERFrame(frameIdx, p.character);
+
+          const c = this._erFramesCache[p.character];
+          const frame = c?.[frameIdx];
+          if (frame) {
+            ctx.drawImage(
+              frame,
+              0, 0, this._erFrameW, this._erFrameH,
+              sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH
+            );
+          }
+        }
+      }
+
       visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx, ry, this._renderDt);
+
+      if (p.recoveryActive && p.alive) {
+        const sp = worldToScreen(this.camera, this.canvas, rx, ry);
+        if (this.energyRecoverImg.complete && this.energyRecoverImg.naturalWidth > 0) {
+          const frameIdx = Math.floor(now * 0.009) % this._erFrames;
+          const col = frameIdx % this._erCols;
+          const row = Math.floor(frameIdx / this._erCols);
+          const drawW = 140;
+          const drawH = this._erFrameH * (drawW / this._erFrameW);
+
+          this._processERFrame(frameIdx, p.character);
+
+          const c = this._erFramesCache[p.character];
+          const frame = c?.[frameIdx];
+          if (frame) {
+            ctx.globalAlpha = 0.25;
+            ctx.drawImage(
+              frame,
+              0, 0, this._erFrameW, this._erFrameH,
+              sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH
+            );
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
 
       ctx.restore();
     });
+  }
+
+  _processERFrame(frameIdx, character) {
+    if (!this._erFramesCache[character]) this._erFramesCache[character] = [];
+    if (this._erFramesCache[character][frameIdx]) return;
+    if (!this.energyRecoverImg.complete) return;
+
+    const col = frameIdx % this._erCols;
+    const row = Math.floor(frameIdx / this._erCols);
+
+    const offscreen = document.createElement("canvas");
+    offscreen.width = this._erFrameW;
+    offscreen.height = this._erFrameH;
+    const offCtx = offscreen.getContext("2d");
+
+    offCtx.drawImage(
+      this.energyRecoverImg,
+      col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
+      0, 0, this._erFrameW, this._erFrameH
+    );
+
+    const imageData = offCtx.getImageData(0, 0, this._erFrameW, this._erFrameH);
+    const pixels = imageData.data;
+
+    const colors = {
+      yuta:   { r: 255, g: 20,  b: 140 },
+      sukuna: { r: 230, g: 50,  b: 50  },
+      hakari: { r: 50,  g: 220, b: 80  },
+    };
+    const c = colors[character] || { r: 80, g: 235, b: 255 };
+    const alphaMuls = { yuta: 0.7 };
+    const am = alphaMuls[character] || 0.5;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const a = pixels[i + 3];
+
+      if (a < 10) continue;
+
+      const brightness = Math.max(r, g, b);
+      if (brightness < 25) {
+        pixels[i]     = 0;
+        pixels[i + 1] = 0;
+        pixels[i + 2] = 0;
+        pixels[i + 3] = Math.round(a * am);
+      } else {
+        pixels[i]     = c.r;
+        pixels[i + 1] = c.g;
+        pixels[i + 2] = c.b;
+        pixels[i + 3] = Math.round(a * am);
+      }
+    }
+
+    offCtx.putImageData(imageData, 0, 0);
+    this._erFramesCache[character][frameIdx] = offscreen;
   }
 
   drawM1PunchEffects() {

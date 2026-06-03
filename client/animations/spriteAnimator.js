@@ -72,6 +72,7 @@ export class SpriteAnimator {
     const dh = sh * renderScale;
 
     ctx.save();
+    ctx.imageSmoothingEnabled = false;
     if (facing < 0) {
       ctx.translate(x, y);
       ctx.scale(-1, 1);

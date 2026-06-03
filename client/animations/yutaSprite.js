@@ -2,6 +2,15 @@ import { SpriteAnimator } from "./spriteAnimator.js";
 import { loadImage } from "./imageLoader.js";
 import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH } from "./yutaSprites.js";
 
+const ALT_SHEET_PATH = "/assets/sprites/yuta_m1_alt.png";
+const ALT_ANIMATIONS = {
+  m1_2: { row: 0, frames: 5, speed: 10, loop: false },
+  m1_4: { row: 0, frames: 5, speed: 10, loop: false },
+  idle: { row: 0, frames: 1, speed: 1, loop: true },
+};
+
+const ALT_STATES = ["m1_2", "m1_4"];
+
 const DEFAULT_SIZE = 136;
 const DASH_SIZE = Math.round(DEFAULT_SIZE * (150 / 160));
 const RIKA_SIZE = Math.round(DEFAULT_SIZE * 1.5);
@@ -17,6 +26,16 @@ export class YutaSpriteRenderer {
       offsetX: YUTA_SPRITE_CONFIG.offsetX,
       renderScale: YUTA_SPRITE_CONFIG.renderScale,
       animations: YUTA_ANIMATIONS,
+    });
+    this.altAnimator = new SpriteAnimator({
+      sheetPath: ALT_SHEET_PATH,
+      cellWidth: 108,
+      cellHeight: YUTA_SPRITE_CONFIG.cellHeight,
+      pivotX: 52,
+      pivotY: 70,
+      offsetX: YUTA_SPRITE_CONFIG.offsetX,
+      renderScale: YUTA_SPRITE_CONFIG.renderScale,
+      animations: ALT_ANIMATIONS,
     });
     this.rikaSprite = null;
     this.domainPrepSprite = null;
@@ -73,12 +92,13 @@ export class YutaSpriteRenderer {
   update(dt) {
     this.walkTime += dt;
     this.animator.update(dt);
+    this.altAnimator.update(dt);
   }
 
   render(ctx, x, y, state, facing = 1, _scale = 1, playerId = "default") {
     const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
-
-    this.animator.render(ctx, x, y, state, facing, scale, playerId);
+    const animator = ALT_STATES.includes(state) ? this.altAnimator : this.animator;
+    animator.render(ctx, x, y, state, facing, scale, playerId);
   }
 
   renderRika(ctx, x, y, facing = 1, floatPhase = 0, floatAmp = 2.2, _scale = 1) {

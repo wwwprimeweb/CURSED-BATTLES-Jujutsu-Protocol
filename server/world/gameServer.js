@@ -553,9 +553,15 @@ class GameServer {
         ? YUJI_OWN_DOMAIN_ENERGY_REGEN_MULTIPLIER
         : 1;
 
+      const canRecover = !(player.cast && player.cast.type === "domain")
+        && !this.domainSystem.hasActiveDomain(player.id)
+        && player.domainExhaustionTimer <= 0;
+      const recoveryActive = canRecover && (this.now - (player.lastAttackAt || 0)) > 5000;
+      const recoveryMul = recoveryActive ? 2 : 1;
+
       player.energy = Math.min(
         player.maxEnergy,
-        player.energy + player.energyRegen * player.modifiers.energyRegenMul * yujiOwnDomainRegenMul * dt
+        player.energy + player.energyRegen * player.modifiers.energyRegenMul * yujiOwnDomainRegenMul * recoveryMul * dt
       );
 
       Object.keys(player.cooldowns).forEach((key) => {
@@ -1076,6 +1082,7 @@ class GameServer {
     player.m1Timer = kit.m1.cooldown;
     player.comboStep = (player.comboStep % 4) + 1;
     player.comboResetTimer = 0.9;
+    player.lastAttackAt = this.now;
 
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     const m1DirX = Number.isFinite(aim.x) ? aim.x : 0;
@@ -1198,6 +1205,7 @@ class GameServer {
     }
     player.energy -= energyCost;
     player.cooldowns[cooldownKey] = baseCooldown * player.modifiers.cooldownMul;
+    player.lastAttackAt = this.now;
     return true;
   }
 
@@ -3249,6 +3257,10 @@ class GameServer {
         kills: player.kills,
         deaths: player.deaths,
         animState: player.animState,
+        recoveryActive: !(player.cast && player.cast.type === "domain")
+          && !this.domainSystem.hasActiveDomain(player.id)
+          && player.domainExhaustionTimer <= 0
+          && (this.now - (player.lastAttackAt || 0)) > 5000,
         invuln: player.invulnTimer > 0,
         rikaActive: this.rikas.has(player.id),
         rikaX: (() => { const r = this.rikas.get(player.id); return r ? Math.round(r.x * 10) / 10 : undefined; })(),
@@ -3915,6 +3927,14 @@ class GameServer {
             almaAbaladaTimer: Number((player.almaAbaladaTimer || 0).toFixed(1)),
             rikaBuffTime: Number((player.rikaBuffTime || 0).toFixed(1)),
             domainExhaustionTimer: Number((player.domainExhaustionTimer || 0).toFixed(1)),
+            energyRecoveryTime: (() => {
+              if (player.cast && player.cast.type === "domain") return 0;
+              if (this.domainSystem.hasActiveDomain(player.id)) return 0;
+              if (player.domainExhaustionTimer > 0) return 0;
+              const t = Math.max(0, this.now - (player.lastAttackAt || 0));
+              const sec = t / 1000;
+              return sec > 5 ? Number(Math.min(999, sec - 5).toFixed(1)) : 0;
+            })(),
           },
         },
       };
@@ -3979,6 +3999,14 @@ class GameServer {
             almaAbaladaTimer: Number((player.almaAbaladaTimer || 0).toFixed(1)),
             rikaBuffTime: Number((player.rikaBuffTime || 0).toFixed(1)),
             domainExhaustionTimer: Number((player.domainExhaustionTimer || 0).toFixed(1)),
+            energyRecoveryTime: (() => {
+              if (player.cast && player.cast.type === "domain") return 0;
+              if (this.domainSystem.hasActiveDomain(player.id)) return 0;
+              if (player.domainExhaustionTimer > 0) return 0;
+              const t = Math.max(0, this.now - (player.lastAttackAt || 0));
+              const sec = t / 1000;
+              return sec > 5 ? Number(Math.min(999, sec - 5).toFixed(1)) : 0;
+            })(),
           },
         },
       };

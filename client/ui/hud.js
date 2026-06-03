@@ -67,6 +67,7 @@ const BUFF_DEFS = {
   invulnTimer: { label: "INV", name: "Invulnerável", type: "buff" },
   rikaBuffTime: { label: "RIK", name: "Rika Ativa", type: "buff" },
   domainExhaustionTimer: { label: "DOM", name: "Exaustão de Domínio", type: "debuff" },
+  energyRecoveryTime: { label: "REC", name: "Recuperação de Energia", type: "buff" },
 };
 
 function clamp(value, min, max) {
@@ -652,7 +653,8 @@ export class Hud {
         const pct = key === "rikaBuffTime" ? Math.min(val / 3 * 100, 100) :
           key === "almaAbaladaTimer" ? Math.min(val / 3 * 100, 100) :
           key === "stunTimer" ? Math.min(val / 0.5 * 100, 100) :
-          key === "domainExhaustionTimer" ? Math.min(val / 60 * 100, 100) : 50;
+          key === "domainExhaustionTimer" ? Math.min(val / 60 * 100, 100) :
+          key === "energyRecoveryTime" ? 100 : 50;
         return `
           <div class="buff-item" data-key="${key}">
             <div class="buff-icon is-${def.type}">

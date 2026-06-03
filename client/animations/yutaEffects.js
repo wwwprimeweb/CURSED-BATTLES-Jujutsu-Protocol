@@ -72,7 +72,7 @@ export function drawRikaShockwave(ctx, x, y, radius, progress, intensity = 1) {
   ctx.restore();
 }
 
-export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range, coneAngle, katanaSprite) {
+export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range, coneAngle, m1Spritesheet) {
   if (progress <= 0.01 || progress >= 0.98) return;
   const fastPhase = Math.min(1, progress * 8);
   const fadePhase = Math.max(0, 1 - Math.max(0, progress - 0.4) * 1.67);
@@ -80,36 +80,49 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
   if (alpha <= 0.01) return;
 
   const angle = Math.atan2(dirY, dirX);
-  const sweepAngle = 1.0 + comboStep * 0.08;
-  const arcStart = angle - sweepAngle * 0.5;
-  const arcEnd = arcStart + sweepAngle * Math.min(1, progress * 3);
-  const bladeLen = range * 0.95;
 
   ctx.save();
   ctx.translate(x, y);
   ctx.globalCompositeOperation = "lighter";
 
-  // Sprite principal
-  if (katanaSprite && katanaSprite.complete && katanaSprite.naturalWidth > 0) {
-    const spriteDist = bladeLen * 0.84;
-    const rotationOffset = 0;
-    const aspect = katanaSprite.naturalWidth / katanaSprite.naturalHeight;
+  if (m1Spritesheet && m1Spritesheet.complete && m1Spritesheet.naturalWidth > 0) {
+    const TOTAL_FRAMES = 9;
+    const FRAME_COLS = 9;
+    const frameW = m1Spritesheet.naturalWidth / FRAME_COLS;
+    const frameH = m1Spritesheet.naturalHeight;
+
+    // Frame selection: 0→4 on entry (0→0.5), 4→8 on exit (0.5→1)
+    let frameIdx;
+    if (progress < 0.5) {
+      frameIdx = Math.floor((progress / 0.5) * 4 + 0.5);
+      frameIdx = Math.min(4, Math.max(0, frameIdx));
+    } else {
+      frameIdx = 4 + Math.floor(((progress - 0.5) / 0.5) * 4 + 0.5);
+      frameIdx = Math.min(8, Math.max(4, frameIdx));
+    }
+
+    const col = frameIdx % FRAME_COLS;
+    const sx = col * frameW;
+    const sy = 0;
+
     const moveIn = Math.min(1, progress * 5);
     const growScale = Math.min(1, 0.3 + progress * 3.5);
-    const spriteWidth = (110 + comboStep * 15) * 1.3 * growScale;
-    const spriteHeight = spriteWidth / aspect;
+    const spriteWidth = (110 + comboStep * 15) * 3.25 * growScale;
+    const spriteHeight = spriteWidth * (frameH / frameW);
     const spriteAlpha = alpha * (1 - Math.max(0, progress - 0.8) * 5);
-    const sx = Math.cos(angle) * spriteDist * moveIn;
-    const sy = Math.sin(angle) * spriteDist * moveIn;
+    const dist = range * 0.4 * moveIn;
+
+    const px = Math.cos(angle) * dist;
+    const py = Math.sin(angle) * dist;
 
     ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(angle + Math.PI + rotationOffset);
+    ctx.translate(px, py);
+    ctx.rotate(angle);
     if (dirX > 0) ctx.scale(1, -1);
     ctx.globalAlpha = spriteAlpha;
     ctx.shadowColor = "#ff66cc";
     ctx.shadowBlur = 35;
-    ctx.drawImage(katanaSprite, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
+    ctx.drawImage(m1Spritesheet, sx, sy, frameW, frameH, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
     ctx.restore();
   }
 
