@@ -32,7 +32,8 @@ const YUJI = {
   flyingKnee: {
     energy: 30,
     cooldown: 8,
-    damage: 40,
+    damage: 80,
+    stunDuration: 2,
     startup: 0.05,
     distance: 350,
     speed: 2000,

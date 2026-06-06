@@ -28,6 +28,10 @@ export class YujiVisualSystem {
 
     this.impactSheet = new Image();
     this.impactSheet.src = IMPACT_SHEET_PATH;
+    this.red7022Cache = [];
+    this.black7022Cache = [];
+    this.impactSheet.onload = () => this.build7022Cache();
+    if (this.impactSheet.complete) this.build7022Cache();
 
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
@@ -41,6 +45,36 @@ export class YujiVisualSystem {
     this.soulImpactEffects = [];
     this.taidoBeatdownEffects = [];
     this.cutLines = [];
+  }
+
+  build7022Cache() {
+    if (!this.impactSheet.complete || this.impactSheet.naturalWidth <= 0) return;
+    this.red7022Cache = [];
+    this.black7022Cache = [];
+    for (let i = 0; i < 13; i++) {
+      const frameIdx = 8 + i;
+      const sx = frameIdx * IMPACT_FRAME_W;
+
+      const red = document.createElement('canvas');
+      red.width = IMPACT_FRAME_W;
+      red.height = IMPACT_FRAME_H;
+      const rctx = red.getContext('2d');
+      rctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+      rctx.globalCompositeOperation = "source-atop";
+      rctx.fillStyle = "#ff0000";
+      rctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+      this.red7022Cache.push(red);
+
+      const black = document.createElement('canvas');
+      black.width = IMPACT_FRAME_W;
+      black.height = IMPACT_FRAME_H;
+      const bctx = black.getContext('2d');
+      bctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+      bctx.globalCompositeOperation = "source-atop";
+      bctx.fillStyle = "#000000";
+      bctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+      this.black7022Cache.push(black);
+    }
   }
 
   update(dt) {
@@ -87,8 +121,8 @@ export class YujiVisualSystem {
     });
   }
 
-  triggerSoulImpact(x, y) {
-    this.soulImpactEffects.push({ x, y, life: 0.76 });
+  triggerSoulImpact(x, y, dirX, dirY) {
+    this.soulImpactEffects.push({ x, y, dirX: dirX || 0, dirY: dirY || 1, startTime: this.time, life: 0.76 });
   }
 
   triggerTaidoBeatdownHit(x, y, hitNum) {
@@ -217,7 +251,7 @@ export class YujiVisualSystem {
     ctx.fillText(p.name || "Yuji", pos.x, pos.y - (65 * 2.05 + 10) * zoom);
   }
 
-  drawImpactFrame(ctx, x, y, zoom, frameIndex, alpha = 1, sizeMul = 1) {
+  drawImpactFrame(ctx, x, y, zoom, frameIndex, alpha = 1, sizeMul = 1, flipX = false) {
     if (!this.impactSheet.complete || this.impactSheet.naturalWidth <= 0) return;
     const idx = ((frameIndex % IMPACT_FRAMES) + IMPACT_FRAMES) % IMPACT_FRAMES;
     const sx = idx * IMPACT_FRAME_W;
@@ -231,7 +265,15 @@ export class YujiVisualSystem {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.globalCompositeOperation = "lighter";
-    ctx.drawImage(this.impactSheet, sx, sy, sw, sh, x - targetW * 0.5, y - targetH * 0.5, targetW, targetH);
+
+    if (flipX) {
+      ctx.translate(x, y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(this.impactSheet, sx, sy, sw, sh, -targetW * 0.5, -targetH * 0.5, targetW, targetH);
+    } else {
+      ctx.drawImage(this.impactSheet, sx, sy, sw, sh, x - targetW * 0.5, y - targetH * 0.5, targetW, targetH);
+    }
+
     ctx.restore();
   }
 
@@ -253,29 +295,53 @@ export class YujiVisualSystem {
       ctx.stroke();
       ctx.restore();
 
-      if (e.hit) {
-        this.drawImpactFrame(ctx, screenX, screenY, zoom, 9, alpha, 0.85);
-      }
     });
 
     this.soulImpactEffects.forEach((e) => {
-      const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
-      const screenY = (e.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+      const offsetDist = 65;
+      const fistHeight = 45;
+      const effectX = e.x + e.dirX * offsetDist;
+      const effectY = e.y - fistHeight;
+      const screenX = (effectX - camera.x) * zoom + ctx.canvas.width * 0.5;
+      const screenY = (effectY - camera.y) * zoom + ctx.canvas.height * 0.5;
       const alpha = Math.min(1, e.life / 0.76);
+      const elapsed = 0.76 - e.life;
+      const frameIndex = Math.floor(elapsed * 18) % 13;
+
+      const sizeMul = 1.64;
+      const targetW = IMPACT_FRAME_W * zoom * sizeMul;
+      const targetH = IMPACT_FRAME_H * zoom * sizeMul;
+
+      const redFrame = this.red7022Cache[frameIndex];
+      const blackFrame = this.black7022Cache[frameIndex];
+      if (!redFrame || !blackFrame) return;
 
       ctx.save();
       ctx.globalAlpha = alpha;
-      const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, 62 * zoom);
-      gradient.addColorStop(0, "rgba(255,255,255,0.95)");
-      gradient.addColorStop(0.35, "rgba(200,0,0,0.75)");
-      gradient.addColorStop(1, "rgba(100,0,0,0)");
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, 62 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
 
-      this.drawImpactFrame(ctx, screenX, screenY, zoom, 14, alpha * 0.9, 0.82);
+      const flipX = e.dirX < 0;
+      let drawX, drawY;
+      if (flipX) {
+        ctx.translate(screenX, screenY);
+        ctx.scale(-1, 1);
+        drawX = -targetW * 0.5;
+        drawY = -targetH * 0.5;
+      } else {
+        drawX = screenX - targetW * 0.5;
+        drawY = screenY - targetH * 0.5;
+      }
+
+      const outlineOff = 5;
+      ctx.globalCompositeOperation = "source-over";
+      for (let ox = -outlineOff; ox <= outlineOff; ox += outlineOff) {
+        for (let oy = -outlineOff; oy <= outlineOff; oy += outlineOff) {
+          if (ox === 0 && oy === 0) continue;
+          ctx.drawImage(blackFrame, drawX + ox, drawY + oy, targetW, targetH);
+        }
+      }
+      ctx.drawImage(redFrame, drawX, drawY, targetW, targetH);
+
+      ctx.restore();
     });
 
     this.taidoBeatdownEffects.forEach((e) => {

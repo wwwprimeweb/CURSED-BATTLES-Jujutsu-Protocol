@@ -787,10 +787,11 @@ class GameServer {
           source: player,
           amount: damage,
           kind: "flyingKnee",
-          knockback: 200,
+          knockback: 400,
           fromX: player.flyingKnee.startX,
           fromY: player.flyingKnee.startY,
         });
+        hitTarget.stunTimer = Math.max(hitTarget.stunTimer || 0, kit.flyingKnee.stunDuration);
         this.emitEventNear(player.x, player.y, {
           type: "flyingKnee",
           x: player.x,

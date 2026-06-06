@@ -295,11 +295,11 @@ function handleEvents(events) {
     } else if (ev.type === "flyingKnee") {
       renderer.yujiVisual.triggerFlyingKnee(ev.x, ev.y, 0, 0, ev.hit);
       if (ev.hit) {
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffaa44", count: 20, speed: 250, life: 0.3, size: 3 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 150, life: 0.2, size: 2 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66ccff", count: 20, speed: 250, life: 0.3, size: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#b6e2ff", count: 10, speed: 150, life: 0.2, size: 2 });
       }
     } else if (ev.type === "soulImpact") {
-      renderer.yujiVisual.triggerSoulImpact(ev.x, ev.y);
+      renderer.yujiVisual.triggerSoulImpact(ev.x, ev.y, ev.dirX, ev.dirY);
       if (!ev.miss) {
         renderer.triggerBlackFlash(ev.x, ev.y, ev.dirX || 0, ev.dirY || 1);
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff0000", count: 30, speed: 300, life: 0.5, size: 4 });
