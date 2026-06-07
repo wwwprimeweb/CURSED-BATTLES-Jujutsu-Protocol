@@ -577,10 +577,21 @@ class GameServer {
       const recoveryActive = canRecover && (this.now - (player.lastAttackAt || 0)) > 5000;
       const recoveryMul = recoveryActive ? 2 : 1;
 
+      player.modifiers.damageReductionMul = recoveryActive ? 0.85 : 1.0;
+
       player.energy = Math.min(
         player.maxEnergy,
         player.energy + player.energyRegen * player.modifiers.energyRegenMul * yujiOwnDomainRegenMul * recoveryMul * dt
       );
+
+      if (player.alive) {
+        const hpRegenDelay = 8000;
+        const timeSinceDamage = this.now - (player.lastDamageTaken || -Infinity);
+        if (timeSinceDamage > hpRegenDelay) {
+          const regenAmount = player.maxHp * 0.01 * dt;
+          player.hp = Math.min(player.maxHp, player.hp + regenAmount);
+        }
+      }
 
       Object.keys(player.cooldowns).forEach((key) => {
         player.cooldowns[key] = Math.max(0, player.cooldowns[key] - dt);
@@ -591,6 +602,20 @@ class GameServer {
       this.resolveCasting(player, dt);
       const skillLockedAtTickStart = this.domainSystem.isSkillLockedForPlayer(player);
       this.resolveInput(player, dt, skillLockedAtTickStart);
+
+      if (this.domainSystem.hasActiveDomain(player.id)) {
+        if (player.input.f) {
+          player.domainCancelTimer = Math.min(3, player.domainCancelTimer + dt);
+          if (player.domainCancelTimer >= 3) {
+            this.domainSystem.collapseDomain(player.id, null, false);
+            player.domainCancelTimer = 0;
+          }
+        } else {
+          player.domainCancelTimer = 0;
+        }
+      } else {
+        player.domainCancelTimer = 0;
+      }
 
       if (player.comboResetTimer <= 0) {
         player.comboStep = 0;
@@ -882,6 +907,7 @@ class GameServer {
 
     if (!player.cast && !skillLockedAtTickStart && player.domainExhaustionTimer <= 0) {
       const chara = player.character || "gojo";
+      const domainActive = this.domainSystem.hasActiveDomain(player.id);
       if (chara === "yuta" || chara === "megumi") {
         if (qPressed) {
           this.tryCastRika(player);
@@ -891,12 +917,8 @@ class GameServer {
           this.tryCastPureLove(player);
         } else if (spacePressed) {
           this.tryCastDashSlash(player);
-        } else if (fPressed) {
-          if (chara === "yuta" && this.domainSystem.hasActiveDomain(player.id)) {
-            this.tryCastDomainCopy(player);
-          } else {
-            this.tryCastDomain(player);
-          }
+        } else if (fPressed && !domainActive) {
+          this.tryCastDomain(player);
         }
       } else if (chara === "yuji") {
         if (qPressed) {
@@ -907,7 +929,7 @@ class GameServer {
           this.tryCastTaidoBeatdown(player);
         } else if (spacePressed) {
           this.tryCastFlyingKnee(player);
-        } else if (fPressed) {
+        } else if (fPressed && !domainActive) {
           this.tryCastDomain(player);
         }
       } else {
@@ -919,7 +941,7 @@ class GameServer {
           this.tryCastPurple(player);
         } else if (spacePressed) {
           this.tryCastTeleport(player);
-        } else if (fPressed) {
+        } else if (fPressed && !domainActive) {
           this.tryCastDomain(player);
         }
       }
@@ -3945,6 +3967,8 @@ class GameServer {
               }))
             : null,
           skillLock: this.domainSystem.isSkillLockedForPlayer(player),
+          hasActiveDomain: this.domainSystem.hasActiveDomain(player.id),
+          domainCancelTime: Number(player.domainCancelTimer.toFixed(2)),
           status: {
             stunTimer: Number((player.stunTimer || 0).toFixed(1)),
             invulnTimer: Number((player.invulnTimer || 0).toFixed(1)),
@@ -3958,6 +3982,11 @@ class GameServer {
               const t = Math.max(0, this.now - (player.lastAttackAt || 0));
               const sec = t / 1000;
               return sec > 5 ? Number(Math.min(999, sec - 5).toFixed(1)) : 0;
+            })(),
+            healthRegenTime: (() => {
+              const t = Math.max(0, this.now - (player.lastDamageTaken || -Infinity));
+              const sec = t / 1000;
+              return sec > 8 ? Number(Math.min(999, sec - 8).toFixed(1)) : 0;
             })(),
           },
         },
@@ -4017,6 +4046,8 @@ class GameServer {
               }))
             : null,
           skillLock: this.domainSystem.isSkillLockedForPlayer(player),
+          hasActiveDomain: this.domainSystem.hasActiveDomain(player.id),
+          domainCancelTime: Number(player.domainCancelTimer.toFixed(2)),
           status: {
             stunTimer: Number((player.stunTimer || 0).toFixed(1)),
             invulnTimer: Number((player.invulnTimer || 0).toFixed(1)),
@@ -4030,6 +4061,11 @@ class GameServer {
               const t = Math.max(0, this.now - (player.lastAttackAt || 0));
               const sec = t / 1000;
               return sec > 5 ? Number(Math.min(999, sec - 5).toFixed(1)) : 0;
+            })(),
+            healthRegenTime: (() => {
+              const t = Math.max(0, this.now - (player.lastDamageTaken || -Infinity));
+              const sec = t / 1000;
+              return sec > 8 ? Number(Math.min(999, sec - 8).toFixed(1)) : 0;
             })(),
           },
         },

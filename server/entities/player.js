@@ -70,6 +70,7 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
     flyingKnee: null,
     skillLock: false,
     domainExhaustionTimer: 0,
+    domainCancelTimer: 0,
     cooldowns: {
       q: 0,
       e: 0,
@@ -105,7 +106,8 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
       dodge: false,
     },
     lastInputAt: now,
-    lastAttackAt: -Infinity,
+    lastAttackAt: now,
+    lastDamageTaken: now,
     inputBurstCount: 0,
     inputBurstWindowStart: now,
     lastProcessedInputSeq: 0,
@@ -154,6 +156,7 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
       pureLoveDamageMul: 1,
       pureLoveRadiusMul: 1,
       domainKatanaDamageMul: 1,
+      damageReductionMul: 1,
     },
   };
 }

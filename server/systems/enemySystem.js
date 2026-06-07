@@ -126,6 +126,18 @@ class EnemySystem {
       enemy.freezeTimer = Math.max(0, enemy.freezeTimer - dt);
       enemy.freezeFxTimer = Math.max(0, enemy.freezeFxTimer - dt);
 
+      const enemyRegenConfig = {
+        1:       { delay: 12000, rate: 0.03 },
+        special: { delay: 8000,  rate: 0.025 },
+      };
+      const regenCfg = enemyRegenConfig[enemy.grade];
+      if (regenCfg) {
+        const timeSinceDamageMs = (this.server.now - (enemy.lastDamageTaken || -Infinity)) * 1000;
+        if (timeSinceDamageMs > regenCfg.delay) {
+          enemy.hp = Math.min(enemy.maxHp, enemy.hp + enemy.maxHp * regenCfg.rate * dt);
+        }
+      }
+
       if (enemy.freezeTimer > 0) {
         enemy.vx = 0;
         enemy.vy = 0;

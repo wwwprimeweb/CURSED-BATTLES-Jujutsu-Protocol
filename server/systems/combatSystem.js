@@ -35,10 +35,18 @@ class CombatSystem {
       finalDamage *= source.modifiers.damageMul;
     }
     if (target.kind === "player") {
+      target.lastDamageTaken = this.server.now;
       finalDamage = Math.max(1, finalDamage - target.armor);
+      finalDamage *= target.modifiers.damageReductionMul;
+      if (target.cast && finalDamage >= 30) {
+        target.cast = null;
+      }
     }
-    if (target.kind === "enemy" && (target.protectionReduction || 0) > 0) {
-      finalDamage *= 1 - target.protectionReduction;
+    if (target.kind === "enemy") {
+      target.lastDamageTaken = this.server.now;
+      if ((target.protectionReduction || 0) > 0) {
+        finalDamage *= 1 - target.protectionReduction;
+      }
     }
 
     target.hp -= finalDamage;

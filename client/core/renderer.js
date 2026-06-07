@@ -1527,7 +1527,14 @@ export class Renderer {
           ctx.scale(-1, 1);
           ctx.translate(-p.x, -drawY);
         }
+        if (frozen) {
+          ctx.shadowColor = "white";
+          ctx.shadowBlur = 4 * zoom;
+        }
         ctx.drawImage(sprite, p.x - w / 2, drawY - h / 2, w, h);
+        if (frozen) {
+          ctx.shadowBlur = 0;
+        }
         ctx.restore();
 
         const hpBarRadius = baseRadius * mult * 0.5;
@@ -1590,16 +1597,6 @@ export class Renderer {
             ctx.fill();
           }
         }
-
-        if (frozen) {
-          ctx.strokeStyle = "rgba(255,255,255,0.85)";
-          ctx.lineWidth = 3 * zoom;
-          ctx.setLineDash([5 * zoom, 5 * zoom]);
-          ctx.beginPath();
-          ctx.arc(p.x, drawY, baseRadius * mult * 0.8 * zoom, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
       } else {
         ctx.save();
         ctx.fillStyle = frozen
@@ -1631,11 +1628,9 @@ export class Renderer {
           ctx.stroke();
           ctx.strokeStyle = "rgba(255,255,255,0.9)";
           ctx.lineWidth = 3 * zoom;
-          ctx.setLineDash([5 * zoom, 5 * zoom]);
           ctx.beginPath();
           ctx.arc(p.x, drawY, baseRadius * zoom + 4 * zoom, 0, Math.PI * 2);
           ctx.stroke();
-          ctx.setLineDash([]);
         }
         ctx.restore();
 

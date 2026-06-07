@@ -170,7 +170,7 @@ function createBarsHtml(stats, flags) {
 
       <!-- Bars Block -->
       <div class="bars-block-wrapper">
-        <div class="bar-row-block health-block">
+        <div class="bar-row-block health-block ${flags.healthRegenActive ? "is-regen" : ""}">
           <div class="bar-row-header">
             <span class="bar-row-label">${charaLabel}</span>
             <span class="bar-row-value">${Math.ceil(stats.hp)} <span class="bar-max-val">/ ${stats.maxHp}</span></span>
@@ -182,12 +182,12 @@ function createBarsHtml(stats, flags) {
           </div>
         </div>
 
-        <div class="bar-row-block energy-block ${energyDry ? "is-dry" : ""}">
+        <div class="bar-row-block energy-block ${energyDry ? "is-dry" : ""}" style="--energy-glow:${ENERGY_BAR_COLORS[chara] || "#50ebff"}">
           <div class="bar-row-header compact">
             <span class="bar-row-label">Energia Amaldiçoada</span>
             <span class="bar-row-value">${Math.ceil(stats.energy)} <span class="bar-max-val">/ ${stats.maxEnergy}</span></span>
           </div>
-          <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%;background:linear-gradient(90deg,#1f62e6,${ENERGY_BAR_COLORS[chara] || "#50ebff"});box-shadow:0 0 10px ${ENERGY_BAR_COLORS[chara] || "#50ebff"}66"></div></div>
+          <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%"></div></div>
         </div>
       </div>
 
@@ -329,6 +329,22 @@ export class Hud {
     this._recoveryWrap.appendChild(this._recoveryTooltip);
     const hudMain = document.getElementById("hud-main");
     if (hudMain) hudMain.appendChild(this._recoveryWrap);
+
+    this._domainCancelPanel = document.createElement("div");
+    this._domainCancelPanel.className = "domain-cancel-panel domain-cancel-hidden";
+    this._domainCancelPanel.innerHTML = `
+      <div class="domain-cancel-header">
+        <span class="domain-cancel-icon">\u2715</span>
+        <span class="domain-cancel-title">Cancelar Dom\u00ednio</span>
+      </div>
+      <div class="domain-cancel-track">
+        <div class="domain-cancel-fill" style="width:0%"></div>
+      </div>
+      <div class="domain-cancel-footer">
+        <span class="domain-cancel-hint">Segure F</span>
+        <span class="domain-cancel-time">3.0</span>
+      </div>
+    `;
   }
 
   _updateInner(el, html) {
@@ -348,7 +364,8 @@ export class Hud {
 
     const chara = you.character || "gojo";
 
-    const barsHtml = createBarsHtml(you, { tookDamage });
+    const healthRegenActive = (you.status && you.status.healthRegenTime > 0) && you.alive;
+    const barsHtml = createBarsHtml(you, { tookDamage, healthRegenActive });
     if (barsHtml !== this._barsHtml) {
       this._barsHtml = barsHtml;
       this.barsEl.innerHTML = barsHtml;
@@ -400,6 +417,44 @@ export class Hud {
       m1Slot.classList.toggle('is-active', energyDrop);
     }
 
+    // Domain cancel panel
+    const domainNow = (you.hasActiveDomain || false) && you.alive;
+    const domainPrev = this._domainWasActive || false;
+    this._domainWasActive = domainNow;
+    const panel = this._domainCancelPanel;
+    const fWrapper = this.mainSkillsEl
+      ? this.mainSkillsEl.querySelector('.slot-key-f')?.closest('.skill-slot-wrapper')
+      : null;
+    if (fWrapper && panel && panel.parentNode !== fWrapper) {
+      fWrapper.appendChild(panel);
+    }
+    if (panel) {
+      if (domainNow) {
+        const cancelRatio = Math.min(1, (you.domainCancelTime || 0) / 3);
+        const remaining = Math.max(0, 3 - (you.domainCancelTime || 0));
+        panel.querySelector('.domain-cancel-fill').style.width = `${cancelRatio * 100}%`;
+        panel.querySelector('.domain-cancel-time').textContent = remaining.toFixed(1);
+        panel.classList.remove('domain-cancel-hidden');
+        if (!domainPrev) {
+          panel.classList.add('domain-cancel-visible');
+          panel.classList.remove('domain-cancel-fade');
+        }
+        if (cancelRatio >= 1) {
+          panel.classList.add('domain-cancel-complete');
+        } else {
+          panel.classList.remove('domain-cancel-complete');
+        }
+      } else if (domainPrev) {
+        panel.classList.add('domain-cancel-fade');
+        panel.classList.remove('domain-cancel-visible');
+        setTimeout(() => {
+          panel.classList.add('domain-cancel-hidden');
+          panel.querySelector('.domain-cancel-fill').style.width = '0%';
+          panel.querySelector('.domain-cancel-time').textContent = '3.0';
+        }, 200);
+      }
+    }
+
     const timerHtml = `
       <span class="timer-time">${formatTime(elapsedSec)}</span>
       <span class="timer-phase">${escapeHtml(phase)}</span>
@@ -435,7 +490,7 @@ export class Hud {
     const canvas = this._recoveryCanvas;
     if (recoveryActive) {
       wrap.style.display = "block";
-      this._recoveryTooltip.innerHTML = `<strong>Recuperação de Energia</strong><span>${you.status.energyRecoveryTime.toFixed(1)}s · Regeneração 2x</span>`;
+      this._recoveryTooltip.innerHTML = `<strong>Recuperação de Energia</strong><span>${you.status.energyRecoveryTime.toFixed(1)}s · Regeneração 2x · -15% Dano</span>`;
       if (now - this._flameLastTick > 60) {
         this._flameFrameIdx = (this._flameFrameIdx + 1) % this._flameFrames;
         this._flameLastTick = now;

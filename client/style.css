@@ -714,19 +714,53 @@ input {
   height: 8px;
 }
 .fill.energy {
-  background: linear-gradient(90deg, #1f62e6, var(--energy));
+  background: linear-gradient(90deg, #1f62e6, var(--energy-glow, #42c9ff));
   box-shadow: 0 0 10px rgba(66, 201, 255, 0.25);
 }
 
-@keyframes energyRecoveryPulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.6); }
+@keyframes hpRegenFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.health-block.is-regen .fill.hp {
+  background: linear-gradient(90deg, #c92c4b, #e86676, #c92c4b);
+  background-size: 200% 100%;
+  animation: hpRegenFlow 2s ease-in-out infinite;
+}
+
+@keyframes energyRecoveryFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .energy-block.is-recovering .fill.energy {
-  animation: energyRecoveryPulse 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, #1f62e6, var(--energy-glow, #42c9ff), #1f62e6);
+  background-size: 200% 100%;
+  animation: energyRecoveryFlow 1.8s ease-in-out infinite;
+  box-shadow: 0 0 10px var(--energy-glow, #42c9ff);
 }
 .energy-block.is-recovering .energy-track {
-  box-shadow: 0 0 16px var(--energy);
+  position: relative;
+}
+.energy-block.is-recovering .energy-track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    transparent 25%,
+    rgba(255,255,255,0.35) 45%,
+    rgba(255,255,255,0.6) 50%,
+    rgba(255,255,255,0.35) 55%,
+    transparent 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: energyRecoveryFlow 1.2s ease-in-out infinite;
+  z-index: 5;
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 /* XP Strip underneath bars */
@@ -1010,6 +1044,101 @@ input {
 }
 .skill-slot.slot-key-f.is-ready::after {
   border-color: rgba(255, 208, 86, 0.3);
+}
+
+/* Domain cancel panel */
+@keyframes domainPanelPulse {
+  0%, 100% { border-color: rgba(168, 85, 247, 0.4); box-shadow: 0 0 12px rgba(168, 85, 247, 0.1), 0 6px 18px rgba(0,0,0,0.45); }
+  50%      { border-color: rgba(168, 85, 247, 0.7); box-shadow: 0 0 20px rgba(168, 85, 247, 0.2), 0 6px 18px rgba(0,0,0,0.45); }
+}
+.domain-cancel-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translateX(-50%);
+  width: 150px;
+  background: rgba(4, 5, 10, 0.92);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 8px;
+  padding: 6px 10px 8px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 60;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  animation: domainPanelPulse 1.4s ease-in-out infinite;
+}
+.domain-cancel-hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+  pointer-events: none;
+}
+.domain-cancel-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.domain-cancel-fade {
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.domain-cancel-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.domain-cancel-icon {
+  font-size: 0.85rem;
+  color: #c084fc;
+  text-shadow: 0 0 4px rgba(168, 85, 247, 0.3);
+}
+.domain-cancel-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #e2d9f0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.domain-cancel-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+.domain-cancel-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.6), #c084fc);
+  border-radius: 2px;
+  transition: width 50ms linear;
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.25);
+}
+.domain-cancel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.domain-cancel-hint {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.domain-cancel-time {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #c084fc;
+  text-shadow: 0 0 4px rgba(168, 85, 247, 0.2);
+  font-variant-numeric: tabular-nums;
+}
+.domain-cancel-complete .domain-cancel-fill {
+  background: linear-gradient(90deg, #a855f7, #d8b4fe);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+}
+.domain-cancel-complete .domain-cancel-time {
+  color: #d8b4fe;
 }
 
 /* =========================================================================

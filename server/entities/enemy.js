@@ -52,6 +52,7 @@ function createEnemy(id, type, x, y, scale = 1) {
     targetId: null,
     alive: true,
     hitFlash: 0,
+    lastDamageTaken: -Infinity,
     state: "idle",
     xpReward: s.xp,
     telegraph: null,

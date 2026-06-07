@@ -92,7 +92,6 @@ export class InputManager {
     this.keys.e = false;
     this.keys.r = false;
     this.keys.space = false;
-    this.keys.f = false;
     this.keys.dodge = false;
   }
 

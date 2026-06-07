@@ -120,13 +120,7 @@ class DomainSystem {
         return;
       }
       domain.conflict = false;
-      domain.energy -= domain.drain * dt;
       owner.energy -= domain.drain * 4 * dt;
-
-      const durationMul = owner.modifiers.domainDurationMul;
-      if (durationMul > 1) {
-        domain.energy += (durationMul - 1) * 0.75 * dt;
-      }
 
       domain.hitTimer += dt;
       domain.shouldHit = domain.character === "yuji" && domain.hitTimer >= 1;
