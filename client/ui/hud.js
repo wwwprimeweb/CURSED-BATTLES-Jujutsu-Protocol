@@ -129,6 +129,15 @@ function upgradeIcon(id) {
   return "+";
 }
 
+const ENERGY_BAR_COLORS = {
+  gojo:   "#50ebff",
+  yuta:   "#ff148c",
+  sukuna: "#e63232",
+  yuji:   "#50ebff",
+  megumi: "#50ebff",
+  hakari: "#32dc50",
+};
+
 function createBarsHtml(stats, flags) {
   const hpPercent = pct(stats.hp, stats.maxHp);
   const energyPercent = pct(stats.energy, stats.maxEnergy);
@@ -178,9 +187,10 @@ function createBarsHtml(stats, flags) {
             <span class="bar-row-label">Energia Amaldiçoada</span>
             <span class="bar-row-value">${Math.ceil(stats.energy)} <span class="bar-max-val">/ ${stats.maxEnergy}</span></span>
           </div>
-          <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%"></div></div>
+          <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%;background:linear-gradient(90deg,#1f62e6,${ENERGY_BAR_COLORS[chara] || "#50ebff"});box-shadow:0 0 10px ${ENERGY_BAR_COLORS[chara] || "#50ebff"}66"></div></div>
         </div>
       </div>
+
     </div>
 
     <!-- XP strip underneath -->
@@ -296,6 +306,29 @@ export class Hud {
     this._prevChar = "";
     this._prevSkillLock = false;
     this._prevBoss = false;
+
+    this.recoveryFlameImg = new Image();
+    this.recoveryFlameImg.src = "/assets/energyrecover/recovery_flame.png";
+    this._flameFrames = 12;
+    this._flameCols = 4;
+    this._flameFrameW = 500;
+    this._flameFrameH = 567;
+    this._flameFramesCache = {};
+    this._flameLastTick = 0;
+    this._flameFrameIdx = 0;
+
+    this._recoveryWrap = document.createElement("div");
+    this._recoveryWrap.className = "recovery-flame-wrap";
+    this._recoveryCanvas = document.createElement("canvas");
+    this._recoveryCanvas.className = "recovery-flame-canvas";
+    this._recoveryCanvas.width = 160;
+    this._recoveryCanvas.height = 192;
+    this._recoveryWrap.appendChild(this._recoveryCanvas);
+    this._recoveryTooltip = document.createElement("div");
+    this._recoveryTooltip.className = "recovery-hover-tooltip";
+    this._recoveryWrap.appendChild(this._recoveryTooltip);
+    const hudMain = document.getElementById("hud-main");
+    if (hudMain) hudMain.appendChild(this._recoveryWrap);
   }
 
   _updateInner(el, html) {
@@ -396,6 +429,26 @@ export class Hud {
     this.hudLayer.classList.toggle("hud-boss", Boolean(boss));
 
     this.updateBuffs(you.status || {});
+
+    const recoveryActive = (you.status && you.status.energyRecoveryTime > 0) && you.alive;
+    const wrap = this._recoveryWrap;
+    const canvas = this._recoveryCanvas;
+    if (recoveryActive) {
+      wrap.style.display = "block";
+      this._recoveryTooltip.innerHTML = `<strong>Recuperação de Energia</strong><span>${you.status.energyRecoveryTime.toFixed(1)}s · Regeneração 2x</span>`;
+      if (now - this._flameLastTick > 60) {
+        this._flameFrameIdx = (this._flameFrameIdx + 1) % this._flameFrames;
+        this._flameLastTick = now;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this._drawFlameFrame(ctx, chara, this._flameFrameIdx, canvas.width, canvas.height);
+    } else {
+      wrap.style.display = "none";
+    }
+
+    const energyBlock = this.barsEl.querySelector('.energy-block');
+    if (energyBlock) energyBlock.classList.toggle('is-recovering', recoveryActive);
 
     if (you.alive && hpPercent <= 18 && now - this.lastCriticalNoticeAt > 5500) {
       this.pushNotice("Vida critica", "danger", "recuar ou finalizar rapido");
@@ -642,6 +695,55 @@ export class Hud {
 
   hideSpectate() {
     if (this.spectateEl) this.spectateEl.classList.add("hidden");
+  }
+
+  _drawFlameFrame(ctx, character, frameIdx, w, h) {
+    if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
+    if (!this._flameFramesCache[character]) this._flameFramesCache[character] = {};
+    const cached = this._flameFramesCache[character][frameIdx];
+    if (cached) {
+      ctx.drawImage(cached, 0, 0, cached.width, cached.height, 0, 0, w, h);
+      return;
+    }
+
+    const col = frameIdx % this._flameCols;
+    const row = Math.floor(frameIdx / this._flameCols);
+    const offscreen = document.createElement("canvas");
+    offscreen.width = this._flameFrameW;
+    offscreen.height = this._flameFrameH;
+    const offCtx = offscreen.getContext("2d");
+
+    offCtx.drawImage(
+      this.recoveryFlameImg,
+      col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
+      0, 0, this._flameFrameW, this._flameFrameH
+    );
+
+    const imageData = offCtx.getImageData(0, 0, this._flameFrameW, this._flameFrameH);
+    const pixels = imageData.data;
+    const colors = {
+      yuta:   { r: 255, g: 20,  b: 140 },
+      sukuna: { r: 230, g: 50,  b: 50  },
+      hakari: { r: 50,  g: 220, b: 80  },
+    };
+    const c = colors[character] || { r: 80, g: 235, b: 255 };
+    const alphaMul = 0.7;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
+      if (a < 10) continue;
+      const brightness = Math.max(r, g, b);
+      if (brightness < 50) {
+        pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0;
+        pixels[i + 3] = Math.round(a * alphaMul);
+      } else {
+        pixels[i] = c.r; pixels[i + 1] = c.g; pixels[i + 2] = c.b;
+        pixels[i + 3] = Math.round(a * alphaMul);
+      }
+    }
+    offCtx.putImageData(imageData, 0, 0);
+    this._flameFramesCache[character][frameIdx] = offscreen;
+    ctx.drawImage(offscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
   }
 
   updateBuffs(status) {

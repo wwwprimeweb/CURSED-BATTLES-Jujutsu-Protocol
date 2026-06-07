@@ -73,6 +73,30 @@ export class Renderer {
     this._erFrameH = 292;
     this._erFramesCache = {};
 
+    this.crawlerExplosions = [];
+    this.acidPuddles = [];
+
+    this.monsterSprites = {};
+    this.enemyFacing = new Map();
+    this._loadMonsterSprite("crawler_nest", "/assets/spritesmonsters/Crawler Nest.png");
+    this._loadMonsterSprite("crawler_baby", "/assets/spritesmonsters/Crawler Nest Baby.png");
+    this.monsterSprites["fleshmaw"] = new Image();
+    this.monsterSprites["fleshmaw"].src = "/assets/spritesmonsters/Fleshmaw.png";
+    this.fleshmawAttackFrames = [];
+    for (let i = 0; i < 5; i++) {
+      const img = new Image();
+      img.onerror = () => { console.error(`[MONSTER] Failed to load attack frame: fleshmaw_atk_${i}.png`); };
+      img.src = `/assets/spritesmonsters/fleshmaw_atk_${i}.png`;
+      this.fleshmawAttackFrames.push(img);
+    }
+    this.crawlerAttackFrames = [];
+    for (let i = 0; i < 18; i++) {
+      const img = new Image();
+      img.onerror = () => { console.error(`[MONSTER] Failed to load attack frame: crawler_atk_${i}.png`); };
+      img.src = `/assets/spritesmonsters/crawler_atk_${i}.png`;
+      this.crawlerAttackFrames.push(img);
+    }
+
     this._renderDt = 1 / 60;
     this._lastRenderTime = 0;
 
@@ -89,6 +113,14 @@ export class Renderer {
     this.canvas.style.width = `${w}px`;
     this.canvas.style.height = `${h}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  _loadMonsterSprite(type, path) {
+    const img = new Image();
+    img.onload = () => { this.monsterSprites[type] = img; };
+    img.onerror = () => { console.error(`[MONSTER] Failed to load: ${path}`); };
+    img.src = path;
+    if (img.complete) this.monsterSprites[type] = img;
   }
 
   setMap(map) {
@@ -165,6 +197,14 @@ export class Renderer {
 
   addMarker({ x, y, radius = 60, color = "rgba(255,136,170,0.4)", ttl = 0.8 }) {
     this.markers.push({ x, y, radius, color, ttl, life: ttl });
+  }
+
+  addCrawlerExplosion({ x, y, radius = 160, ttl = 0.6 }) {
+    this.crawlerExplosions.push({ x, y, radius, ttl, life: ttl, seed: Math.random() * 100 });
+  }
+
+  addAcidPuddle({ x, y, radius = 60, duration = 4, dps = 8 }) {
+    this.acidPuddles.push({ x, y, radius, ttl: duration, life: duration, dps });
   }
 
   addRedExplosion({ x, y, radius = 110, ttl = 0.5 }) {
@@ -262,23 +302,11 @@ export class Renderer {
 
       ctx.save();
 
-      ctx.shadowColor = "#00d4b0";
-      ctx.shadowBlur = 30 + easeScale * 60;
       ctx.globalAlpha = 0.4 + easeScale * 0.6;
-
-      const auraGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, imgSize * 2);
-      auraGrad.addColorStop(0, `rgba(0, 230, 190,${0.15 * easeScale})`);
-      auraGrad.addColorStop(0.5, `rgba(0, 170, 150,${0.06 * easeScale})`);
-      auraGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = auraGrad;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, imgSize * 2, 0, Math.PI * 2);
-      ctx.fill();
 
       if (this.hollowPurpleImg.complete && this.hollowPurpleImg.naturalWidth > 0) {
         ctx.drawImage(this.hollowPurpleImg, p.x - imgSize / 2, p.y - imgSize / 2, imgSize * pulse, imgSize * pulse);
       } else {
-        ctx.shadowBlur = 20 + easeScale * 40;
         const fallbackGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, imgSize * 0.5);
         fallbackGrad.addColorStop(0, `rgba(255,255,255,${0.6 * easeScale})`);
         fallbackGrad.addColorStop(0.3, `rgba(200,130,255,${0.5 * easeScale})`);
@@ -440,8 +468,8 @@ export class Renderer {
       const e = this.blueExplosions[i];
       e.life -= dt;
       if (e.life <= 0) {
-        this.blueExplosions.splice(i, 1);
-      }
+      this.blueExplosions.splice(i, 1);
+    }
     }
     for (let i = this.blackFlashes.length - 1; i >= 0; i -= 1) {
       const bf = this.blackFlashes[i];
@@ -449,6 +477,115 @@ export class Renderer {
       if (elapsed >= this.blackFlashDuration) {
         this.blackFlashes.splice(i, 1);
       }
+    }
+    for (let i = this.crawlerExplosions.length - 1; i >= 0; i -= 1) {
+      const e = this.crawlerExplosions[i];
+      e.life -= dt;
+      if (e.life <= 0) this.crawlerExplosions.splice(i, 1);
+    }
+    for (let i = this.acidPuddles.length - 1; i >= 0; i -= 1) {
+      const p = this.acidPuddles[i];
+      p.life -= dt;
+      if (p.life <= 0) this.acidPuddles.splice(i, 1);
+    }
+  }
+
+  drawCrawlerExplosions() {
+    const ctx = this.ctx;
+    const now = Date.now();
+    for (let i = 0; i < this.crawlerExplosions.length; i += 1) {
+      const e = this.crawlerExplosions[i];
+      const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
+      const t = e.life / e.ttl;
+      const s = e.seed;
+      const z = this.camera.zoom || 1;
+
+      ctx.save();
+
+      const coreSize = e.radius * 0.2 * (1 - t * 0.5) * z;
+      const coreGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreSize);
+      coreGrad.addColorStop(0, `rgba(200,255,200,${t * 0.9})`);
+      coreGrad.addColorStop(0.3, `rgba(80,255,100,${t * 0.6})`);
+      coreGrad.addColorStop(0.7, `rgba(30,180,50,${t * 0.3})`);
+      coreGrad.addColorStop(1, "rgba(0,80,0,0)");
+      ctx.shadowColor = "#40ff60";
+      ctx.shadowBlur = 30 * t * z;
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, coreSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      const ringR = e.radius * (0.3 + (1 - t) * 0.7) * z;
+      ctx.strokeStyle = `rgba(80,255,120,${t * 0.4})`;
+      ctx.lineWidth = 3 * t * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(200,255,200,${t * 0.2})`;
+      ctx.lineWidth = 1.5 * t * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ringR * 1.15, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const dropCount = 6 + Math.floor(t * 4);
+      for (let d = 0; d < dropCount; d++) {
+        const angle = (d / dropCount) * Math.PI * 2 + Math.sin(s + d * 1.7) * 0.3 + (1 - t) * 0.5;
+        const dist = e.radius * (0.2 + (1 - t) * 0.8) * (0.6 + Math.sin(s + d * 2.3) * 0.4) * z;
+        const dx = p.x + Math.cos(angle) * dist;
+        const dy = p.y + Math.sin(angle) * dist;
+        const dropSize = 3 * (0.3 + t * 0.7) * z;
+        ctx.fillStyle = `rgba(100,255,120,${t * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(dx, dy, dropSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  drawAcidPuddles() {
+    const ctx = this.ctx;
+    const now = Date.now();
+    for (let i = 0; i < this.acidPuddles.length; i += 1) {
+      const puddle = this.acidPuddles[i];
+      const p = worldToScreen(this.camera, this.canvas, puddle.x, puddle.y);
+      const t = puddle.life / puddle.ttl;
+      const z = this.camera.zoom || 1;
+
+      ctx.save();
+
+      const gradR = puddle.radius * z;
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gradR);
+      grad.addColorStop(0, `rgba(80,255,100,${0.3 * t})`);
+      grad.addColorStop(0.5, `rgba(40,200,60,${0.2 * t})`);
+      grad.addColorStop(1, `rgba(0,80,0,0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, gradR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(100,255,120,${0.3 * t})`;
+      ctx.lineWidth = 2 * z;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, puddle.radius * (0.95 + Math.sin(now * 0.003 + i) * 0.05) * z, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const bubbleCount = 3 + Math.floor(Math.sin(now * 0.002 + i * 2.3) * 2 + 3);
+      for (let b = 0; b < bubbleCount; b++) {
+        const bAngle = (b / bubbleCount) * Math.PI * 2 + now * 0.001;
+        const bDist = puddle.radius * (0.3 + Math.sin(now * 0.004 + b * 1.7 + i) * 0.3) * z;
+        const bx = p.x + Math.cos(bAngle) * bDist;
+        const by = p.y + Math.sin(bAngle) * bDist;
+        const bSize = (2 + Math.sin(now * 0.005 + b * 2.1) * 1) * z;
+        ctx.fillStyle = `rgba(150,255,170,${0.4 * t})`;
+        ctx.beginPath();
+        ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
     }
   }
 
@@ -458,6 +595,8 @@ export class Renderer {
     this.blueExplosions = [];
     this.purpleExplosions = [];
     this.blackFlashes = [];
+    this.crawlerExplosions = [];
+    this.acidPuddles = [];
     this.gojoVisual.m1Slashes = [];
     this.gojoVisual.effects.projectiles = [];
     this.gojoVisual.effects.beams = [];
@@ -1351,49 +1490,161 @@ export class Renderer {
   drawEnemies(enemies) {
     const ctx = this.ctx;
     const zoom = this.camera.zoom || 1;
+    const now = Date.now();
+
+    const spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25 };
+    const bobConfig = {
+      crawler_nest: { freq: 3, amp: 3, minSpeed: 2 },
+      fleshmaw: { freq: 1.5, amp: 2, minSpeed: 3 },
+    };
+
     enemies.forEach((entry) => {
       const e = entry.raw;
       const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
       const baseRadius = e.type === "boss" ? 34 : e.type === "elite" ? 24 : 18;
-      const radius = baseRadius * zoom;
       const frozen = Boolean(e.frozen);
 
-      ctx.save();
-      ctx.fillStyle = frozen
-        ? "#d3e6ff"
-        : e.type === "boss"
-          ? "#9b2e4f"
-          : e.type === "elite"
-            ? "#5b335f"
-            : e.type === "caster"
-              ? "#573d66"
-              : "#3a4159";
-      ctx.strokeStyle = frozen ? "rgba(246,253,255,0.92)" : "rgba(242,156,177,0.58)";
-      if (frozen) {
-        ctx.shadowColor = "rgba(227,244,255,0.85)";
-        ctx.shadowBlur = 16;
-      }
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      const walkSpeed = Math.sqrt(e.vx * e.vx + e.vy * e.vy);
+      const bc = bobConfig[e.type] || { freq: 1, amp: 2, minSpeed: 5 };
+      const bob = walkSpeed > bc.minSpeed
+        ? Math.sin(now * 0.008 * bc.freq + (e.id ? e.id.length : 0) * 2.3) * bc.amp * zoom
+        : 0;
+      const drawY = p.y + bob;
 
-      if (frozen) {
-        const pulse = 0.75 + Math.sin(Date.now() * 0.01 + radius) * 0.15;
-        ctx.strokeStyle = "rgba(243,252,255,0.75)";
+      const sprite = this.monsterSprites[e.type];
+      if (sprite) {
+        const mult = spriteScale[e.type] || 1;
+        const aspect = sprite.naturalWidth / sprite.naturalHeight;
+        const h = baseRadius * 2.5 * mult * zoom;
+        const w = h * aspect;
+        ctx.save();
+        let facing = this.enemyFacing.get(e.id);
+        if (Math.abs(e.vx || 0) > 1) facing = (e.vx || 0) > 0 ? -1 : 1;
+        if (!facing) facing = 1;
+        this.enemyFacing.set(e.id, facing);
+        if (facing < 0) {
+          ctx.translate(p.x, drawY);
+          ctx.scale(-1, 1);
+          ctx.translate(-p.x, -drawY);
+        }
+        ctx.drawImage(sprite, p.x - w / 2, drawY - h / 2, w, h);
+        ctx.restore();
+
+        const hpBarRadius = baseRadius * mult * 0.5;
+        const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
+        const hpBarW = hpBarRadius * 2 * zoom;
+        const hpBarH = 4 * zoom;
+        const hpBarX = p.x - hpBarW / 2;
+        const hpBarY = drawY - h / 2 - 6 * zoom;
+        ctx.fillStyle = "rgba(14,18,27,0.8)";
+        ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+        ctx.fillStyle = "#ff6e8f";
+        ctx.fillRect(hpBarX, hpBarY, hpBarW * hpPct, hpBarH);
+
+        if (e.type === "fleshmaw" && e.windupTimer > 0) {
+          const progress = 1 - Math.max(0, e.windupTimer) / (e.attackWindup || 0.5);
+          const frameIdx = Math.min(4, Math.floor(progress * 5));
+          const atkSprite = this.fleshmawAttackFrames[frameIdx];
+          const mlen = Math.sqrt((e.vx || 0) * (e.vx || 0) + (e.vy || 0) * (e.vy || 0));
+          const dirX = mlen > 0.01 ? (e.vx || 0) / mlen : (facing < 0 ? 1 : -1);
+          const dirY = mlen > 0.01 ? (e.vy || 0) / mlen : 0.01;
+          const atkH = h * 0.6;
+          if (atkSprite && atkSprite.naturalWidth > 0) {
+            const atkAspect = atkSprite.naturalWidth / atkSprite.naturalHeight;
+            const atkW = atkH * atkAspect;
+            ctx.save();
+            ctx.translate(p.x, drawY + h * 0.2);
+            if (dirX < 0) ctx.scale(-1, 1);
+            ctx.rotate(Math.atan2(dirY, Math.abs(dirX || 0.01)));
+            ctx.drawImage(atkSprite, -atkW / 2 + h * 0.2, -atkH / 2, atkW, atkH);
+            ctx.restore();
+          } else if (atkSprite) {
+            ctx.fillStyle = "rgba(30,20,40,0.7)";
+            ctx.beginPath();
+            ctx.arc(p.x, drawY + h * 0.2, atkH * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if ((e.type === "crawler_nest" || e.type === "crawler_baby") && e.windupTimer > 0) {
+          const progress = 1 - Math.max(0, e.windupTimer) / (e.attackWindup || 0.7);
+          const frameIdx = Math.min(17, Math.floor(progress * 18));
+          const atkSprite = this.crawlerAttackFrames[frameIdx];
+          const mlen = Math.sqrt((e.vx || 0) * (e.vx || 0) + (e.vy || 0) * (e.vy || 0));
+          const dirX = mlen > 0.01 ? (e.vx || 0) / mlen : (facing < 0 ? 1 : -1);
+          const dirY = mlen > 0.01 ? (e.vy || 0) / mlen : 0.01;
+          if (atkSprite && atkSprite.naturalWidth > 0) {
+            const atkAspect = atkSprite.naturalWidth / atkSprite.naturalHeight;
+            const atkW = w * 0.5;
+            const atkH = atkW / atkAspect;
+            ctx.save();
+            ctx.translate(p.x, drawY + h * (e.type === "crawler_baby" ? 0.3 : 0));
+            if (dirX < 0) ctx.scale(-1, 1);
+            ctx.rotate(Math.atan2(dirY, Math.abs(dirX || 0.01)));
+            ctx.drawImage(atkSprite, -atkW / 2 + h * 0.2, -atkH / 2, atkW, atkH);
+            ctx.restore();
+          } else if (atkSprite) {
+            ctx.fillStyle = "rgba(50,70,40,0.7)";
+            ctx.beginPath();
+            ctx.arc(p.x, drawY + h * (e.type === "crawler_baby" ? 0.3 : 0), h * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (frozen) {
+          ctx.strokeStyle = "rgba(255,255,255,0.85)";
+          ctx.lineWidth = 3 * zoom;
+          ctx.setLineDash([5 * zoom, 5 * zoom]);
+          ctx.beginPath();
+          ctx.arc(p.x, drawY, baseRadius * mult * 0.8 * zoom, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      } else {
+        ctx.save();
+        ctx.fillStyle = frozen
+          ? "#d3e6ff"
+          : e.type === "boss"
+            ? "#9b2e4f"
+            : e.type === "elite"
+              ? "#5b335f"
+              : e.type === "caster"
+                ? "#573d66"
+                : "#3a4159";
+        ctx.strokeStyle = frozen ? "rgba(246,253,255,0.92)" : "rgba(242,156,177,0.58)";
+        if (frozen) {
+          ctx.shadowColor = "rgba(227,244,255,0.85)";
+          ctx.shadowBlur = 16;
+        }
         ctx.lineWidth = 2 * zoom;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, radius + 4 * zoom + pulse * 2 * zoom, 0, Math.PI * 2);
+        ctx.arc(p.x, drawY, baseRadius * zoom, 0, Math.PI * 2);
+        ctx.fill();
         ctx.stroke();
-      }
 
-      const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
-      ctx.fillStyle = "rgba(14,18,27,0.8)";
-      ctx.fillRect(p.x - radius, p.y - radius - 10 * zoom, radius * 2, 4 * zoom);
-      ctx.fillStyle = "#ff6e8f";
-      ctx.fillRect(p.x - radius, p.y - radius - 10 * zoom, radius * 2 * hpPct, 4 * zoom);
-      ctx.restore();
+        if (frozen) {
+          const pulse = 0.75 + Math.sin(now * 0.01 + baseRadius) * 0.15;
+          ctx.strokeStyle = "rgba(243,252,255,0.75)";
+          ctx.lineWidth = 2 * zoom;
+          ctx.beginPath();
+          ctx.arc(p.x, drawY, baseRadius * zoom + 4 * zoom + pulse * 2 * zoom, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(255,255,255,0.9)";
+          ctx.lineWidth = 3 * zoom;
+          ctx.setLineDash([5 * zoom, 5 * zoom]);
+          ctx.beginPath();
+          ctx.arc(p.x, drawY, baseRadius * zoom + 4 * zoom, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+
+        const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
+        ctx.fillStyle = "rgba(14,18,27,0.8)";
+        ctx.fillRect(p.x - baseRadius * zoom, drawY - baseRadius * zoom - 10 * zoom, baseRadius * 2 * zoom, 4 * zoom);
+        ctx.fillStyle = "#ff6e8f";
+        ctx.fillRect(p.x - baseRadius * zoom, drawY - baseRadius * zoom - 10 * zoom, baseRadius * 2 * zoom * hpPct, 4 * zoom);
+      }
     });
   }
 
@@ -1504,6 +1755,19 @@ export class Renderer {
       }
 
       ctx.restore();
+
+      if (p.frozen) {
+        const sp = worldToScreen(this.camera, this.canvas, rx, ry);
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,0.85)";
+        ctx.lineWidth = 3 * (this.camera.zoom || 1);
+        ctx.setLineDash([5 * (this.camera.zoom || 1), 5 * (this.camera.zoom || 1)]);
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 22 * (this.camera.zoom || 1), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
     });
   }
 
@@ -1664,6 +1928,8 @@ export class Renderer {
       this.drawMarkers();
       this.drawRedExplosions();
       this.drawBlueExplosions();
+      this.drawCrawlerExplosions();
+      this.drawAcidPuddles();
       this.drawBlackFlashes();
       this.drawProjectiles(interpolation.projectiles);
       this.renderPurpleCharges(this.ctx, this.camera);

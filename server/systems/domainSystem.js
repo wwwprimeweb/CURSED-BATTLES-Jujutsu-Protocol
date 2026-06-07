@@ -112,6 +112,7 @@ class DomainSystem {
   }
 
   update(dt) {
+    this.server.players.forEach((p) => p.domainFrozen = false);
     this.domains.forEach((domain) => {
       const owner = this.server.players.get(domain.ownerId);
       if (!owner || !owner.alive || owner.energy <= 0) {
@@ -183,6 +184,7 @@ class DomainSystem {
         if (!owner || !owner.alive) return;
         const d = distance(targetPlayer.x, targetPlayer.y, domain.x, domain.y);
         if (d <= domain.radius) {
+          targetPlayer.domainFrozen = true;
           if (domain.character === "yuji") {
             if (domain.shouldHit) {
               this.server.combat.applyDamage({
@@ -280,7 +282,7 @@ class DomainSystem {
         });
       }
 
-      const barrierDamage = (enemy.type === "boss" ? 6 : enemy.type === "elite" ? 3 : 1) * dt;
+      const barrierDamage = (enemy.grade === "special" ? 6 : enemy.grade <= 1 ? 3 : 1) * dt;
       this.damageBarrier(sourceDomain.ownerId, barrierDamage);
     });
   }

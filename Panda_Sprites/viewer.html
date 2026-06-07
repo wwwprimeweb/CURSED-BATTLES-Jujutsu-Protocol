@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang=pt-BR>
+<head>
+<meta charset=UTF-8>
+<title>Panda - Sprites Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+h1 { text-align: center; margin-bottom: 5px; color: #e94560; }
+p.sub { text-align: center; color: #888; margin-bottom: 20px; font-size: 14px; }
+.stats { text-align: center; color: #aaa; margin-bottom: 15px; font-size: 13px; }
+.groups { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; max-height: 120px; overflow-y: auto; padding: 8px; background: #16213e; border-radius: 8px; }
+.groups button { padding: 3px 10px; background: #0f3460; border: 1px solid #533483; color: #eee; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: nowrap; }
+.groups button:hover { background: #533483; }
+.groups button.active { background: #e94560; border-color: #e94560; }
+.sprite-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: flex-start; }
+.sprite-item { background: #16213e; border-radius: 4px; padding: 4px; text-align: center; }
+.sprite-item img { display: block; image-rendering: pixelated; background: repeating-conic-gradient(#2a2a4a 0% 25%, transparent 0% 50%) 0 0 / 20px 20px; max-width: 300px; }
+.sprite-item .label { font-size: 11px; color: #aaa; margin-top: 2px; }
+</style>
+</head>
+<body>
+<h1>Panda - Sprites</h1>
+<p class=sub>Extraído de Jujutsu Kaisen Mugen V9</p>
+<p class=stats>74 grupos | 835 sprites</p>
+
+<div class=groups id=group-nav></div>
+<div class=sprite-grid id=grid></div>
+
+<script>
+var allGroups = {"0":["0_0.png"],"1":["1_0.png"],"2":["2_0.png","2_1.png","2_2.png","2_3.png"],"3":["3_0.png","3_1.png","3_2.png"],"4":["4_0.png","4_1.png","4_2.png","4_3.png","4_4.png","4_5.png"],"5":["5_0.png","5_1.png"],"6":["6_0.png","6_1.png","6_2.png","6_3.png","6_4.png","6_5.png"],"190":["190_0.png","190_1.png"],"200":["200_0.png","200_1.png","200_2.png","200_3.png","200_4.png","200_5.png","200_6.png"],"222":["222_0.png","222_1.png","222_2.png","222_3.png","222_4.png","222_5.png"],"300":["300_0.png","300_1.png","300_2.png","300_3.png","300_4.png","300_5.png","300_6.png"],"400":["400_0.png","400_1.png","400_2.png"],"500":["500_0.png"],"550":["550_0.png","550_1.png","550_2.png","550_3.png","550_4.png","550_5.png","550_6.png","550_7.png","550_8.png","550_9.png","550_10.png","550_12.png","550_13.png","550_14.png","550_15.png","550_16.png","550_17.png","550_18.png","550_19.png","550_20.png"],"551":["551_0.png","551_1.png","551_2.png"],"552":["552_0.png","552_1.png","552_2.png","552_3.png"],"553":["553_0.png"],"555":["555_0.png","555_1.png","555_2.png","555_3.png","555_4.png","555_5.png","555_6.png","555_7.png","555_8.png","555_9.png","555_10.png"],"556":["556_0.png","556_1.png","556_2.png","556_3.png","556_4.png","556_5.png","556_6.png","556_7.png","556_8.png","556_9.png","556_10.png","556_11.png","556_12.png"],"557":["557_1.png","557_2.png","557_3.png","557_4.png","557_5.png","557_6.png","557_7.png","557_8.png","557_9.png","557_10.png","557_11.png","557_12.png"],"580":["580_0.png","580_1.png","580_2.png","580_3.png","580_4.png","580_5.png","580_6.png","580_7.png","580_8.png"],"581":["581_0.png","581_1.png","581_2.png","581_3.png","581_4.png","581_5.png","581_6.png","581_7.png"],"582":["582_0.png","582_1.png","582_2.png","582_3.png","582_4.png","582_5.png"],"600":["600_0.png","600_1.png","600_2.png"],"700":["700_0.png","700_1.png"],"1000":["1000_0.png","1000_1.png","1000_2.png","1000_3.png","1000_4.png","1000_5.png","1000_6.png","1000_7.png","1000_8.png","1000_9.png","1000_10.png"],"2000":["2000_0.png","2000_1.png","2000_2.png","2000_3.png","2000_4.png","2000_5.png","2000_6.png","2000_7.png","2000_8.png","2000_9.png","2000_10.png","2000_11.png","2000_12.png","2000_13.png","2000_14.png","2000_15.png","2000_16.png","2000_17.png","2000_18.png","2000_19.png","2000_20.png","2000_21.png","2000_22.png","2000_23.png","2000_24.png","2000_25.png","2000_26.png","2000_27.png","2000_28.png","2000_29.png","2000_30.png","2000_31.png","2000_32.png","2000_33.png","2000_34.png","2000_35.png","2000_36.png","2000_37.png","2000_38.png","2000_39.png","2000_40.png","2000_41.png","2000_42.png","2000_43.png"],"3000":["3000_0.png","3000_1.png","3000_2.png","3000_3.png"],"3080":["3080_0.png","3080_1.png","3080_2.png"],"3081":["3081_0.png","3081_1.png","3081_2.png","3081_3.png","3081_4.png","3081_5.png","3081_6.png","3081_7.png","3081_8.png","3081_9.png","3081_10.png","3081_11.png","3081_12.png","3081_13.png","3081_14.png","3081_15.png","3081_16.png","3081_17.png","3081_18.png","3081_19.png","3081_20.png","3081_21.png","3081_22.png","3081_23.png","3081_24.png","3081_25.png","3081_26.png","3081_27.png","3081_28.png","3081_29.png"],"3280":["3280_0.png","3280_1.png","3280_2.png","3280_3.png","3280_4.png","3280_5.png","3280_6.png","3280_7.png","3280_8.png","3280_9.png","3280_10.png"],"3285":["3285_0.png","3285_1.png","3285_2.png","3285_3.png","3285_4.png","3285_5.png","3285_6.png","3285_7.png","3285_8.png"],"3286":["3286_0.png","3286_1.png","3286_2.png","3286_3.png","3286_4.png","3286_5.png","3286_6.png","3286_7.png","3286_8.png"],"3287":["3287_0.png","3287_1.png","3287_2.png","3287_3.png","3287_4.png","3287_5.png","3287_6.png","3287_7.png","3287_8.png"],"3290":["3290_0.png","3290_1.png","3290_2.png","3290_3.png","3290_4.png","3290_5.png","3290_6.png","3290_7.png","3290_8.png","3290_9.png","3290_10.png","3290_11.png","3290_12.png","3290_13.png","3290_14.png","3290_15.png","3290_16.png","3290_17.png","3290_18.png","3290_19.png","3290_20.png","3290_21.png","3290_22.png","3290_23.png"],"3291":["3291_0.png","3291_1.png","3291_2.png","3291_3.png","3291_4.png","3291_5.png","3291_6.png","3291_7.png","3291_8.png","3291_9.png","3291_10.png","3291_11.png","3291_12.png","3291_13.png","3291_14.png","3291_15.png","3291_16.png","3291_17.png","3291_18.png","3291_19.png","3291_20.png","3291_21.png","3291_22.png","3291_23.png"],"4444":["4444_0.png","4444_1.png","4444_2.png","4444_3.png","4444_4.png","4444_5.png","4444_6.png","4444_7.png","4444_8.png","4444_9.png","4444_10.png","4444_11.png","4444_12.png","4444_13.png","4444_14.png","4444_15.png","4444_16.png","4444_17.png","4444_18.png","4444_19.png"],"7000":["7000_0.png","7000_1.png","7000_2.png","7000_3.png","7000_4.png","7000_5.png","7000_6.png","7000_7.png","7000_8.png","7000_9.png","7000_10.png","7000_11.png","7000_12.png","7000_13.png","7000_14.png","7000_15.png","7000_16.png","7000_17.png","7000_18.png","7000_19.png","7000_20.png"],"7001":["7001_0.png","7001_1.png","7001_2.png","7001_3.png"],"7002":["7002_0.png","7002_1.png","7002_2.png","7002_3.png","7002_4.png","7002_5.png","7002_6.png","7002_7.png","7002_8.png"],"7005":["7005_0.png","7005_1.png","7005_2.png","7005_3.png","7005_4.png","7005_5.png","7005_6.png","7005_7.png","7005_8.png","7005_9.png","7005_10.png","7005_11.png","7005_12.png","7005_13.png","7005_14.png","7005_15.png","7005_16.png","7005_17.png","7005_18.png","7005_19.png","7005_20.png","7005_21.png","7005_22.png","7005_23.png","7005_24.png","7005_25.png"],"7006":["7006_1.png","7006_2.png","7006_3.png","7006_4.png","7006_5.png","7006_6.png","7006_7.png","7006_8.png","7006_9.png","7006_10.png","7006_11.png","7006_12.png","7006_13.png","7006_14.png","7006_15.png","7006_16.png","7006_17.png","7006_18.png"],"7007":["7007_0.png","7007_1.png","7007_2.png","7007_3.png","7007_4.png","7007_5.png"],"7010":["7010_0.png","7010_1.png","7010_2.png","7010_3.png","7010_4.png"],"7011":["7011_0.png","7011_1.png","7011_2.png","7011_3.png"],"7012":["7012_0.png","7012_1.png","7012_2.png","7012_3.png","7012_4.png","7012_5.png","7012_6.png","7012_7.png","7012_8.png","7012_9.png","7012_10.png","7012_11.png","7012_12.png","7012_13.png","7012_14.png","7012_15.png","7012_16.png","7012_17.png"],"7013":["7013_0.png","7013_1.png","7013_2.png","7013_3.png","7013_4.png","7013_5.png","7013_6.png","7013_7.png"],"7014":["7014_0.png","7014_1.png","7014_2.png","7014_3.png","7014_4.png","7014_5.png","7014_6.png","7014_7.png"],"7020":["7020_0.png","7020_1.png","7020_2.png","7020_3.png","7020_4.png","7020_5.png","7020_6.png","7020_7.png","7020_8.png","7020_9.png","7020_10.png","7020_11.png","7020_12.png","7020_13.png"],"7021":["7021_0.png","7021_1.png","7021_2.png","7021_3.png","7021_4.png","7021_5.png","7021_6.png","7021_7.png","7021_8.png","7021_9.png","7021_10.png","7021_11.png","7021_12.png","7021_13.png","7021_14.png","7021_15.png"],"7022":["7022_0.png","7022_1.png","7022_2.png","7022_3.png","7022_4.png","7022_5.png","7022_6.png","7022_7.png","7022_8.png","7022_9.png","7022_10.png","7022_11.png","7022_12.png","7022_13.png","7022_14.png","7022_15.png","7022_16.png","7022_17.png"],"7023":["7023_0.png","7023_1.png","7023_2.png","7023_3.png","7023_4.png","7023_5.png","7023_6.png","7023_7.png","7023_8.png","7023_9.png","7023_10.png","7023_11.png","7023_12.png","7023_13.png"],"7024":["7024_0.png","7024_1.png","7024_2.png","7024_3.png","7024_4.png","7024_5.png","7024_6.png","7024_7.png"],"7025":["7025_0.png","7025_1.png","7025_2.png","7025_3.png","7025_4.png","7025_5.png","7025_6.png","7025_7.png"],"7026":["7026_0.png","7026_1.png","7026_2.png","7026_3.png","7026_4.png"],"7027":["7027_0.png","7027_1.png","7027_2.png","7027_3.png","7027_4.png","7027_5.png","7027_6.png","7027_7.png","7027_8.png","7027_9.png","7027_10.png"],"7028":["7028_0.png","7028_1.png","7028_2.png","7028_3.png","7028_4.png","7028_5.png","7028_6.png","7028_7.png","7028_8.png","7028_9.png","7028_10.png","7028_11.png","7028_12.png","7028_13.png","7028_14.png","7028_15.png","7028_16.png","7028_17.png"],"7029":["7029_1.png","7029_2.png","7029_3.png","7029_4.png","7029_5.png","7029_6.png","7029_7.png","7029_8.png","7029_9.png","7029_10.png","7029_11.png","7029_12.png","7029_13.png","7029_14.png"],"7030":["7030_0.png","7030_1.png","7030_2.png","7030_3.png","7030_4.png","7030_5.png","7030_6.png","7030_7.png","7030_8.png","7030_9.png","7030_10.png","7030_11.png","7030_12.png","7030_13.png","7030_14.png","7030_15.png","7030_16.png","7030_17.png","7030_18.png","7030_19.png"],"7031":["7031_0.png","7031_1.png","7031_2.png","7031_3.png","7031_4.png","7031_5.png","7031_6.png","7031_7.png","7031_8.png","7031_9.png","7031_10.png","7031_11.png","7031_12.png","7031_13.png","7031_14.png","7031_15.png","7031_16.png","7031_17.png","7031_18.png","7031_19.png","7031_20.png"],"7032":["7032_0.png","7032_1.png","7032_2.png","7032_3.png","7032_4.png","7032_5.png","7032_6.png","7032_7.png"],"7033":["7033_0.png","7033_1.png","7033_2.png","7033_3.png","7033_4.png","7033_5.png","7033_6.png","7033_7.png","7033_8.png"],"7034":["7034_0.png","7034_1.png","7034_2.png","7034_3.png","7034_4.png","7034_5.png","7034_6.png","7034_7.png","7034_8.png"],"7035":["7035_0.png","7035_1.png","7035_2.png","7035_3.png","7035_4.png","7035_5.png","7035_6.png"],"7036":["7036_0.png","7036_1.png","7036_2.png","7036_3.png","7036_4.png","7036_5.png","7036_6.png","7036_7.png"],"7037":["7037_0.png"],"7038":["7038_0.png","7038_1.png","7038_2.png","7038_3.png","7038_4.png","7038_5.png","7038_6.png","7038_7.png","7038_8.png","7038_9.png","7038_10.png","7038_11.png","7038_12.png","7038_13.png","7038_14.png","7038_15.png","7038_16.png","7038_17.png","7038_18.png","7038_19.png","7038_20.png","7038_21.png","7038_22.png","7038_23.png","7038_24.png","7038_25.png","7038_26.png","7038_27.png","7038_28.png","7038_29.png","7038_30.png","7038_31.png","7038_32.png","7038_33.png","7038_34.png","7038_35.png","7038_36.png","7038_37.png","7038_38.png","7038_39.png","7038_40.png","7038_41.png","7038_42.png","7038_43.png","7038_44.png","7038_45.png","7038_46.png","7038_47.png","7038_48.png","7038_49.png","7038_50.png","7038_51.png","7038_52.png","7038_53.png","7038_54.png","7038_55.png","7038_56.png"],"7044":["7044_0.png","7044_1.png","7044_2.png","7044_3.png","7044_4.png"],"7055":["7055_0.png","7055_1.png","7055_2.png","7055_3.png","7055_4.png","7055_5.png","7055_6.png","7055_7.png","7055_8.png","7055_9.png","7055_10.png","7055_11.png","7055_12.png","7055_13.png","7055_14.png","7055_15.png"],"7666":["7666_0.png","7666_1.png","7666_2.png","7666_3.png","7666_4.png","7666_5.png","7666_6.png","7666_7.png"],"8250":["8250_0.png","8250_2.png","8250_3.png","8250_4.png","8250_5.png","8250_6.png","8250_7.png","8250_8.png","8250_9.png","8250_10.png","8250_11.png","8250_12.png","8250_13.png","8250_14.png","8250_15.png","8250_16.png","8250_17.png","8250_18.png","8250_19.png","8250_20.png","8250_21.png","8250_22.png","8250_23.png","8250_24.png","8250_25.png","8250_26.png","8250_27.png","8250_28.png","8250_29.png","8250_30.png","8250_31.png","8250_32.png","8250_33.png","8250_34.png","8250_35.png","8250_36.png","8250_37.png","8250_38.png","8250_39.png","8250_40.png","8250_41.png","8250_42.png","8250_43.png","8250_44.png","8250_45.png","8250_46.png","8250_47.png","8250_48.png","8250_49.png","8250_50.png","8250_51.png","8250_52.png","8250_53.png"],"8251":["8251_0.png","8251_1.png","8251_2.png","8251_3.png","8251_4.png","8251_5.png","8251_6.png","8251_7.png","8251_8.png","8251_9.png","8251_10.png","8251_11.png","8251_12.png","8251_13.png","8251_14.png","8251_15.png"],"9000":["9000_0.png","9000_1.png","9000_2.png","9000_10.png"],"9999":["9999_0.png"]};
+
+var groupIds = Object.keys(allGroups);
+var nav = document.getElementById('group-nav');
+
+for (var i = 0; i < groupIds.length; i++) {
+  var g = groupIds[i];
+  var btn = document.createElement('button');
+  btn.textContent = 'Grupo ' + g + ' (' + allGroups[g].length + ')';
+  btn.onclick = (function(grp) {
+    return function() { showGroup(grp); };
+  })(g);
+  nav.appendChild(btn);
+}
+
+function showGroup(groupId) {
+  var buttons = document.querySelectorAll('.groups button');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].classList.remove('active');
+    if (buttons[i].textContent.indexOf('Grupo ' + groupId + ' ') === 0) {
+      buttons[i].classList.add('active');
+    }
+  }
+
+  var grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  var sprites = allGroups[groupId];
+  if (!sprites) return;
+
+  for (var i = 0; i < sprites.length; i++) {
+    var sprite = sprites[i];
+    var div = document.createElement('div');
+    div.className = 'sprite-item';
+    var img = document.createElement('img');
+    img.src = 'Panda Base/' + sprite;
+    img.alt = sprite;
+    img.loading = 'lazy';
+    var label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = sprite.replace('.png', '');
+    div.appendChild(img);
+    div.appendChild(label);
+    grid.appendChild(div);
+  }
+}
+
+if (groupIds.length > 0) showGroup(groupIds[0]);
+</script>
+</body>
+</html>

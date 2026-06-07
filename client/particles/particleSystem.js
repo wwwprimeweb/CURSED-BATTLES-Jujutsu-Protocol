@@ -16,6 +16,24 @@ export class ParticleSystem {
     }
   }
 
+  spawnUpwardBurst({ x, y, color = "#ffffff", count = 8, speed = 220, life = 0.26, size = 2.2, spread = 0.8 }) {
+    for (let i = 0; i < count; i += 1) {
+      if (this.pool.length === 0) return;
+      const p = this.pool.pop();
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * spread;
+      const s = speed * (0.7 + Math.random() * 0.7);
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * s;
+      p.vy = Math.sin(angle) * s;
+      p.life = life;
+      p.maxLife = life;
+      p.size = size * (0.7 + Math.random() * 0.7);
+      p.color = color;
+      this.active.push(p);
+    }
+  }
+
   spawnBurst({ x, y, color = "#ffffff", count = 8, speed = 220, life = 0.26, size = 2.2 }) {
     for (let i = 0; i < count; i += 1) {
       if (this.pool.length === 0) {

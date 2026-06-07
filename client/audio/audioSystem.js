@@ -72,6 +72,24 @@ export class AudioSystem {
     osc.stop(now + duration + 0.02);
   }
 
+  noise(duration, gain = 0.15, decay = 1) {
+    if (!this.enabled || !this.ctx) return;
+    const sr = this.ctx.sampleRate;
+    const len = Math.floor(sr * duration);
+    const buffer = this.ctx.createBuffer(1, len, sr);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    const source = this.ctx.createBufferSource();
+    const g = this.ctx.createGain();
+    source.buffer = buffer;
+    g.gain.value = gain;
+    source.connect(g);
+    g.connect(this.masterGain);
+    source.start(0);
+  }
+
   play(eventType) {
     switch (eventType) {
       case "hit":
@@ -96,6 +114,36 @@ export class AudioSystem {
         } else {
           this.tone(100, 0.3, "sine", 0.16);
         }
+        break;
+      case "crawlerTremor":
+        this.tone(30, 0.35, "square", 0.08);
+        this.tone(38, 0.25, "sawtooth", 0.06);
+        break;
+      case "crawlerExplosion":
+        this.tone(22, 0.6, "sawtooth", 0.35);
+        this.tone(45, 0.35, "square", 0.2);
+        this.noise(0.4, 0.12, 1.8);
+        break;
+      case "acidPuddle":
+        this.tone(800, 0.1, "sine", 0.06);
+        this.tone(550, 0.08, "triangle", 0.04);
+        this.tone(1000, 0.07, "sine", 0.03);
+        break;
+      case "fleshmawAttack":
+        this.tone(120, 0.07, "sawtooth", 0.22);
+        this.tone(200, 0.05, "square", 0.15);
+        this.tone(80, 0.1, "sawtooth", 0.18);
+        this.noise(0.05, 0.12, 4);
+        break;
+      case "crawlerNestAttack":
+        this.tone(80, 0.12, "sawtooth", 0.2);
+        this.tone(140, 0.09, "square", 0.15);
+        this.tone(60, 0.1, "sine", 0.18);
+        break;
+      case "crawlerBabyAttack":
+        this.tone(350, 0.07, "sawtooth", 0.18);
+        this.tone(500, 0.05, "square", 0.12);
+        this.tone(280, 0.06, "sine", 0.1);
         break;
       default:
         break;

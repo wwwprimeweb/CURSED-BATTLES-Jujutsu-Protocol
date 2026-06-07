@@ -24,4 +24,7 @@ module.exports = {
     maxNameLength: 20,
     maxAimDistanceFromPlayer: 6000,
   },
+  debug: {
+    overridePhase: null,
+  },
 };

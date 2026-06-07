@@ -221,6 +221,24 @@ class GameServer {
       id: player.id,
       name: player.name,
     });
+
+    const { getAllDefs } = require("../entities/enemyRegistry");
+    const { createEnemy } = require("../entities/enemy");
+    this.queueDelayedAction(0.5, () => {
+      for (const def of getAllDefs()) {
+        const count = def.grade === 3 ? 2 : 1;
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 120 + Math.random() * 160;
+          const x = Math.max(30, Math.min(this.map.width - 30, player.x + Math.cos(angle) * dist));
+          const y = Math.max(30, Math.min(this.map.height - 30, player.y + Math.sin(angle) * dist));
+          const id = `e${this.nextEnemyId++}`;
+          const enemy = createEnemy(id, def.type, x, y, 1);
+          this.enemies.set(id, enemy);
+        }
+      }
+    });
+
     return { player, reconnected: false };
   }
 
@@ -3263,6 +3281,7 @@ class GameServer {
           && player.domainExhaustionTimer <= 0
           && (this.now - (player.lastAttackAt || 0)) > 5000,
         invuln: player.invulnTimer > 0,
+        frozen: player.domainFrozen || false,
         rikaActive: this.rikas.has(player.id),
         rikaX: (() => { const r = this.rikas.get(player.id); return r ? Math.round(r.x * 10) / 10 : undefined; })(),
         rikaY: (() => { const r = this.rikas.get(player.id); return r ? Math.round(r.y * 10) / 10 : undefined; })(),
@@ -3287,10 +3306,14 @@ class GameServer {
         type: enemy.type,
         x: Math.round(enemy.x),
         y: Math.round(enemy.y),
+        vx: Math.round(enemy.vx * 100) / 100,
+        vy: Math.round(enemy.vy * 100) / 100,
         hp: Math.round(enemy.hp * 10) / 10,
         maxHp: enemy.maxHp,
         alive: enemy.alive,
         state: enemy.state,
+        windupTimer: Math.round(enemy.windupTimer * 100) / 100,
+        attackWindup: enemy.attackWindup,
         frozen: enemy.freezeTimer > 0,
         freezeLeft: Math.round(enemy.freezeTimer * 100) / 100,
       });

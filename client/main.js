@@ -11,6 +11,37 @@ import { initGifBackground } from "./animations/gifBackground.js";
 const SESSION_KEY = "cursed_battles_session";
 const NICK_KEY = "cursed_battles_nick";
 
+let _lastTremorSound = 0;
+const _prevWindup = new Map();
+
+function playSoundIfNear(ev, sound) {
+  const px = state.localPred?.x;
+  const py = state.localPred?.y;
+  if (px == null) return;
+  const dist = Math.hypot(px - ev.x, py - ev.y);
+  const zoom = renderer.camera.zoom || 1;
+  const halfW = (renderer.canvas.clientWidth * 0.5) / zoom;
+  const halfH = (renderer.canvas.clientHeight * 0.5) / zoom;
+  const screenRadius = Math.sqrt(halfW * halfW + halfH * halfH);
+  if (dist <= screenRadius) {
+    audio.play(sound);
+  }
+}
+
+function updateEnemyAttackSounds(enemies) {
+  enemies.forEach((entry) => {
+    const e = entry.raw;
+    if (!e || e.windupTimer == null) return;
+    const prev = _prevWindup.get(e.id) || 0;
+    if (prev <= 0 && e.windupTimer > 0) {
+      const map = { fleshmaw: "fleshmawAttack", crawler_nest: "crawlerNestAttack", crawler_baby: "crawlerBabyAttack" };
+      const sound = map[e.type];
+      if (sound) playSoundIfNear({ x: entry.x, y: entry.y }, sound);
+    }
+    _prevWindup.set(e.id, e.windupTimer);
+  });
+}
+
 const canvas = document.getElementById("game-canvas");
 const startScreen = document.getElementById("start-screen");
 const playBtn = document.getElementById("play-btn");
@@ -494,7 +525,9 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6d94", count: 26, speed: 300, life: 0.5, size: 3.2 });
       hud.pushNotice("Boss apareceu", "danger", "perigo no centro da arena");
     } else if (ev.type === "telegraph") {
-      renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 70, color: "rgba(255,140,180,0.5)", ttl: 0.45 });
+      if (ev.radius < 250 && ev.enemyType !== "fleshmaw") {
+        renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 70, color: "rgba(255,140,180,0.5)", ttl: 0.45 });
+      }
     } else if (ev.type === "bossSlamTelegraph") {
       renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 120, color: "rgba(255,110,140,0.58)", ttl: ev.delay || 0.85 });
     } else if (ev.type === "bossSlamImpact") {
@@ -503,6 +536,24 @@ function handleEvents(events) {
       handleGameOver();
     } else if (ev.type === "matchReset") {
       handleMatchReset();
+    } else if (ev.type === "crawlerBabySpawn") {
+      particles.spawnUpwardBurst({ x: ev.x, y: ev.y, color: "#60ff80", count: 14, speed: 100, life: 0.5, size: 2.5, spread: 1.0 });
+      particles.spawnUpwardBurst({ x: ev.x, y: ev.y, color: "#b0ffc0", count: 8, speed: 70, life: 0.4, size: 2, spread: 0.6 });
+      playSoundIfNear(ev, "crawlerExplosion");
+    } else if (ev.type === "crawlerExplosion") {
+      renderer.addCrawlerExplosion({ x: ev.x, y: ev.y, radius: ev.radius || 160 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#60ff80", count: 20, speed: 250, life: 0.4, size: 3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#b0ffc0", count: 12, speed: 150, life: 0.3, size: 2 });
+      playSoundIfNear(ev, "crawlerExplosion");
+    } else if (ev.type === "crawlerTremor") {
+      renderer.addMarker({ x: ev.x, y: ev.y, radius: 40 + (1 - ev.intensity) * 30, color: "rgba(100,255,120,0.4)", ttl: 0.3 });
+      if (Date.now() - _lastTremorSound > 350) {
+        playSoundIfNear(ev, "crawlerTremor");
+        _lastTremorSound = Date.now();
+      }
+    } else if (ev.type === "acidPuddle") {
+      renderer.addAcidPuddle({ x: ev.x, y: ev.y, radius: ev.radius || 60, duration: ev.duration || 4, dps: ev.dps || 8 });
+      playSoundIfNear(ev, "acidPuddle");
     } else if (ev.type === "levelUp") {
       hud.pushNotice("Level " + ev.level, "info", "escolha uma melhoria");
     } else if (ev.type === "upgradeApplied") {
@@ -669,6 +720,8 @@ function loop(nowMs) {
     console.log(`[DIAG] loop #${_diagLoopFrames}: joined=${state.joined}, connected=${state.connected}, you=${!!state.you}, camera=(${renderer.camera.x.toFixed(0)},${renderer.camera.y.toFixed(0)}), localPred=(${state.localPred.x.toFixed(0)},${state.localPred.y.toFixed(0)})`);
     _diagLoopFrames++;
   }
+
+  updateEnemyAttackSounds(interpolation.enemies);
 
   renderer.render({
     interpolation,

@@ -1,6 +1,7 @@
 "use strict";
 
 const { normalize } = require("../utils/math");
+const { getEnemyDef } = require("../entities/enemyRegistry");
 
 class CombatSystem {
   constructor(server) {
@@ -36,6 +37,9 @@ class CombatSystem {
     if (target.kind === "player") {
       finalDamage = Math.max(1, finalDamage - target.armor);
     }
+    if (target.kind === "enemy" && (target.protectionReduction || 0) > 0) {
+      finalDamage *= 1 - target.protectionReduction;
+    }
 
     target.hp -= finalDamage;
     target.hitFlash = 0.1;
@@ -45,13 +49,16 @@ class CombatSystem {
     }
 
     if (knockback > 0 && Number.isFinite(fromX) && Number.isFinite(fromY)) {
-      const n = normalize(target.x - fromX, target.y - fromY);
-      target.vx += n.x * knockback;
-      target.vy += n.y * knockback;
-      const cap = Number.isFinite(knockbackDistanceCap) ? Math.max(0, knockbackDistanceCap) : 170;
-      const knockbackDistance = Math.min(cap, knockback * 0.16);
-      if (knockbackDistance > 0) {
-        this.server.moveEntityWithCollisions(target, n.x * knockbackDistance, n.y * knockbackDistance, true);
+      const def = target.kind === "enemy" ? getEnemyDef(target.type) : null;
+      if (!def || !def.behaviors || !def.behaviors.immuneKnockback) {
+        const n = normalize(target.x - fromX, target.y - fromY);
+        target.vx += n.x * knockback;
+        target.vy += n.y * knockback;
+        const cap = Number.isFinite(knockbackDistanceCap) ? Math.max(0, knockbackDistanceCap) : 170;
+        const knockbackDistance = Math.min(cap, knockback * 0.16);
+        if (knockbackDistance > 0) {
+          this.server.moveEntityWithCollisions(target, n.x * knockbackDistance, n.y * knockbackDistance, true);
+        }
       }
     }
 
@@ -69,6 +76,16 @@ class CombatSystem {
   }
 
   handleDeath(target, source) {
+    if (target.kind === "enemy") {
+      const def = getEnemyDef(target.type);
+      if (def && def.onDeath && def.onDeath(target, this.server, source)) {
+        target.hp = 0;
+        target.vx = 0;
+        target.vy = 0;
+        return;
+      }
+    }
+
     target.hp = 0;
     target.alive = false;
     target.vx = 0;

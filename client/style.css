@@ -593,6 +593,57 @@ input {
   gap: 4px;
 }
 
+/* Recovery Flame Indicator */
+.recovery-flame-wrap {
+  position: absolute;
+  left: 100%;
+  bottom: -8px;
+  margin-left: 4px;
+  display: none;
+}
+.recovery-flame-canvas {
+  width: 120px;
+  height: 144px;
+  display: block;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  image-rendering: auto;
+}
+.recovery-hover-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: rgba(8, 13, 22, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+.recovery-flame-wrap:hover .recovery-hover-tooltip {
+  opacity: 1;
+}
+.recovery-hover-tooltip strong {
+  display: block;
+  color: var(--energy, #42c9ff);
+  font-weight: 700;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+.recovery-hover-tooltip span {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.65rem;
+}
+
 .bar-row-header {
   display: flex;
   justify-content: space-between;
@@ -665,6 +716,17 @@ input {
 .fill.energy {
   background: linear-gradient(90deg, #1f62e6, var(--energy));
   box-shadow: 0 0 10px rgba(66, 201, 255, 0.25);
+}
+
+@keyframes energyRecoveryPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.6); }
+}
+.energy-block.is-recovering .fill.energy {
+  animation: energyRecoveryPulse 1.2s ease-in-out infinite;
+}
+.energy-block.is-recovering .energy-track {
+  box-shadow: 0 0 16px var(--energy);
 }
 
 /* XP Strip underneath bars */
