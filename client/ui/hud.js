@@ -507,13 +507,13 @@ export class Hud {
       if (now - this._flameLastTick > 60) {
         this._flameFrameIdx = (this._flameFrameIdx + 1) % this._flameFrames;
         this._flameLastTick = now;
-        const bb = this._flameBackbuffer;
-        const bbCtx = bb.getContext('2d');
-        bbCtx.clearRect(0, 0, bb.width, bb.height);
-        this._drawFlameFrame(bbCtx, chara, this._flameFrameIdx, bb.width, bb.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(bb, 0, 0);
       }
+      const bb = this._flameBackbuffer;
+      const bbCtx = bb.getContext('2d');
+      bbCtx.clearRect(0, 0, bb.width, bb.height);
+      this._drawFlameFrame(bbCtx, chara, this._flameFrameIdx, bb.width, bb.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bb, 0, 0);
     } else {
       wrap.style.opacity = "0";
     }
