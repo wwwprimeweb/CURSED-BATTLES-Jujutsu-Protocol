@@ -80,7 +80,9 @@ export class YujiVisualSystem {
     bctx.fillStyle = "#000000";
     bctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
 
-    this._soulFrameCache[frameIndex] = { red, black };
+    const redImg = new Image(); redImg.src = red.toDataURL();
+    const blackImg = new Image(); blackImg.src = black.toDataURL();
+    this._soulFrameCache[frameIndex] = { red: redImg, black: blackImg };
     return this._soulFrameCache[frameIndex];
   }
 

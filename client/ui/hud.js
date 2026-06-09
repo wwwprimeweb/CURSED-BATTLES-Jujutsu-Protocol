@@ -831,8 +831,10 @@ export class Hud {
       }
     }
     offCtx.putImageData(imageData, 0, 0);
-    this._flameFramesCache[character][frameIdx] = offscreen;
-    ctx.drawImage(offscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
+    const img = new Image();
+    img.src = offscreen.toDataURL();
+    this._flameFramesCache[character][frameIdx] = img;
+    ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
   }
 
   updateBuffs(status) {
