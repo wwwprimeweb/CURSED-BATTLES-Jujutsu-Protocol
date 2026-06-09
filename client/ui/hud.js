@@ -498,7 +498,7 @@ export class Hud {
 
     this.updateBuffs(you.status || {});
 
-    const recoveryActive = (you.status && you.status.energyRecoveryTime > 0) && you.alive;
+    const recoveryActive = (you.status && you.status.energyRecoveryTime > 0.5) && you.alive;
     const wrap = this._recoveryWrap;
     const canvas = this._recoveryCanvas;
     if (recoveryActive) {
