@@ -502,7 +502,7 @@ export class Hud {
     const wrap = this._recoveryWrap;
     const canvas = this._recoveryCanvas;
     if (recoveryActive) {
-      wrap.style.display = "block";
+      wrap.style.opacity = "1";
       this._recoveryTooltip.innerHTML = `<strong>Recuperação de Energia</strong><span>${you.status.energyRecoveryTime.toFixed(1)}s · Regeneração 2x · -15% Dano</span>`;
       if (now - this._flameLastTick > 60) {
         this._flameFrameIdx = (this._flameFrameIdx + 1) % this._flameFrames;
@@ -512,7 +512,7 @@ export class Hud {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       this._drawFlameFrame(ctx, chara, this._flameFrameIdx, canvas.width, canvas.height);
     } else {
-      wrap.style.display = "none";
+      wrap.style.opacity = "0";
     }
 
     const energyBlock = this.barsEl.querySelector('.energy-block');
