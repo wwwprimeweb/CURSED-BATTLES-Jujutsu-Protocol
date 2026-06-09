@@ -599,9 +599,7 @@ input {
   left: 100%;
   bottom: -8px;
   margin-left: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
+  display: none;
 }
 .recovery-flame-canvas {
   width: 120px;
