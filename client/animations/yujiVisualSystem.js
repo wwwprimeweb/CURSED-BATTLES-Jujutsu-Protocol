@@ -28,10 +28,7 @@ export class YujiVisualSystem {
 
     this.impactSheet = new Image();
     this.impactSheet.src = IMPACT_SHEET_PATH;
-    this.red7022Cache = [];
-    this.black7022Cache = [];
-    this.impactSheet.onload = () => this.build7022Cache();
-    if (this.impactSheet.complete) this.build7022Cache();
+    this._soulFrameCache = {};
 
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
@@ -58,34 +55,33 @@ export class YujiVisualSystem {
     this.trainImpacts = [];
   }
 
-  build7022Cache() {
-    if (!this.impactSheet.complete || this.impactSheet.naturalWidth <= 0) return;
-    this.red7022Cache = [];
-    this.black7022Cache = [];
-    for (let i = 0; i < 13; i++) {
-      const frameIdx = 8 + i;
-      const sx = frameIdx * IMPACT_FRAME_W;
+  _getSoulFrame(frameIndex) {
+    if (!this.impactSheet.complete || this.impactSheet.naturalWidth <= 0) return null;
+    if (this._soulFrameCache[frameIndex]) return this._soulFrameCache[frameIndex];
 
-      const red = document.createElement('canvas');
-      red.width = IMPACT_FRAME_W;
-      red.height = IMPACT_FRAME_H;
-      const rctx = red.getContext('2d');
-      rctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-      rctx.globalCompositeOperation = "source-atop";
-      rctx.fillStyle = "#ff0000";
-      rctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-      this.red7022Cache.push(red);
+    const frameIdx = 8 + frameIndex;
+    const sx = frameIdx * IMPACT_FRAME_W;
 
-      const black = document.createElement('canvas');
-      black.width = IMPACT_FRAME_W;
-      black.height = IMPACT_FRAME_H;
-      const bctx = black.getContext('2d');
-      bctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-      bctx.globalCompositeOperation = "source-atop";
-      bctx.fillStyle = "#000000";
-      bctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-      this.black7022Cache.push(black);
-    }
+    const red = document.createElement('canvas');
+    red.width = IMPACT_FRAME_W;
+    red.height = IMPACT_FRAME_H;
+    const rctx = red.getContext('2d');
+    rctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+    rctx.globalCompositeOperation = "source-atop";
+    rctx.fillStyle = "#ff0000";
+    rctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+
+    const black = document.createElement('canvas');
+    black.width = IMPACT_FRAME_W;
+    black.height = IMPACT_FRAME_H;
+    const bctx = black.getContext('2d');
+    bctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+    bctx.globalCompositeOperation = "source-atop";
+    bctx.fillStyle = "#000000";
+    bctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+
+    this._soulFrameCache[frameIndex] = { red, black };
+    return this._soulFrameCache[frameIndex];
   }
 
   update(dt) {
@@ -332,9 +328,10 @@ export class YujiVisualSystem {
       const targetW = IMPACT_FRAME_W * zoom * sizeMul;
       const targetH = IMPACT_FRAME_H * zoom * sizeMul;
 
-      const redFrame = this.red7022Cache[frameIndex];
-      const blackFrame = this.black7022Cache[frameIndex];
-      if (!redFrame || !blackFrame) return;
+      const frame = this._getSoulFrame(frameIndex);
+      if (!frame) return;
+      const redFrame = frame.red;
+      const blackFrame = frame.black;
 
       ctx.save();
       ctx.globalAlpha = alpha;
