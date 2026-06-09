@@ -4,9 +4,11 @@ import { InterpolationBuffer } from "./core/interpolation.js";
 import { Renderer } from "./core/renderer.js";
 import { ParticleSystem } from "./particles/particleSystem.js";
 import { AudioSystem } from "./audio/audioSystem.js";
+import { AUDIO_PATHS } from "./audio/audioConfig.js";
 import { Hud } from "./ui/hud.js";
 import { AnimationStateMachine } from "./animations/stateMachine.js";
-import { initGifBackground } from "./animations/gifBackground.js";
+import { initCyclingBackground } from "./animations/gifBackground.js";
+import { playHoverSound, playClickSound, playSelectSound, playOpenSound, playCloseSound, playTabSwitchSound, playSliderTickSound } from "./audio/uiSounds.js";
 
 const SESSION_KEY = "cursed_battles_session";
 const NICK_KEY = "cursed_battles_nick";
@@ -50,7 +52,12 @@ const characterCards = document.querySelectorAll(".character-card[data-character
 
 const menuBg = document.getElementById("menu-bg");
 if (menuBg) {
-  initGifBackground(menuBg, "/assets/backgrounds/telainicio.gif");
+  initCyclingBackground(menuBg, [
+    "/assets/backgrounds/telainicio.gif",
+    "/assets/backgrounds/telainicio2.gif",
+    "/assets/backgrounds/telainicio3.gif",
+    "/assets/backgrounds/telainicio4.gif",
+  ]);
 }
 
 function loadIcons() {
@@ -84,7 +91,17 @@ const renderer = new Renderer(canvas, particles);
 const input = new InputManager(canvas);
 const hud = new Hud();
 const audio = new AudioSystem();
-audio.loadSound("/assets/sounds/domain_entrancesound.mp3", "domainStart");
+audio.loadSound(AUDIO_PATHS.domainStart, "domainStart");
+audio.preloadMusic(AUDIO_PATHS.menuMusic);
+audio.unlock();
+async function resumeOnInteraction() {
+  await audio.resume();
+  audio.playMusic();
+  document.removeEventListener("click", resumeOnInteraction);
+  document.removeEventListener("keydown", resumeOnInteraction);
+}
+document.addEventListener("click", resumeOnInteraction);
+document.addEventListener("keydown", resumeOnInteraction);
 const interpolation = new InterpolationBuffer();
 const animation = new AnimationStateMachine();
 
@@ -512,6 +529,11 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f8fdff", count: 8, speed: 125, life: 0.18, size: 2.1 });
     } else if (ev.type === "yujiDomainHit") {
       renderer.yujiVisual.addCutLine(ev.x, ev.y);
+    } else if (ev.type === "trainHit") {
+      renderer.yujiVisual.addTrainImpact(ev.x, ev.y);
+      audio.play("trainHit");
+    } else if (ev.type === "trainApproach") {
+      audio.play("trainApproach");
     } else if (ev.type === "blueExplosion") {
       renderer.addBlueExplosion({ x: ev.x, y: ev.y, radius: ev.radius || 200 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66ccff", count: 30, speed: 250, life: 0.4, size: 3 });
@@ -637,9 +659,12 @@ function cycleSpectatePrev() {
 }
 
 function start() {
+  closeSettings();
   const nick = (nickInput.value || "Sorcerer").trim().slice(0, 20) || "Sorcerer";
   localStorage.setItem(NICK_KEY, nick);
-  audio.unlock();
+  audio.setGameActive(true);
+  audio.resume();
+  audio.stopMusic(300);
 
   const char = state.selectedChar || 'gojo';
   state.sessionToken = state.sessionToken || localStorage.getItem(SESSION_KEY) || "";
@@ -755,6 +780,11 @@ function loop(nowMs) {
     });
   }
 
+  if (state.joined) {
+    if (input.keys.help) hud.showHelp(state.selectedChar);
+    else hud.hideHelp();
+  }
+
   sendInputIfNeeded(nowMs);
 
   if (state.connected && nowMs - state.lastPingAt > 1100) {
@@ -771,6 +801,7 @@ input.onUpgradeKey = (index) => {
 playBtn.addEventListener("click", () => {
   start();
 });
+playBtn.addEventListener("mouseenter", () => playHoverSound(audio));
 
 const CHAR_COLORS = {
   gojo: [0, 229, 255],
@@ -789,7 +820,9 @@ function setAccentColor(charId) {
 }
 
 characterCards.forEach((card) => {
+  card.addEventListener("mouseenter", () => playHoverSound(audio));
   card.addEventListener("click", () => {
+    if (card.classList.contains("selected")) return;
     characterCards.forEach((item) => item.classList.remove("selected"));
     characterCards.forEach((item) => item.setAttribute("aria-pressed", "false"));
     card.classList.add("selected");
@@ -797,6 +830,7 @@ characterCards.forEach((card) => {
     const charId = card.dataset.character;
     state.selectedChar = charId;
     setAccentColor(charId);
+    playSelectSound(audio);
   });
 });
 
@@ -824,5 +858,207 @@ document.addEventListener("visibilitychange", () => {
     particles.clear();
   }
 });
+
+/* =========================================================================
+   SETTINGS PANEL LOGIC
+   ========================================================================= */
+const settingsGear = document.getElementById("settings-gear");
+const settingsPanel = document.getElementById("settings-panel");
+const settingsBackdrop = document.getElementById("settings-backdrop");
+const settingsClose = document.getElementById("settings-close");
+const settingsTabs = document.querySelectorAll(".settings-tab");
+const tabContents = {
+  audio: document.getElementById("settings-audio"),
+  controls: document.getElementById("settings-controls"),
+  bindings: document.getElementById("settings-bindings"),
+};
+const volMaster = document.getElementById("vol-master");
+const volMusic = document.getElementById("vol-music");
+const volSfx = document.getElementById("vol-sfx");
+const volMasterLabel = document.getElementById("vol-master-label");
+const volMusicLabel = document.getElementById("vol-music-label");
+const volSfxLabel = document.getElementById("vol-sfx-label");
+const bindingsList = document.getElementById("bindings-list");
+const bindingsReset = document.getElementById("bindings-reset");
+const controlsKeys = document.querySelectorAll(".ctrl-keys[data-action]");
+
+function openSettings() {
+  settingsBackdrop.classList.remove("hidden");
+  settingsPanel.classList.remove("hidden");
+  loadSettingsUI();
+  playOpenSound(audio);
+}
+
+function closeSettings() {
+  settingsBackdrop.classList.add("hidden");
+  settingsPanel.classList.add("hidden");
+  stopListening();
+  playCloseSound(audio);
+}
+
+function loadSettingsUI() {
+  volMaster.value = audio.getMasterVolume();
+  volMasterLabel.textContent = Math.round(audio.getMasterVolume() * 100) + "%";
+  volMusic.value = audio.getMusicVolume();
+  volMusicLabel.textContent = Math.round(audio.getMusicVolume() * 100) + "%";
+  volSfx.value = audio.getSfxVolume();
+  volSfxLabel.textContent = Math.round(audio.getSfxVolume() * 100) + "%";
+  updateBindingsUI();
+  updateControlsUI();
+}
+
+function updateControlsUI() {
+  const bindings = input.getBindings();
+  controlsKeys.forEach((el) => {
+    const action = el.dataset.action;
+    if (bindings[action]) {
+      const code = bindings[action];
+      el.textContent = formatCode(code);
+    }
+  });
+}
+
+function updateBindingsUI() {
+  const bindings = input.getBindings();
+  const btns = bindingsList.querySelectorAll(".binding-btn");
+  btns.forEach((btn) => {
+    const action = btn.dataset.action;
+    if (bindings[action]) {
+      btn.textContent = formatCode(bindings[action]);
+    }
+  });
+}
+
+function formatCode(code) {
+  const map = {
+    Space: "ESPAÇO",
+    ShiftLeft: "SHIFT",
+    ShiftRight: "SHIFT",
+    ControlLeft: "CTRL",
+    ControlRight: "CTRL",
+    AltLeft: "ALT",
+    AltRight: "ALT",
+    ArrowUp: "↑",
+    ArrowDown: "↓",
+    ArrowLeft: "←",
+    ArrowRight: "→",
+    Enter: "ENTER",
+    Escape: "ESC",
+    Tab: "TAB",
+    Backspace: "BACK",
+    Delete: "DEL",
+  };
+  if (map[code]) return map[code];
+  if (code.startsWith("Key")) return code.slice(3);
+  if (code.startsWith("Digit")) return code.slice(5);
+  if (code.startsWith("Numpad")) return "NUM" + code.slice(6);
+  return code;
+}
+
+let listeningBtn = null;
+
+function stopListening() {
+  if (listeningBtn) {
+    listeningBtn.classList.remove("listening");
+    listeningBtn.textContent = formatCode(input.getBindings()[listeningBtn.dataset.action]);
+    listeningBtn = null;
+  }
+}
+
+function startListening(btn) {
+  stopListening();
+  listeningBtn = btn;
+  btn.classList.add("listening");
+  btn.textContent = "...";
+}
+
+function handleBindingKeydown(event) {
+  if (!listeningBtn) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const action = listeningBtn.dataset.action;
+  const code = event.code;
+
+  if (code === "Escape") {
+    stopListening();
+    return;
+  }
+
+  const ok = input.setBinding(action, code);
+  if (!ok) {
+    listeningBtn.classList.add("conflict");
+    setTimeout(() => listeningBtn.classList.remove("conflict"), 400);
+    return;
+  }
+
+  stopListening();
+  updateBindingsUI();
+  updateControlsUI();
+}
+
+settingsGear.addEventListener("click", openSettings);
+settingsGear.addEventListener("mouseenter", () => playHoverSound(audio));
+
+settingsClose.addEventListener("click", closeSettings);
+settingsClose.addEventListener("mouseenter", () => playHoverSound(audio));
+
+settingsBackdrop.addEventListener("click", closeSettings);
+
+settingsTabs.forEach((tab) => {
+  tab.addEventListener("mouseenter", () => playHoverSound(audio));
+  tab.addEventListener("click", () => {
+    if (tab.classList.contains("active")) return;
+    settingsTabs.forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    Object.values(tabContents).forEach((c) => c.classList.remove("active"));
+    const target = tab.dataset.tab;
+    if (tabContents[target]) tabContents[target].classList.add("active");
+    playTabSwitchSound(audio);
+  });
+});
+
+let _sliderThrottle = 0;
+function onSliderInput(value, label, setter) {
+  label.textContent = Math.round(value * 100) + "%";
+  setter(value);
+  const now = Date.now();
+  if (now - _sliderThrottle > 100) {
+    _sliderThrottle = now;
+    playSliderTickSound(audio);
+  }
+}
+
+volMaster.addEventListener("input", () => {
+  onSliderInput(parseFloat(volMaster.value), volMasterLabel, (v) => audio.setMasterVolume(v));
+});
+
+volMusic.addEventListener("input", () => {
+  onSliderInput(parseFloat(volMusic.value), volMusicLabel, (v) => audio.setMusicVolume(v));
+});
+
+volSfx.addEventListener("input", () => {
+  onSliderInput(parseFloat(volSfx.value), volSfxLabel, (v) => audio.setSfxVolume(v));
+});
+
+bindingsList.addEventListener("click", (event) => {
+  const btn = event.target.closest(".binding-btn");
+  if (!btn) return;
+  playClickSound(audio);
+  startListening(btn);
+});
+document.querySelectorAll(".binding-btn").forEach((btn) => {
+  btn.addEventListener("mouseenter", () => playHoverSound(audio));
+});
+
+bindingsReset.addEventListener("click", () => {
+  playClickSound(audio);
+  input.resetBindings();
+  updateBindingsUI();
+  updateControlsUI();
+});
+bindingsReset.addEventListener("mouseenter", () => playHoverSound(audio));
+
+document.addEventListener("keydown", handleBindingKeydown);
 
 requestAnimationFrame(loop);

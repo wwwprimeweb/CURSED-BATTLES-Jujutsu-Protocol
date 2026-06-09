@@ -45,6 +45,17 @@ export class YujiVisualSystem {
     this.soulImpactEffects = [];
     this.taidoBeatdownEffects = [];
     this.cutLines = [];
+    this.trainSpritesReady = false;
+    this.trainImpactSprites = [];
+    let loaded = 0;
+    for (let i = 0; i < 14; i++) {
+      const img = new Image();
+      img.onload = () => { loaded++; if (loaded === 14) this.trainSpritesReady = true; };
+      img.onerror = () => { loaded++; if (loaded === 14) this.trainSpritesReady = true; };
+      img.src = `/assets/sprites/megumi/7123_${i}.png`;
+      this.trainImpactSprites.push(img);
+    }
+    this.trainImpacts = [];
   }
 
   build7022Cache() {
@@ -110,6 +121,11 @@ export class YujiVisualSystem {
       this.cutLines[i].life -= dt;
       if (this.cutLines[i].life <= 0) this.cutLines.splice(i, 1);
     }
+
+    for (let i = this.trainImpacts.length - 1; i >= 0; i -= 1) {
+      this.trainImpacts[i].life -= dt;
+      if (this.trainImpacts[i].life <= 0) this.trainImpacts.splice(i, 1);
+    }
   }
 
   triggerFlyingKnee(x, y, dirX, dirY, hit) {
@@ -142,6 +158,10 @@ export class YujiVisualSystem {
       life: 0.35,
       maxLife: 0.35,
     });
+  }
+
+  addTrainImpact(x, y) {
+    this.trainImpacts.push({ x, y, life: 0.5, maxLife: 0.5 });
   }
 
   triggerHit(x, y, intensity = 1) {
@@ -393,6 +413,22 @@ export class YujiVisualSystem {
       ctx.lineTo(endX, endY);
       ctx.stroke();
 
+      ctx.restore();
+    });
+
+    this.trainImpacts.forEach((e) => {
+      const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
+      const screenY = (e.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+      const progress = 1 - e.life / e.maxLife;
+      const frameIdx = Math.min(13, Math.floor(progress * 14));
+      const alpha = Math.min(1, progress * 4) * Math.max(0, 1 - (e.life / e.maxLife - 0.6) / 0.4);
+      const img = this.trainImpactSprites[frameIdx];
+      if (!this.trainSpritesReady) return;
+      const w = img.naturalWidth * zoom * 0.7;
+      const h = img.naturalHeight * zoom * 0.7;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, screenX - w * 0.5, screenY - h * 0.5, w, h);
       ctx.restore();
     });
 

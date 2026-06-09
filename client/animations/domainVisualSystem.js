@@ -361,28 +361,7 @@ export class DomainVisualSystem {
           effectiveOffset = { x: 0.3, y: -0.3 };
         }
 
-        if (char === 'yuji' && key === 'mid') {
-          effectiveParallax = 0.25;
-          effectiveScale = 1.56;
-          effectiveOffset = {
-            x: 0.8,
-            y: 0.50,
-          };
-          const expandEntry = this.expanding.get(ownerId);
-          if (expandEntry) {
-            const elapsed = (performance.now() - expandEntry.startTime) / 1000;
-            if (elapsed >= 10) {
-              const t = Math.min(1, (elapsed - 10) / 3);
-              const slide = t * t;
-              if (slide >= 1) {
-                continue;
-              }
-              effectiveScale = 1.56 + slide * 2.08;
-              effectiveOffset.x = 0.8 + 2.0 * slide;
-              effectiveOffset.y = 0.50 + slide * 0.95;
-            }
-          }
-        }
+        if (char === 'yuji' && key === 'mid') continue;
 
         const camX = camera.x || 0;
         const camY = camera.y || 0;
@@ -475,6 +454,38 @@ export class DomainVisualSystem {
             ctx.globalAlpha = overlayAlpha;
             this.drawScaledImage(ctx, overlay, p.x + dx, p.y + dy, vz, 0, 0, 1.2);
             ctx.restore();
+          }
+        }
+
+        // Train (yuji2.png animado nos trilhos)
+        const trainEntry = this.expanding.get(ownerId);
+        if (trainEntry) {
+          const elapsed = (performance.now() - trainEntry.startTime) / 1000;
+          if (elapsed >= 6) {
+            const adjustedElapsed = elapsed - 6;
+            const progress = adjustedElapsed % 10;
+            if (progress <= 2) {
+              const t = progress / 2;
+              const tNormX = 65 / (380 * 1.2);
+              const tNormY = (-1400 + t * 2800) / (380 * 1.2);
+              const parallaxDepth = 0.25;
+              const camX = camera.x || 0;
+              const camY = camera.y || 0;
+              const dx = (worldX - camX) * parallaxDepth * zoom;
+              const dy = (worldY - camY) * parallaxDepth * zoom;
+              const trainX = p.x + tNormX * vz + dx;
+              const trainY = p.y + tNormY * vz + dy + vz * 0.3;
+
+              const trainImg = this.getLayerImage('yuji', '2');
+              if (trainImg && trainImg.width) {
+                ctx.save();
+                ctx.translate(trainX, trainY);
+                ctx.shadowColor = 'rgba(255, 107, 157, 0.4)';
+                ctx.shadowBlur = 12;
+                this.drawScaledImage(ctx, trainImg, 0, 0, vz, 0, 0, 1.2);
+                ctx.restore();
+              }
+            }
           }
         }
       }

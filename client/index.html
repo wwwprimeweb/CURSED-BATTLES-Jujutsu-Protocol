@@ -65,7 +65,89 @@
             </div>
           </div>
         </div>
+        <button id="settings-gear" type="button" aria-label="Configurações" title="Configurações">⚙</button>
       </section>
+
+      <div id="settings-backdrop" class="hidden"></div>
+      <div id="settings-panel" class="hidden">
+        <div class="settings-header">
+          <h2>CONFIGURAÇÕES</h2>
+          <button id="settings-close" type="button" aria-label="Fechar">✕</button>
+        </div>
+        <div class="settings-tabs">
+          <button class="settings-tab active" data-tab="audio">ÁUDIO</button>
+          <button class="settings-tab" data-tab="controls">CONTROLES</button>
+          <button class="settings-tab" data-tab="bindings">ATALHOS</button>
+        </div>
+        <div class="settings-body">
+          <div class="settings-tab-content active" id="settings-audio">
+            <div class="settings-slider-row">
+              <label>Volume Mestre</label>
+              <input type="range" id="vol-master" min="0" max="1" step="0.05" value="1" />
+              <span class="vol-label" id="vol-master-label">100%</span>
+            </div>
+            <div class="settings-slider-row">
+              <label>Música</label>
+              <input type="range" id="vol-music" min="0" max="1" step="0.05" value="1" />
+              <span class="vol-label" id="vol-music-label">100%</span>
+            </div>
+            <div class="settings-slider-row">
+              <label>Efeitos Sonoros</label>
+              <input type="range" id="vol-sfx" min="0" max="1" step="0.05" value="1" />
+              <span class="vol-label" id="vol-sfx-label">100%</span>
+            </div>
+          </div>
+          <div class="settings-tab-content" id="settings-controls">
+            <div class="controls-grid">
+              <div class="ctrl-row"><span class="ctrl-action">Movimento</span><span class="ctrl-keys">W A S D</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Habilidade 1</span><span class="ctrl-keys" data-action="q">Q</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Habilidade 2</span><span class="ctrl-keys" data-action="e">E</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Habilidade 3</span><span class="ctrl-keys" data-action="r">R</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Mobilidade</span><span class="ctrl-keys" data-action="space">ESPAÇO</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Ultimate / Domínio</span><span class="ctrl-keys" data-action="f">F</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Esquiva</span><span class="ctrl-keys" data-action="dodge">SHIFT</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Ajuda</span><span class="ctrl-keys" data-action="help">C</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Ataque Básico</span><span class="ctrl-keys">CLIQUE ESQUERDO</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Upgrade 1-3</span><span class="ctrl-keys">1 2 3</span></div>
+              <div class="ctrl-row"><span class="ctrl-action">Spectate</span><span class="ctrl-keys">[ ]</span></div>
+            </div>
+          </div>
+          <div class="settings-tab-content" id="settings-bindings">
+            <p class="bindings-hint">Clique em um atalho e pressione a nova tecla</p>
+            <div class="bindings-list" id="bindings-list">
+              <div class="binding-row" data-action="q">
+                <span class="binding-action">Habilidade 1</span>
+                <button class="binding-btn" data-action="q">Q</button>
+              </div>
+              <div class="binding-row" data-action="e">
+                <span class="binding-action">Habilidade 2</span>
+                <button class="binding-btn" data-action="e">E</button>
+              </div>
+              <div class="binding-row" data-action="r">
+                <span class="binding-action">Habilidade 3</span>
+                <button class="binding-btn" data-action="r">R</button>
+              </div>
+              <div class="binding-row" data-action="space">
+                <span class="binding-action">Mobilidade</span>
+                <button class="binding-btn" data-action="space">ESPAÇO</button>
+              </div>
+              <div class="binding-row" data-action="f">
+                <span class="binding-action">Ultimate / Domínio</span>
+                <button class="binding-btn" data-action="f">F</button>
+              </div>
+              <div class="binding-row" data-action="dodge">
+                <span class="binding-action">Esquiva</span>
+                <button class="binding-btn" data-action="dodge">SHIFT</button>
+              </div>
+              <div class="binding-row" data-action="help">
+                <span class="binding-action">Ajuda</span>
+                <button class="binding-btn" data-action="help">C</button>
+              </div>
+            </div>
+            <button id="bindings-reset" type="button">Restaurar Padrões</button>
+          </div>
+        </div>
+      </div>
 
       <section id="hud-layer">
         <div id="match-timer"></div>

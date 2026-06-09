@@ -1,3 +1,5 @@
+import { HELP_DATA } from "./helpData.js";
+
 const CHARACTER_SKILLS = {
   gojo: [
     { key: "q", hotkey: "Q", icon: "Az", name: "Azul", cost: 35, baseCooldown: 10, tag: "controle" },
@@ -203,7 +205,6 @@ function createBarsHtml(stats, flags) {
 
 function buildSkillSlotsHtml(skills, energy) {
   return skills.map((skill) => {
-    const costText = skill.cost > 0 ? `${skill.cost}` : "";
     return `
       <div class="skill-slot-wrapper">
         <div class="skill-slot slot-key-${skill.key}" data-key="${skill.key}" style="--cooldown:0deg">
@@ -211,7 +212,7 @@ function buildSkillSlotsHtml(skills, energy) {
           <div class="skill-diamond-inner">
             <span class="skill-key-badge">${skill.hotkey}</span>
             <span class="skill-icon-face">${skill.icon}</span>
-            ${costText ? `<span class="skill-cost-badge">${costText}</span>` : ""}
+            <span class="skill-cost-badge">${skill.cost}</span>
             <div class="skill-radial-countdown" style="display:none">0.0</div>
           </div>
         </div>
@@ -307,7 +308,9 @@ export class Hud {
     this._prevSkillLock = false;
     this._prevBoss = false;
 
+    this._flameChars = ["gojo", "yuta", "sukuna", "yuji", "megumi", "hakari"];
     this.recoveryFlameImg = new Image();
+    this.recoveryFlameImg.onload = () => this._precacheFlames();
     this.recoveryFlameImg.src = "/assets/energyrecover/recovery_flame.png";
     this._flameFrames = 12;
     this._flameCols = 4;
@@ -316,6 +319,9 @@ export class Hud {
     this._flameFramesCache = {};
     this._flameLastTick = 0;
     this._flameFrameIdx = 0;
+    this._flameBackbuffer = document.createElement("canvas");
+    this._flameBackbuffer.width = 160;
+    this._flameBackbuffer.height = 192;
 
     this._recoveryWrap = document.createElement("div");
     this._recoveryWrap.className = "recovery-flame-wrap";
@@ -345,6 +351,12 @@ export class Hud {
         <span class="domain-cancel-time">3.0</span>
       </div>
     `;
+
+    this.helpOverlay = document.createElement("div");
+    this.helpOverlay.id = "help-overlay";
+    this.helpOverlay.className = "help-overlay hidden";
+    this.helpOverlay.innerHTML = "";
+    this.hudLayer.appendChild(this.helpOverlay);
   }
 
   _updateInner(el, html) {
@@ -391,6 +403,7 @@ export class Hud {
             <div class="skill-diamond-inner">
               <span class="skill-key-badge">M1</span>
               <span class="skill-icon-face">Atq</span>
+              <span class="skill-cost-badge">0</span>
             </div>
           </div>
           <div class="skill-hover-tooltip">
@@ -485,21 +498,24 @@ export class Hud {
 
     this.updateBuffs(you.status || {});
 
-    const recoveryActive = (you.status && you.status.energyRecoveryTime > 0) && you.alive;
+    const recoveryActive = (you.status && you.status.energyRecoveryTime > 0.5) && you.alive;
     const wrap = this._recoveryWrap;
     const canvas = this._recoveryCanvas;
     if (recoveryActive) {
-      wrap.style.display = "block";
+      wrap.style.opacity = "1";
       this._recoveryTooltip.innerHTML = `<strong>Recuperação de Energia</strong><span>${you.status.energyRecoveryTime.toFixed(1)}s · Regeneração 2x · -15% Dano</span>`;
       if (now - this._flameLastTick > 60) {
         this._flameFrameIdx = (this._flameFrameIdx + 1) % this._flameFrames;
         this._flameLastTick = now;
+        const bb = this._flameBackbuffer;
+        const bbCtx = bb.getContext('2d');
+        bbCtx.clearRect(0, 0, bb.width, bb.height);
+        this._drawFlameFrame(bbCtx, chara, this._flameFrameIdx, bb.width, bb.height);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bb, 0, 0);
       }
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      this._drawFlameFrame(ctx, chara, this._flameFrameIdx, canvas.width, canvas.height);
     } else {
-      wrap.style.display = "none";
+      wrap.style.opacity = "0";
     }
 
     const energyBlock = this.barsEl.querySelector('.energy-block');
@@ -752,53 +768,83 @@ export class Hud {
     if (this.spectateEl) this.spectateEl.classList.add("hidden");
   }
 
-  _drawFlameFrame(ctx, character, frameIdx, w, h) {
-    if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
-    if (!this._flameFramesCache[character]) this._flameFramesCache[character] = {};
-    const cached = this._flameFramesCache[character][frameIdx];
-    if (cached) {
-      ctx.drawImage(cached, 0, 0, cached.width, cached.height, 0, 0, w, h);
-      return;
+  showHelp(charId) {
+    const data = HELP_DATA[charId];
+    if (!data) return;
+    const skills = data.skills;
+    const keyMap = { m1: "M1", q: "Q", e: "E", r: "R", space: "ESPAÇO", f: "F" };
+    let html = `<div class="help-header">${data.name}</div>`;
+    if (data.passiva) {
+      html += `<div class="help-passiva">${data.passiva}</div>`;
     }
+    html += `<div class="help-skills">`;
+    for (const [sk, desc] of Object.entries(skills)) {
+      html += `<div class="help-skill-row">
+        <span class="help-key">${keyMap[sk] || sk.toUpperCase()}</span>
+        <span class="help-desc">${desc}</span>
+      </div>`;
+    }
+    html += `</div>`;
+    html += `<div class="help-footer">Solte a tecla para fechar</div>`;
+    this.helpOverlay.innerHTML = html;
+    this.helpOverlay.classList.remove("hidden");
+  }
 
-    const col = frameIdx % this._flameCols;
-    const row = Math.floor(frameIdx / this._flameCols);
+  hideHelp() {
+    this.helpOverlay.classList.add("hidden");
+  }
+
+  _precacheFlames() {
+    if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
     const offscreen = document.createElement("canvas");
     offscreen.width = this._flameFrameW;
     offscreen.height = this._flameFrameH;
     const offCtx = offscreen.getContext("2d");
-
-    offCtx.drawImage(
-      this.recoveryFlameImg,
-      col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
-      0, 0, this._flameFrameW, this._flameFrameH
-    );
-
-    const imageData = offCtx.getImageData(0, 0, this._flameFrameW, this._flameFrameH);
-    const pixels = imageData.data;
-    const colors = {
-      yuta:   { r: 255, g: 20,  b: 140 },
-      sukuna: { r: 230, g: 50,  b: 50  },
-      hakari: { r: 50,  g: 220, b: 80  },
-    };
-    const c = colors[character] || { r: 80, g: 235, b: 255 };
-    const alphaMul = 0.7;
-
-    for (let i = 0; i < pixels.length; i += 4) {
-      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
-      if (a < 10) continue;
-      const brightness = Math.max(r, g, b);
-      if (brightness < 50) {
-        pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0;
-        pixels[i + 3] = Math.round(a * alphaMul);
-      } else {
-        pixels[i] = c.r; pixels[i + 1] = c.g; pixels[i + 2] = c.b;
-        pixels[i + 3] = Math.round(a * alphaMul);
+    for (const chara of this._flameChars) {
+      this._flameFramesCache[chara] = {};
+      for (let f = 0; f < this._flameFrames; f++) {
+        const col = f % this._flameCols;
+        const row = Math.floor(f / this._flameCols);
+        offCtx.clearRect(0, 0, this._flameFrameW, this._flameFrameH);
+        offCtx.drawImage(
+          this.recoveryFlameImg,
+          col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
+          0, 0, this._flameFrameW, this._flameFrameH
+        );
+        const imageData = offCtx.getImageData(0, 0, this._flameFrameW, this._flameFrameH);
+        const pixels = imageData.data;
+        const colors = {
+          yuta:   { r: 255, g: 20,  b: 140 },
+          sukuna: { r: 230, g: 50,  b: 50  },
+          hakari: { r: 50,  g: 220, b: 80  },
+        };
+        const c = colors[chara] || { r: 80, g: 235, b: 255 };
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
+          if (a < 10) continue;
+          if (Math.max(r, g, b) < 50) {
+            pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0;
+            pixels[i + 3] = Math.round(a * 0.7);
+          } else {
+            pixels[i] = c.r; pixels[i + 1] = c.g; pixels[i + 2] = c.b;
+            pixels[i + 3] = Math.round(a * 0.7);
+          }
+        }
+        offCtx.putImageData(imageData, 0, 0);
+        const frame = document.createElement("canvas");
+        frame.width = 160;
+        frame.height = 192;
+        frame.getContext("2d").drawImage(offscreen, 0, 0, 160, 192);
+        this._flameFramesCache[chara][f] = frame;
       }
     }
-    offCtx.putImageData(imageData, 0, 0);
-    this._flameFramesCache[character][frameIdx] = offscreen;
-    ctx.drawImage(offscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
+  }
+
+  _drawFlameFrame(ctx, character, frameIdx, w, h) {
+    const cached = this._flameFramesCache[character]?.[frameIdx];
+    if (cached) {
+      ctx.drawImage(cached, 0, 0, w, h);
+    }
   }
 
   updateBuffs(status) {

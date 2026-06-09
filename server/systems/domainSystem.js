@@ -41,10 +41,13 @@ class DomainSystem {
       slowProjectile,
       active: true,
       conflict: false,
-      barrierHp: 100,
-      barrierMaxHp: 100,
+      barrierHp: 300,
+      barrierMaxHp: 300,
       hitTimer: 0,
       copyUsed: false,
+      trainTimer: 0,
+      trainInitialDelay: 6,
+      trainHits: new Set(),
     };
 
     if (domain.character === "yuta") {
@@ -127,6 +130,21 @@ class DomainSystem {
       if (domain.shouldHit) {
         domain.hitTimer -= 1;
       }
+
+      if (domain.character === "yuji") {
+        if (domain.trainInitialDelay > 0) {
+          if (domain.trainInitialDelay <= 3 && domain.trainInitialDelay + dt > 3) {
+            this.server.emitEventNear(domain.x, domain.y, { type: "trainApproach", x: domain.x, y: domain.y }, domain.radius);
+          }
+          domain.trainInitialDelay -= dt;
+        } else {
+          if (domain.trainTimer >= 7 && domain.trainTimer - dt < 7) {
+            this.server.emitEventNear(domain.x, domain.y, { type: "trainApproach", x: domain.x, y: domain.y }, domain.radius);
+          }
+          domain.trainTimer += dt;
+          if (domain.trainTimer > 10) domain.trainTimer -= 10;
+        }
+      }
     });
 
     const list = Array.from(this.domains.values());
@@ -166,6 +184,7 @@ class DomainSystem {
 
     this.applyDomainFreezeEffects(dt);
     this.applyDomainPlayerEffects(dt);
+    this.applyYujiTrainHit(dt);
   }
 
   applyDomainPlayerEffects(dt) {
@@ -178,8 +197,8 @@ class DomainSystem {
         if (!owner || !owner.alive) return;
         const d = distance(targetPlayer.x, targetPlayer.y, domain.x, domain.y);
         if (d <= domain.radius) {
-          targetPlayer.domainFrozen = true;
           if (domain.character === "yuji") {
+            targetPlayer.domainFrozen = false;
             if (domain.shouldHit) {
               this.server.combat.applyDamage({
                 target: targetPlayer,
@@ -196,6 +215,7 @@ class DomainSystem {
               });
             }
           } else {
+            targetPlayer.domainFrozen = true;
             targetPlayer.vx *= 0.5;
             targetPlayer.vy *= 0.5;
             this.server.combat.applyDamage({
@@ -278,6 +298,82 @@ class DomainSystem {
 
       const barrierDamage = (enemy.grade === "special" ? 6 : enemy.grade <= 1 ? 3 : 1) * dt;
       this.damageBarrier(sourceDomain.ownerId, barrierDamage);
+    });
+  }
+
+  applyYujiTrainHit(dt) {
+    this.domains.forEach((domain) => {
+      if (domain.character !== "yuji") return;
+      if (domain.trainInitialDelay > 0) return;
+      const progress = domain.trainTimer;
+      if (progress > 2) return;
+
+      // Clear hit tracking at start of a new pass (timer wrapped around)
+      if (progress <= 1 / 30) domain.trainHits.clear();
+
+      const t = progress / 2;
+      const baseNorm = 380 * 1.2;
+      const scale = domain.radius / baseNorm;
+      const tRelX = 65 * scale;
+      const tRelY = (-1400 + t * 2800) * scale;
+      const trainWorldX = domain.x + tRelX;
+      const trainWorldY = domain.y + tRelY + domain.radius * 0.3;
+      const trainHitboxX = trainWorldX + 200 * scale;
+      const halfW = domain.radius * 0.16;
+      const halfH = domain.radius * 1.8;
+      const owner = this.server.players.get(domain.ownerId);
+
+      this.server.players.forEach((player) => {
+        if (!player.alive) return;
+        if (domain.trainHits.has(player.id)) return;
+
+        const closestX = Math.max(trainHitboxX - halfW, Math.min(player.x, trainHitboxX + halfW));
+        const closestY = Math.max(trainWorldY - halfH, Math.min(player.y, trainWorldY + halfH));
+        const d = distance(player.x, player.y, closestX, closestY);
+
+        if (d <= (player.radius || 20)) {
+          domain.trainHits.add(player.id);
+          this.server.combat.applyDamage({
+            target: player,
+            source: owner,
+            amount: 30,
+            kind: "domainFreeze",
+            fromX: trainHitboxX,
+            fromY: trainWorldY,
+          });
+          player.vx = -3000;
+          player.vy = -800;
+          player.stunTimer = Math.max(player.stunTimer || 0, 0.5);
+          this.server.moveEntityWithCollisions(player, player.vx * dt, player.vy * dt);
+          this.server.emitEventNear(player.x, player.y, { type: "trainHit", x: player.x, y: player.y });
+        }
+      });
+
+      this.server.enemies.forEach((enemy) => {
+        if (!enemy.alive) return;
+        if (domain.trainHits.has(`e_${enemy.id}`)) return;
+
+        const closestX = Math.max(trainHitboxX - halfW, Math.min(enemy.x, trainHitboxX + halfW));
+        const closestY = Math.max(trainWorldY - halfH, Math.min(enemy.y, trainWorldY + halfH));
+        const d = distance(enemy.x, enemy.y, closestX, closestY);
+        const enemyR = enemy.radius || 20;
+
+        if (d <= enemyR) {
+          domain.trainHits.add(`e_${enemy.id}`);
+          this.server.combat.applyDamage({
+            target: enemy,
+            source: owner,
+            amount: 30,
+            kind: "domainFreeze",
+            fromX: trainHitboxX,
+            fromY: trainWorldY,
+          });
+          enemy.vx = -3000;
+          enemy.vy = -800;
+          this.server.moveEntityWithCollisions(enemy, enemy.vx * dt, enemy.vy * dt);
+          this.server.emitEventNear(enemy.x, enemy.y, { type: "trainHit", x: enemy.x, y: enemy.y });
+        }
+      });
     });
   }
 
