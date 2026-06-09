@@ -314,7 +314,7 @@ export class Hud {
     this._flameCols = 4;
     this._flameFrameW = 500;
     this._flameFrameH = 567;
-    this._flameFramesCache = {};
+
     this._flameLastTick = 0;
     this._flameFrameIdx = 0;
 
@@ -788,27 +788,14 @@ export class Hud {
 
   _drawFlameFrame(ctx, character, frameIdx, w, h) {
     if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
-    if (!this._flameFramesCache[character]) this._flameFramesCache[character] = {};
-    const cached = this._flameFramesCache[character][frameIdx];
-    if (cached) {
-      ctx.drawImage(cached, 0, 0, cached.width, cached.height, 0, 0, w, h);
-      return;
-    }
-
     const col = frameIdx % this._flameCols;
     const row = Math.floor(frameIdx / this._flameCols);
-    const offscreen = document.createElement("canvas");
-    offscreen.width = this._flameFrameW;
-    offscreen.height = this._flameFrameH;
-    const offCtx = offscreen.getContext("2d");
-
-    offCtx.drawImage(
+    ctx.drawImage(
       this.recoveryFlameImg,
       col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
-      0, 0, this._flameFrameW, this._flameFrameH
+      0, 0, w, h
     );
-
-    const imageData = offCtx.getImageData(0, 0, this._flameFrameW, this._flameFrameH);
+    const imageData = ctx.getImageData(0, 0, w, h);
     const pixels = imageData.data;
     const colors = {
       yuta:   { r: 255, g: 20,  b: 140 },
@@ -817,7 +804,6 @@ export class Hud {
     };
     const c = colors[character] || { r: 80, g: 235, b: 255 };
     const alphaMul = 0.7;
-
     for (let i = 0; i < pixels.length; i += 4) {
       const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
       if (a < 10) continue;
@@ -830,11 +816,7 @@ export class Hud {
         pixels[i + 3] = Math.round(a * alphaMul);
       }
     }
-    offCtx.putImageData(imageData, 0, 0);
-    const img = new Image();
-    img.src = offscreen.toDataURL();
-    this._flameFramesCache[character][frameIdx] = img;
-    ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
+    ctx.putImageData(imageData, 0, 0);
   }
 
   updateBuffs(status) {

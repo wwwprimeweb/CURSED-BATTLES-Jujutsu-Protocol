@@ -71,7 +71,8 @@ export class Renderer {
     this._erCols = 6;
     this._erFrameW = 136;
     this._erFrameH = 292;
-    this._erFramesCache = {};
+    this._erCanvas = {};
+    this._erLastFrame = {};
 
     this.crawlerExplosions = [];
     this.acidPuddles = [];
@@ -1710,8 +1711,7 @@ export class Renderer {
 
           this._processERFrame(frameIdx, p.character);
 
-          const c = this._erFramesCache[p.character];
-          const frame = c?.[frameIdx];
+          const frame = this._erCanvas[p.character];
           if (frame) {
             ctx.drawImage(
               frame,
@@ -1735,8 +1735,7 @@ export class Renderer {
 
           this._processERFrame(frameIdx, p.character);
 
-          const c = this._erFramesCache[p.character];
-          const frame = c?.[frameIdx];
+          const frame = this._erCanvas[p.character];
           if (frame) {
             ctx.globalAlpha = 0.25;
             ctx.drawImage(
@@ -1767,25 +1766,28 @@ export class Renderer {
   }
 
   _processERFrame(frameIdx, character) {
-    if (!this._erFramesCache[character]) this._erFramesCache[character] = [];
-    if (this._erFramesCache[character][frameIdx]) return;
     if (!this.energyRecoverImg.complete) return;
+    if (!this._erCanvas[character]) {
+      this._erCanvas[character] = document.createElement("canvas");
+      this._erCanvas[character].width = this._erFrameW;
+      this._erCanvas[character].height = this._erFrameH;
+    }
+    if (this._erLastFrame[character] === frameIdx) return;
+    this._erLastFrame[character] = frameIdx;
 
+    const canvas = this._erCanvas[character];
+    const ctx = canvas.getContext("2d");
     const col = frameIdx % this._erCols;
     const row = Math.floor(frameIdx / this._erCols);
 
-    const offscreen = document.createElement("canvas");
-    offscreen.width = this._erFrameW;
-    offscreen.height = this._erFrameH;
-    const offCtx = offscreen.getContext("2d");
-
-    offCtx.drawImage(
+    ctx.clearRect(0, 0, this._erFrameW, this._erFrameH);
+    ctx.drawImage(
       this.energyRecoverImg,
       col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
       0, 0, this._erFrameW, this._erFrameH
     );
 
-    const imageData = offCtx.getImageData(0, 0, this._erFrameW, this._erFrameH);
+    const imageData = ctx.getImageData(0, 0, this._erFrameW, this._erFrameH);
     const pixels = imageData.data;
 
     const colors = {
@@ -1819,8 +1821,7 @@ export class Renderer {
       }
     }
 
-    offCtx.putImageData(imageData, 0, 0);
-    this._erFramesCache[character][frameIdx] = offscreen;
+    ctx.putImageData(imageData, 0, 0);
   }
 
   drawM1PunchEffects() {

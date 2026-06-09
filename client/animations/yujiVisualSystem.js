@@ -28,7 +28,7 @@ export class YujiVisualSystem {
 
     this.impactSheet = new Image();
     this.impactSheet.src = IMPACT_SHEET_PATH;
-    this._soulFrameCache = {};
+
 
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
@@ -55,35 +55,8 @@ export class YujiVisualSystem {
     this.trainImpacts = [];
   }
 
-  _getSoulFrame(frameIndex) {
-    if (!this.impactSheet.complete || this.impactSheet.naturalWidth <= 0) return null;
-    if (this._soulFrameCache[frameIndex]) return this._soulFrameCache[frameIndex];
-
-    const frameIdx = 8 + frameIndex;
-    const sx = frameIdx * IMPACT_FRAME_W;
-
-    const red = document.createElement('canvas');
-    red.width = IMPACT_FRAME_W;
-    red.height = IMPACT_FRAME_H;
-    const rctx = red.getContext('2d');
-    rctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-    rctx.globalCompositeOperation = "source-atop";
-    rctx.fillStyle = "#ff0000";
-    rctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-
-    const black = document.createElement('canvas');
-    black.width = IMPACT_FRAME_W;
-    black.height = IMPACT_FRAME_H;
-    const bctx = black.getContext('2d');
-    bctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-    bctx.globalCompositeOperation = "source-atop";
-    bctx.fillStyle = "#000000";
-    bctx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-
-    const redImg = new Image(); redImg.src = red.toDataURL();
-    const blackImg = new Image(); blackImg.src = black.toDataURL();
-    this._soulFrameCache[frameIndex] = { red: redImg, black: blackImg };
-    return this._soulFrameCache[frameIndex];
+  _soulSheetReady() {
+    return this.impactSheet.complete && this.impactSheet.naturalWidth > 0;
   }
 
   update(dt) {
@@ -326,14 +299,12 @@ export class YujiVisualSystem {
       const elapsed = 0.76 - e.life;
       const frameIndex = Math.floor(elapsed * 18) % 13;
 
+      if (!this._soulSheetReady()) return;
+      const sx = (8 + frameIndex) * IMPACT_FRAME_W;
+
       const sizeMul = 1.64;
       const targetW = IMPACT_FRAME_W * zoom * sizeMul;
       const targetH = IMPACT_FRAME_H * zoom * sizeMul;
-
-      const frame = this._getSoulFrame(frameIndex);
-      if (!frame) return;
-      const redFrame = frame.red;
-      const blackFrame = frame.black;
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -350,15 +321,31 @@ export class YujiVisualSystem {
         drawY = screenY - targetH * 0.5;
       }
 
+      if (!this._soulTintCanvas) {
+        this._soulTintCanvas = document.createElement("canvas");
+        this._soulTintCanvas.width = IMPACT_FRAME_W;
+        this._soulTintCanvas.height = IMPACT_FRAME_H;
+      }
+      const tintCtx = this._soulTintCanvas.getContext("2d");
+
+      const drawTinted = (color, dx, dy) => {
+        tintCtx.clearRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        tintCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        tintCtx.globalCompositeOperation = "source-atop";
+        tintCtx.fillStyle = color;
+        tintCtx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        tintCtx.globalCompositeOperation = "source-over";
+        ctx.drawImage(this._soulTintCanvas, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
+      };
+
       const outlineOff = 5;
-      ctx.globalCompositeOperation = "source-over";
       for (let ox = -outlineOff; ox <= outlineOff; ox += outlineOff) {
         for (let oy = -outlineOff; oy <= outlineOff; oy += outlineOff) {
           if (ox === 0 && oy === 0) continue;
-          ctx.drawImage(blackFrame, drawX + ox, drawY + oy, targetW, targetH);
+          drawTinted("#000000", drawX + ox, drawY + oy);
         }
       }
-      ctx.drawImage(redFrame, drawX, drawY, targetW, targetH);
+      drawTinted("#ff0000", drawX, drawY);
 
       ctx.restore();
     });
