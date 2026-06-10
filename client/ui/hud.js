@@ -503,7 +503,7 @@ export class Hud {
         this._flameFrameIdx = (this._flameFrameIdx + 1) % this._flameFrames;
         this._flameLastTick = now;
       }
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       this._drawFlameFrame(ctx, chara, this._flameFrameIdx, canvas.width, canvas.height);
     } else {
@@ -788,18 +788,14 @@ export class Hud {
 
   _drawFlameFrame(ctx, character, frameIdx, w, h) {
     if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
-    const offscreen = document.createElement("canvas");
-    offscreen.width = this._flameFrameW;
-    offscreen.height = this._flameFrameH;
-    const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
     const col = frameIdx % this._flameCols;
     const row = Math.floor(frameIdx / this._flameCols);
-    offCtx.drawImage(
+    ctx.drawImage(
       this.recoveryFlameImg,
       col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
-      0, 0, this._flameFrameW, this._flameFrameH
+      0, 0, w, h
     );
-    const imageData = offCtx.getImageData(0, 0, this._flameFrameW, this._flameFrameH);
+    const imageData = ctx.getImageData(0, 0, w, h);
     const pixels = imageData.data;
     const colors = {
       yuta:   { r: 255, g: 20,  b: 140 },
@@ -820,8 +816,7 @@ export class Hud {
         pixels[i + 3] = Math.round(a * alphaMul);
       }
     }
-    offCtx.putImageData(imageData, 0, 0);
-    ctx.drawImage(offscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
+    ctx.putImageData(imageData, 0, 0);
   }
 
   updateBuffs(status) {
