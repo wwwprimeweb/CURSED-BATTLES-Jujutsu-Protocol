@@ -308,8 +308,7 @@ export class Hud {
     this._prevSkillLock = false;
     this._prevBoss = false;
 
-    this.recoveryFlameImg = new Image();
-    this.recoveryFlameImg.src = "/assets/energyrecover/recovery_flame.png";
+    this._flameImgs = {};
     this._flameFrames = 12;
     this._flameCols = 4;
     this._flameFrameW = 500;
@@ -786,42 +785,25 @@ export class Hud {
     this.helpOverlay.classList.add("hidden");
   }
 
+  _getFlameImg(character) {
+    if (!this._flameImgs[character]) {
+      const img = new Image();
+      img.src = `/assets/energyrecover/recovery_flame_${character}.png`;
+      this._flameImgs[character] = img;
+    }
+    return this._flameImgs[character];
+  }
+
   _drawFlameFrame(ctx, character, frameIdx, w, h) {
-    if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
-    const offscreen = document.createElement("canvas");
-    offscreen.width = this._flameFrameW;
-    offscreen.height = this._flameFrameH;
-    const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
+    const img = this._getFlameImg(character);
+    if (!img.complete || img.naturalWidth === 0) return;
     const col = frameIdx % this._flameCols;
     const row = Math.floor(frameIdx / this._flameCols);
-    offCtx.drawImage(
-      this.recoveryFlameImg,
+    ctx.drawImage(
+      img,
       col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
-      0, 0, this._flameFrameW, this._flameFrameH
+      0, 0, w, h
     );
-    const imageData = offCtx.getImageData(0, 0, this._flameFrameW, this._flameFrameH);
-    const pixels = imageData.data;
-    const colors = {
-      yuta:   { r: 255, g: 20,  b: 140 },
-      sukuna: { r: 230, g: 50,  b: 50  },
-      hakari: { r: 50,  g: 220, b: 80  },
-    };
-    const c = colors[character] || { r: 80, g: 235, b: 255 };
-    const alphaMul = 0.7;
-    for (let i = 0; i < pixels.length; i += 4) {
-      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
-      if (a < 10) continue;
-      const brightness = Math.max(r, g, b);
-      if (brightness < 50) {
-        pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0;
-        pixels[i + 3] = Math.round(a * alphaMul);
-      } else {
-        pixels[i] = c.r; pixels[i + 1] = c.g; pixels[i + 2] = c.b;
-        pixels[i + 3] = Math.round(a * alphaMul);
-      }
-    }
-    offCtx.putImageData(imageData, 0, 0);
-    ctx.drawImage(offscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
   }
 
   updateBuffs(status) {

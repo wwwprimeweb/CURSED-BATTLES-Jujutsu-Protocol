@@ -65,14 +65,11 @@ export class Renderer {
     this.redImg.src = "/assets/habilit/red.png";
     this.blackFlashes = [];
     this.blackFlashDuration = 800;
-    this.energyRecoverImg = new Image();
-    this.energyRecoverImg.src = "/assets/energyrecover/energyspritesheet.png";
+    this._erImgs = {};
     this._erFrames = 19;
     this._erCols = 6;
     this._erFrameW = 136;
     this._erFrameH = 292;
-    this._erCanvas = {};
-    this._erLastFrame = {};
 
     this.crawlerExplosions = [];
     this.acidPuddles = [];
@@ -1702,50 +1699,16 @@ export class Renderer {
 
       if (p.recoveryActive && p.alive) {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
-        if (this.energyRecoverImg.complete && this.energyRecoverImg.naturalWidth > 0) {
-          const frameIdx = Math.floor(now * 0.009) % this._erFrames;
-          const col = frameIdx % this._erCols;
-          const row = Math.floor(frameIdx / this._erCols);
-          const drawW = 140;
-          const drawH = this._erFrameH * (drawW / this._erFrameW);
-
-          this._processERFrame(frameIdx, p.character);
-
-          const frame = this._erCanvas[p.character];
-          if (frame) {
-            ctx.drawImage(
-              frame,
-              0, 0, this._erFrameW, this._erFrameH,
-              sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH
-            );
-          }
-        }
+        const erFrame = Math.floor(now * 0.009) % this._erFrames;
+        this._drawERFrame(ctx, sp.x, sp.y, 140, erFrame, p.character, 1);
       }
 
       visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx, ry, this._renderDt);
 
       if (p.recoveryActive && p.alive) {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
-        if (this.energyRecoverImg.complete && this.energyRecoverImg.naturalWidth > 0) {
-          const frameIdx = Math.floor(now * 0.009) % this._erFrames;
-          const col = frameIdx % this._erCols;
-          const row = Math.floor(frameIdx / this._erCols);
-          const drawW = 140;
-          const drawH = this._erFrameH * (drawW / this._erFrameW);
-
-          this._processERFrame(frameIdx, p.character);
-
-          const frame = this._erCanvas[p.character];
-          if (frame) {
-            ctx.globalAlpha = 0.25;
-            ctx.drawImage(
-              frame,
-              0, 0, this._erFrameW, this._erFrameH,
-              sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH
-            );
-            ctx.globalAlpha = 1;
-          }
-        }
+        const erFrame = Math.floor(now * 0.009) % this._erFrames;
+        this._drawERFrame(ctx, sp.x, sp.y, 140, erFrame, p.character, 0.25);
       }
 
       ctx.restore();
@@ -1765,63 +1728,30 @@ export class Renderer {
     });
   }
 
-  _processERFrame(frameIdx, character) {
-    if (!this.energyRecoverImg.complete) return;
-    if (!this._erCanvas[character]) {
-      this._erCanvas[character] = document.createElement("canvas");
-      this._erCanvas[character].width = this._erFrameW;
-      this._erCanvas[character].height = this._erFrameH;
+  _getERImg(character) {
+    if (!this._erImgs[character]) {
+      const img = new Image();
+      img.src = `/assets/energyrecover/energyspritesheet_${character}.png`;
+      this._erImgs[character] = img;
     }
-    if (this._erLastFrame[character] === frameIdx) return;
-    this._erLastFrame[character] = frameIdx;
+    return this._erImgs[character];
+  }
 
-    const canvas = this._erCanvas[character];
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  _drawERFrame(ctx, spX, spY, drawW, frameIdx, character, globalAlphaMul) {
+    const img = this._getERImg(character);
+    if (!img.complete || img.naturalWidth === 0) return;
     const col = frameIdx % this._erCols;
     const row = Math.floor(frameIdx / this._erCols);
-
-    ctx.clearRect(0, 0, this._erFrameW, this._erFrameH);
+    const drawH = this._erFrameH * (drawW / this._erFrameW);
+    const dx = spX - drawW / 2;
+    const dy = spY - drawH / 2;
+    if (globalAlphaMul < 1) ctx.globalAlpha = globalAlphaMul;
     ctx.drawImage(
-      this.energyRecoverImg,
+      img,
       col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
-      0, 0, this._erFrameW, this._erFrameH
+      dx, dy, drawW, drawH
     );
-
-    const imageData = ctx.getImageData(0, 0, this._erFrameW, this._erFrameH);
-    const pixels = imageData.data;
-
-    const colors = {
-      yuta:   { r: 255, g: 20,  b: 140 },
-      sukuna: { r: 230, g: 50,  b: 50  },
-      hakari: { r: 50,  g: 220, b: 80  },
-    };
-    const c = colors[character] || { r: 80, g: 235, b: 255 };
-    const alphaMuls = { yuta: 0.7 };
-    const am = alphaMuls[character] || 0.5;
-
-    for (let i = 0; i < pixels.length; i += 4) {
-      const r = pixels[i];
-      const g = pixels[i + 1];
-      const b = pixels[i + 2];
-      const a = pixels[i + 3];
-
-      if (a < 10) continue;
-
-      const brightness = Math.max(r, g, b);
-      if (brightness < 25) {
-        pixels[i]     = 0;
-        pixels[i + 1] = 0;
-        pixels[i + 2] = 0;
-        pixels[i + 3] = Math.round(a * am);
-      } else {
-        pixels[i]     = c.r;
-        pixels[i + 1] = c.g;
-        pixels[i + 2] = c.b;
-        pixels[i + 3] = Math.round(a * am);
-      }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
+    if (globalAlphaMul < 1) ctx.globalAlpha = 1;
   }
 
   drawM1PunchEffects() {

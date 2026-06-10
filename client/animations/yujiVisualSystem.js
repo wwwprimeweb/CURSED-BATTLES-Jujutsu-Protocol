@@ -29,6 +29,10 @@ export class YujiVisualSystem {
     this.impactSheet = new Image();
     this.impactSheet.src = IMPACT_SHEET_PATH;
 
+    this.impactSheetBlack = new Image();
+    this.impactSheetBlack.src = "/assets/sprites/yuji_shinjuku/impact_sheet_black.png";
+    this.impactSheetRed = new Image();
+    this.impactSheetRed.src = "/assets/sprites/yuji_shinjuku/impact_sheet_red.png";
 
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
@@ -299,7 +303,8 @@ export class YujiVisualSystem {
       const elapsed = 0.76 - e.life;
       const frameIndex = Math.floor(elapsed * 18) % 13;
 
-      if (!this._soulSheetReady()) return;
+      if (!this.impactSheetBlack.complete || this.impactSheetBlack.naturalWidth === 0) return;
+      if (!this.impactSheetRed.complete || this.impactSheetRed.naturalWidth === 0) return;
       const sx = (8 + frameIndex) * IMPACT_FRAME_W;
 
       const sizeMul = 1.64;
@@ -321,33 +326,16 @@ export class YujiVisualSystem {
         drawY = screenY - targetH * 0.5;
       }
 
-      const drawTinted = (cr, cg, cb, dx, dy) => {
-        const offscreen = document.createElement("canvas");
-        offscreen.width = IMPACT_FRAME_W;
-        offscreen.height = IMPACT_FRAME_H;
-        const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
-        offCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-        const imageData = offCtx.getImageData(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-        const pixels = imageData.data;
-        for (let i = 0; i < pixels.length; i += 4) {
-          const a = pixels[i + 3];
-          if (a < 10) continue;
-          pixels[i] = cr;
-          pixels[i + 1] = cg;
-          pixels[i + 2] = cb;
-        }
-        offCtx.putImageData(imageData, 0, 0);
-        ctx.drawImage(offscreen, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
-      };
-
       const outlineOff = 5;
       for (let ox = -outlineOff; ox <= outlineOff; ox += outlineOff) {
         for (let oy = -outlineOff; oy <= outlineOff; oy += outlineOff) {
           if (ox === 0 && oy === 0) continue;
-          drawTinted(0, 0, 0, drawX + ox, drawY + oy);
+          ctx.drawImage(this.impactSheetBlack, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
+            drawX + ox, drawY + oy, targetW, targetH);
         }
       }
-      drawTinted(255, 0, 0, drawX, drawY);
+      ctx.drawImage(this.impactSheetRed, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
+        drawX, drawY, targetW, targetH);
 
       ctx.restore();
     });
