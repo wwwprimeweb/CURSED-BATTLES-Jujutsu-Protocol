@@ -309,40 +309,45 @@ export class YujiVisualSystem {
       ctx.save();
       ctx.globalAlpha = alpha;
 
-      const drawX = screenX - targetW * 0.5;
-      const drawY = screenY - targetH * 0.5;
+      const flipX = e.dirX < 0;
+      let drawX, drawY;
+      if (flipX) {
+        ctx.translate(screenX, screenY);
+        ctx.scale(-1, 1);
+        drawX = -targetW * 0.5;
+        drawY = -targetH * 0.5;
+      } else {
+        drawX = screenX - targetW * 0.5;
+        drawY = screenY - targetH * 0.5;
+      }
+
+      const drawTinted = (cr, cg, cb, dx, dy) => {
+        const offscreen = document.createElement("canvas");
+        offscreen.width = IMPACT_FRAME_W;
+        offscreen.height = IMPACT_FRAME_H;
+        const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
+        offCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        const imageData = offCtx.getImageData(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        const pixels = imageData.data;
+        for (let i = 0; i < pixels.length; i += 4) {
+          const a = pixels[i + 3];
+          if (a < 10) continue;
+          pixels[i] = cr;
+          pixels[i + 1] = cg;
+          pixels[i + 2] = cb;
+        }
+        offCtx.putImageData(imageData, 0, 0);
+        ctx.drawImage(offscreen, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
+      };
+
       const outlineOff = 5;
-
-      if (!this._impactMask) this._impactMask = document.createElement("canvas");
-      this._impactMask.width = targetW;
-      this._impactMask.height = targetH;
-      const maskCtx = this._impactMask.getContext("2d", { willReadFrequently: true });
-      maskCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
-        0, 0, targetW, targetH);
-      const maskData = maskCtx.getImageData(0, 0, targetW, targetH);
-
       for (let ox = -outlineOff; ox <= outlineOff; ox += outlineOff) {
         for (let oy = -outlineOff; oy <= outlineOff; oy += outlineOff) {
           if (ox === 0 && oy === 0) continue;
-          ctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
-            drawX + ox, drawY + oy, targetW, targetH);
-          const id = ctx.getImageData(drawX + ox, drawY + oy, targetW, targetH);
-          for (let i = 0; i < id.data.length; i += 4) {
-            if (maskData.data[i + 3] < 10) continue;
-            id.data[i] = 0; id.data[i + 1] = 0; id.data[i + 2] = 0;
-          }
-          ctx.putImageData(id, drawX + ox, drawY + oy);
+          drawTinted(0, 0, 0, drawX + ox, drawY + oy);
         }
       }
-
-      ctx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
-        drawX, drawY, targetW, targetH);
-      const id = ctx.getImageData(drawX, drawY, targetW, targetH);
-      for (let i = 0; i < id.data.length; i += 4) {
-        if (maskData.data[i + 3] < 10) continue;
-        id.data[i] = 255; id.data[i + 1] = 0; id.data[i + 2] = 0;
-      }
-      ctx.putImageData(id, drawX, drawY);
+      drawTinted(255, 0, 0, drawX, drawY);
 
       ctx.restore();
     });

@@ -71,7 +71,8 @@ export class Renderer {
     this._erCols = 6;
     this._erFrameW = 136;
     this._erFrameH = 292;
-
+    this._erCanvas = {};
+    this._erLastFrame = {};
 
     this.crawlerExplosions = [];
     this.acidPuddles = [];
@@ -1703,9 +1704,21 @@ export class Renderer {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
         if (this.energyRecoverImg.complete && this.energyRecoverImg.naturalWidth > 0) {
           const frameIdx = Math.floor(now * 0.009) % this._erFrames;
+          const col = frameIdx % this._erCols;
+          const row = Math.floor(frameIdx / this._erCols);
           const drawW = 140;
           const drawH = this._erFrameH * (drawW / this._erFrameW);
-          this._drawERFrame(ctx, sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH, frameIdx, p.character, 1);
+
+          this._processERFrame(frameIdx, p.character);
+
+          const frame = this._erCanvas[p.character];
+          if (frame) {
+            ctx.drawImage(
+              frame,
+              0, 0, this._erFrameW, this._erFrameH,
+              sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH
+            );
+          }
         }
       }
 
@@ -1715,9 +1728,23 @@ export class Renderer {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
         if (this.energyRecoverImg.complete && this.energyRecoverImg.naturalWidth > 0) {
           const frameIdx = Math.floor(now * 0.009) % this._erFrames;
+          const col = frameIdx % this._erCols;
+          const row = Math.floor(frameIdx / this._erCols);
           const drawW = 140;
           const drawH = this._erFrameH * (drawW / this._erFrameW);
-          this._drawERFrame(ctx, sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH, frameIdx, p.character, 0.25);
+
+          this._processERFrame(frameIdx, p.character);
+
+          const frame = this._erCanvas[p.character];
+          if (frame) {
+            ctx.globalAlpha = 0.25;
+            ctx.drawImage(
+              frame,
+              0, 0, this._erFrameW, this._erFrameH,
+              sp.x - drawW / 2, sp.y - drawH / 2, drawW, drawH
+            );
+            ctx.globalAlpha = 1;
+          }
         }
       }
 
@@ -1738,27 +1765,31 @@ export class Renderer {
     });
   }
 
-  _drawERFrame(ctx, x, y, w, h, frameIdx, character, globalAlphaMul) {
-    if (!this.energyRecoverImg.complete || this.energyRecoverImg.naturalWidth === 0) return;
+  _processERFrame(frameIdx, character) {
+    if (!this.energyRecoverImg.complete) return;
+    if (!this._erCanvas[character]) {
+      this._erCanvas[character] = document.createElement("canvas");
+      this._erCanvas[character].width = this._erFrameW;
+      this._erCanvas[character].height = this._erFrameH;
+    }
+    if (this._erLastFrame[character] === frameIdx) return;
+    this._erLastFrame[character] = frameIdx;
+
+    const canvas = this._erCanvas[character];
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     const col = frameIdx % this._erCols;
     const row = Math.floor(frameIdx / this._erCols);
+
+    ctx.clearRect(0, 0, this._erFrameW, this._erFrameH);
     ctx.drawImage(
       this.energyRecoverImg,
       col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
-      x, y, w, h
+      0, 0, this._erFrameW, this._erFrameH
     );
-    if (!this._erMask) this._erMask = document.createElement("canvas");
-    this._erMask.width = w;
-    this._erMask.height = h;
-    const maskCtx = this._erMask.getContext("2d", { willReadFrequently: true });
-    maskCtx.drawImage(
-      this.energyRecoverImg,
-      col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
-      0, 0, w, h
-    );
-    const maskData = maskCtx.getImageData(0, 0, w, h);
-    const imageData = ctx.getImageData(x, y, w, h);
+
+    const imageData = ctx.getImageData(0, 0, this._erFrameW, this._erFrameH);
     const pixels = imageData.data;
+
     const colors = {
       yuta:   { r: 255, g: 20,  b: 140 },
       sukuna: { r: 230, g: 50,  b: 50  },
@@ -1766,20 +1797,31 @@ export class Renderer {
     };
     const c = colors[character] || { r: 80, g: 235, b: 255 };
     const alphaMuls = { yuta: 0.7 };
-    const am = (alphaMuls[character] || 0.5) * globalAlphaMul;
+    const am = alphaMuls[character] || 0.5;
+
     for (let i = 0; i < pixels.length; i += 4) {
-      const mA = maskData.data[i + 3];
-      if (mA < 10) continue;
-      const brightness = Math.max(maskData.data[i], maskData.data[i + 1], maskData.data[i + 2]);
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const a = pixels[i + 3];
+
+      if (a < 10) continue;
+
+      const brightness = Math.max(r, g, b);
       if (brightness < 25) {
-        pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0;
-        pixels[i + 3] = Math.round(mA * am);
+        pixels[i]     = 0;
+        pixels[i + 1] = 0;
+        pixels[i + 2] = 0;
+        pixels[i + 3] = Math.round(a * am);
       } else {
-        pixels[i] = c.r; pixels[i + 1] = c.g; pixels[i + 2] = c.b;
-        pixels[i + 3] = Math.round(mA * am);
+        pixels[i]     = c.r;
+        pixels[i + 1] = c.g;
+        pixels[i + 2] = c.b;
+        pixels[i + 3] = Math.round(a * am);
       }
     }
-    ctx.putImageData(imageData, x, y);
+
+    ctx.putImageData(imageData, 0, 0);
   }
 
   drawM1PunchEffects() {
