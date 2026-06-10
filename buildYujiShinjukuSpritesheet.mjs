@@ -276,8 +276,24 @@ async function patchDivergentFist() {
   for (let i = 0; i < Math.min(compositeFrames.length, 6); i++) {
     sCtx.drawImage(compositeFrames[i], i * CELL, 11 * CELL);
   }
+
+  // Clear overflow from original skill1 frames (7010,0-4) that leaked into row 12
+  // and re-draw skill2 frames (group 40) into row 12
+  sCtx.clearRect(0, 12 * CELL, CELL * 6, CELL);
+  const skill2Frames = [[40, 0], [40, 1]];
+  for (let colIdx = 0; colIdx < skill2Frames.length; colIdx++) {
+    const [g, n] = skill2Frames[colIdx];
+    const spr = ssData.sprites.find(s => s.group === g && s.number === n);
+    if (spr) {
+      const dstX = colIdx * CELL + PIVOT_X - spr.x;
+      const dstY = 12 * CELL + PIVOT_Y - spr.y;
+      sCtx.drawImage(spriteToCanvas(spr), dstX, dstY);
+    }
+  }
+
   writeFileSync(outPath, sheetCanvas.toBuffer("image/png"));
   console.log(`Patched row 11 with ${compositeFrames.length} divergent fist frames (Shinjuku body + 7008 flame)`);
+  console.log("Cleared skill1 overflow from row 12 and re-drew skill2 frames");
 }
 
 patchDivergentFist().catch(e => { console.error("Divergent fist patch failed:", e); });
