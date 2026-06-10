@@ -3712,13 +3712,15 @@ class GameServer {
     const dirX = cast.dirX;
     const dirY = cast.dirY;
 
+    const hitX = player.x + dirX * 65;
+    const hitY = player.y - 90;
     let hitTarget = null;
     this.players.forEach((target) => {
       if (target.id === player.id || !target.alive) return;
       if (!this.config.match.friendlyFire && target.kind === "player") return;
-      const toTarget = normalize(target.x - player.x, target.y - player.y);
+      const toTarget = normalize(target.x - hitX, target.y - hitY);
       const facing = dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2;
-      const inRange = distance(player.x, player.y, target.x, target.y) <= range + target.radius;
+      const inRange = distance(hitX, hitY, target.x, target.y) <= range + target.radius;
       if (inRange && facing) {
         hitTarget = target;
       }
@@ -3726,9 +3728,9 @@ class GameServer {
 
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
-      const toTarget = normalize(enemy.x - player.x, enemy.y - player.y);
+      const toTarget = normalize(enemy.x - hitX, enemy.y - hitY);
       const facing = dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2;
-      const inRange = distance(player.x, player.y, enemy.x, enemy.y) <= range + enemy.radius;
+      const inRange = distance(hitX, hitY, enemy.x, enemy.y) <= range + enemy.radius;
       if (inRange && facing) {
         hitTarget = enemy;
       }
