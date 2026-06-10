@@ -12,6 +12,9 @@ const DOMAIN_FRAME_W = 110;
 const DOMAIN_FRAME_H = 125;
 const DOMAIN_FRAMES = 12;
 
+const SOUL_STRIKE_SHEET_PATH = "/assets/sprites/yuji_shinjuku/soul_impact_strike.png";
+const SOUL_STRIKE_FRAMES = 3;
+
 
 
 export class YujiVisualSystem {
@@ -29,13 +32,11 @@ export class YujiVisualSystem {
     this.impactSheet = new Image();
     this.impactSheet.src = IMPACT_SHEET_PATH;
 
-    this.impactSheetBlack = new Image();
-    this.impactSheetBlack.src = "/assets/sprites/yuji_shinjuku/impact_sheet_black.png";
-    this.impactSheetRed = new Image();
-    this.impactSheetRed.src = "/assets/sprites/yuji_shinjuku/impact_sheet_red.png";
-
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
+
+    this.soulStrikeSheet = new Image();
+    this.soulStrikeSheet.src = SOUL_STRIKE_SHEET_PATH;
 
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
@@ -301,15 +302,15 @@ export class YujiVisualSystem {
       const screenY = (effectY - camera.y) * zoom + ctx.canvas.height * 0.5;
       const alpha = Math.min(1, e.life / 0.76);
       const elapsed = 0.76 - e.life;
-      const frameIndex = Math.floor(elapsed * 18) % 13;
+      const frameIndex = Math.min(SOUL_STRIKE_FRAMES - 1, Math.floor(elapsed / 0.76 * SOUL_STRIKE_FRAMES));
 
-      if (!this.impactSheetBlack.complete || this.impactSheetBlack.naturalWidth === 0) return;
-      if (!this.impactSheetRed.complete || this.impactSheetRed.naturalWidth === 0) return;
-      const sx = (8 + frameIndex) * IMPACT_FRAME_W;
-
-      const sizeMul = 1.64;
-      const targetW = IMPACT_FRAME_W * zoom * sizeMul;
-      const targetH = IMPACT_FRAME_H * zoom * sizeMul;
+      if (!this.soulStrikeSheet.complete || this.soulStrikeSheet.naturalWidth === 0) return;
+      const img = this.soulStrikeSheet;
+      const fw = img.naturalWidth / SOUL_STRIKE_FRAMES;
+      const fh = img.naturalHeight;
+      const sizeMul = 0.28;
+      const targetW = fw * zoom * sizeMul;
+      const targetH = fh * zoom * sizeMul;
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -326,16 +327,8 @@ export class YujiVisualSystem {
         drawY = screenY - targetH * 0.5;
       }
 
-      const outlineOff = 5;
-      for (let ox = -outlineOff; ox <= outlineOff; ox += outlineOff) {
-        for (let oy = -outlineOff; oy <= outlineOff; oy += outlineOff) {
-          if (ox === 0 && oy === 0) continue;
-          ctx.drawImage(this.impactSheetBlack, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
-            drawX + ox, drawY + oy, targetW, targetH);
-        }
-      }
-      ctx.drawImage(this.impactSheetRed, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H,
-        drawX, drawY, targetW, targetH);
+      const sx = frameIndex * fw;
+      ctx.drawImage(img, sx, 0, fw, fh, drawX, drawY, targetW, targetH);
 
       ctx.restore();
     });

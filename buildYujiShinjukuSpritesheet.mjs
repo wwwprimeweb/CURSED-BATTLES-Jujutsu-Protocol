@@ -4,6 +4,7 @@ import extract from "sff-extractor";
 
 const sffPath = "C:\\Cursed Battles\\client\\Jujutsu Kaisen Mugen V9 (OpenGL)\\chars\\Itadori Shinjuku\\sff.sff";
 const sffPathFinalArc = "C:\\Cursed Battles\\client\\Jujutsu Kaisen Mugen V9 (OpenGL)\\chars\\itadori End\\Itadori.sff";
+const sffPathToji = "C:\\Cursed Battles\\client\\Jujutsu Kaisen Mugen V9 (OpenGL)\\chars\\Toji Fushiguro\\Toji Fushiguro.sff";
 const outDir = "C:\\Cursed Battles\\client\\assets\\sprites\\yuji_shinjuku";
 
 mkdirSync(outDir, { recursive: true });
@@ -197,6 +198,26 @@ function main() {
     impactFrames.push(...sorted);
   }
   buildImpactSheet(impactFrames);
+
+  // ─── Soul Impact Strike (Toji Fushiguro 7304) ───
+  const tojiBuf = readFileSync(sffPathToji);
+  const tojiData = extract(tojiBuf, { palettes: true, spriteBuffer: false, decodeSpriteBuffer: true });
+  const soulStrikeFrames = tojiData.sprites
+    .filter((spr) => spr.group === 7304)
+    .sort((a, b) => a.number - b.number);
+  if (soulStrikeFrames.length) {
+    buildSimpleStrip({
+      sprites: soulStrikeFrames,
+      outPath: `${outDir}\\soul_impact_strike.png`,
+      scale: 1.0,
+    });
+    writeFileSync(`${outDir}\\soul_impact_strike_meta.json`, JSON.stringify({
+      frameWidth: soulStrikeFrames[0].width,
+      frameHeight: soulStrikeFrames[0].height,
+      frames: soulStrikeFrames.length,
+    }, null, 2));
+    console.log(`Saved soul impact strike sheet (${soulStrikeFrames.length} frames)`);
+  }
 
   console.log("Done.");
 }
