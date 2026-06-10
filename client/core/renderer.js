@@ -1776,7 +1776,7 @@ export class Renderer {
     this._erLastFrame[character] = frameIdx;
 
     const canvas = this._erCanvas[character];
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     const col = frameIdx % this._erCols;
     const row = Math.floor(frameIdx / this._erCols);
 

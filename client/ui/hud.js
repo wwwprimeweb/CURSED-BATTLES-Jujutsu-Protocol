@@ -791,7 +791,7 @@ export class Hud {
     const offscreen = document.createElement("canvas");
     offscreen.width = this._flameFrameW;
     offscreen.height = this._flameFrameH;
-    const offCtx = offscreen.getContext("2d");
+    const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
     const col = frameIdx % this._flameCols;
     const row = Math.floor(frameIdx / this._flameCols);
     offCtx.drawImage(

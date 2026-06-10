@@ -325,7 +325,7 @@ export class YujiVisualSystem {
         const offscreen = document.createElement("canvas");
         offscreen.width = IMPACT_FRAME_W;
         offscreen.height = IMPACT_FRAME_H;
-        const offCtx = offscreen.getContext("2d");
+        const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
         offCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
         const imageData = offCtx.getImageData(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
         const pixels = imageData.data;
