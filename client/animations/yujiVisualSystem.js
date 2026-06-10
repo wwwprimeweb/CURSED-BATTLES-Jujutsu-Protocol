@@ -114,7 +114,7 @@ export class YujiVisualSystem {
   }
 
   triggerSoulImpact(x, y, dirX, dirY) {
-    this.soulImpactEffects.push({ x, y, dirX: dirX || 0, dirY: dirY || 1, startTime: this.time, life: 0.76 });
+    this.soulImpactEffects.push({ x, y, dirX: dirX || 0, dirY: dirY || 1, startTime: this.time, life: 0.35 });
   }
 
   triggerTaidoBeatdownHit(x, y, hitNum) {
@@ -295,14 +295,14 @@ export class YujiVisualSystem {
 
     this.soulImpactEffects.forEach((e) => {
       const offsetDist = 65;
-      const fistHeight = 90;
+      const fistHeight = 75;
       const effectX = e.x + e.dirX * offsetDist;
       const effectY = e.y - fistHeight;
       const screenX = (effectX - camera.x) * zoom + ctx.canvas.width * 0.5;
       const screenY = (effectY - camera.y) * zoom + ctx.canvas.height * 0.5;
       const alpha = Math.min(1, e.life / 0.25);
-      const elapsed = 0.76 - e.life;
-      const frameIndex = Math.min(SOUL_STRIKE_FRAMES - 1, Math.floor(elapsed / 0.76 * SOUL_STRIKE_FRAMES));
+      const elapsed = 0.35 - e.life;
+      const frameIndex = Math.min(SOUL_STRIKE_FRAMES - 1, Math.floor(elapsed / 0.35 * SOUL_STRIKE_FRAMES));
 
       if (!this.soulStrikeSheet.complete || this.soulStrikeSheet.naturalWidth === 0) return;
       const img = this.soulStrikeSheet;
