@@ -43,7 +43,7 @@ const YUJI = {
     energy: 40,
     cooldown: 12,
     damage: 100,
-    startup: 0.4,
+    startup: 1.0,
     range: 110,
     debuffDuration: 3,
     debuffPenalty: 0.5,
