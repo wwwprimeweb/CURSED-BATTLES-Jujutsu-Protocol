@@ -321,31 +321,37 @@ export class YujiVisualSystem {
         drawY = screenY - targetH * 0.5;
       }
 
-      if (!this._soulTintCanvas) {
-        this._soulTintCanvas = document.createElement("canvas");
-        this._soulTintCanvas.width = IMPACT_FRAME_W;
-        this._soulTintCanvas.height = IMPACT_FRAME_H;
+      if (!this._soulOffscreen) {
+        this._soulOffscreen = document.createElement("canvas");
+        this._soulOffscreen.width = IMPACT_FRAME_W;
+        this._soulOffscreen.height = IMPACT_FRAME_H;
       }
-      const tintCtx = this._soulTintCanvas.getContext("2d");
+      const offCtx = this._soulOffscreen.getContext("2d");
 
-      const drawTinted = (color, dx, dy) => {
-        tintCtx.clearRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-        tintCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-        tintCtx.globalCompositeOperation = "source-atop";
-        tintCtx.fillStyle = color;
-        tintCtx.fillRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
-        tintCtx.globalCompositeOperation = "source-over";
-        ctx.drawImage(this._soulTintCanvas, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
+      const drawTinted = (cr, cg, cb, dx, dy) => {
+        offCtx.clearRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        offCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        const imageData = offCtx.getImageData(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        const pixels = imageData.data;
+        for (let i = 0; i < pixels.length; i += 4) {
+          const a = pixels[i + 3];
+          if (a < 10) continue;
+          pixels[i] = cr;
+          pixels[i + 1] = cg;
+          pixels[i + 2] = cb;
+        }
+        offCtx.putImageData(imageData, 0, 0);
+        ctx.drawImage(this._soulOffscreen, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
       };
 
       const outlineOff = 5;
       for (let ox = -outlineOff; ox <= outlineOff; ox += outlineOff) {
         for (let oy = -outlineOff; oy <= outlineOff; oy += outlineOff) {
           if (ox === 0 && oy === 0) continue;
-          drawTinted("#000000", drawX + ox, drawY + oy);
+          drawTinted(0, 0, 0, drawX + ox, drawY + oy);
         }
       }
-      drawTinted("#ff0000", drawX, drawY);
+      drawTinted(255, 0, 0, drawX, drawY);
 
       ctx.restore();
     });
