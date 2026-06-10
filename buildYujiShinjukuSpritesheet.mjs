@@ -2,8 +2,8 @@ import { mkdirSync, readFileSync, writeFileSync, copyFileSync, existsSync } from
 import { createCanvas, loadImage } from "canvas";
 import extract from "sff-extractor";
 
-const sffPath = "C:\\Cursed Battles\\client\\deoutrojogo\\Jujutsu Kaisen Cursed Clash (camelô) V6\\chars\\Itadori Shinjuku\\sff.sff";
-const sffPathFinalArc = "C:\\Cursed Battles\\client\\deoutrojogo\\Jujutsu Kaisen Cursed Clash (camelô) V6\\chars\\Itadori Final Arc\\Yuji Itadori.sff";
+const sffPath = "C:\\Cursed Battles\\client\\Jujutsu Kaisen Mugen V9 (OpenGL)\\chars\\Itadori Shinjuku\\sff.sff";
+const sffPathFinalArc = "C:\\Cursed Battles\\client\\Jujutsu Kaisen Mugen V9 (OpenGL)\\chars\\itadori End\\Itadori.sff";
 const outDir = "C:\\Cursed Battles\\client\\assets\\sprites\\yuji_shinjuku";
 
 mkdirSync(outDir, { recursive: true });
@@ -26,6 +26,7 @@ const ROWS = [
   { name: "domain", frames: [[0, 0]] },
   // skill1 will be patched after the main build with composited divergent fist
   { name: "skill1", frames: [[7010, 0], [7010, 1], [7010, 2], [7010, 3], [7010, 4], [7010, 5]] },
+  { name: "skill2", frames: [[40, 0], [40, 1]] },
 ];
 
 const DOMAIN_GROUP = 7011;

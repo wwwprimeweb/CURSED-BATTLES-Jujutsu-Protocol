@@ -311,8 +311,6 @@ export class Hud {
     this._flameImgs = {};
     this._flameFrames = 12;
     this._flameCols = 4;
-    this._flameFrameW = 500;
-    this._flameFrameH = 567;
 
     this._flameLastTick = 0;
     this._flameFrameIdx = 0;
@@ -797,11 +795,14 @@ export class Hud {
   _drawFlameFrame(ctx, character, frameIdx, w, h) {
     const img = this._getFlameImg(character);
     if (!img.complete || img.naturalWidth === 0) return;
+    const rows = Math.ceil(this._flameFrames / this._flameCols);
+    const frameW = Math.floor(img.naturalWidth / this._flameCols);
+    const frameH = Math.floor(img.naturalHeight / rows);
     const col = frameIdx % this._flameCols;
     const row = Math.floor(frameIdx / this._flameCols);
     ctx.drawImage(
       img,
-      col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
+      col * frameW, row * frameH, frameW, frameH,
       0, 0, w, h
     );
   }
