@@ -272,14 +272,14 @@ async function patchDivergentFist() {
   const sheetCanvas = createCanvas(sheet.width, sheet.height);
   const sCtx = sheetCanvas.getContext("2d");
   sCtx.drawImage(sheet, 0, 0);
-  sCtx.clearRect(0, 11 * CELL, CELL * 6, CELL);
+  sCtx.clearRect(0, 11 * CELL, CELL * 10, CELL);
   for (let i = 0; i < Math.min(compositeFrames.length, 6); i++) {
     sCtx.drawImage(compositeFrames[i], i * CELL, 11 * CELL);
   }
 
   // Clear overflow from original skill1 frames (7010,0-4) that leaked into row 12
   // and re-draw skill2 frames (group 40) into row 12
-  sCtx.clearRect(0, 12 * CELL, CELL * 6, CELL);
+  sCtx.clearRect(0, 12 * CELL, CELL * 10, CELL);
   const skill2Frames = [[6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], [6, 6], [4, 3], [4, 4], [4, 5]];
   for (let colIdx = 0; colIdx < skill2Frames.length; colIdx++) {
     const [g, n] = skill2Frames[colIdx];
