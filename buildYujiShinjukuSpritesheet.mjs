@@ -26,7 +26,7 @@ const ROWS = [
   { name: "domain", frames: [[0, 0]] },
   // skill1 will be patched after the main build with composited divergent fist
   { name: "skill1", frames: [[7010, 0], [7010, 1], [7010, 2], [7010, 3], [7010, 4], [7010, 5]] },
-  { name: "skill2", frames: [[40, 0], [40, 1]] },
+  { name: "skill2", frames: [[6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], [6, 6], [4, 3], [4, 4], [4, 5]] },
 ];
 
 const DOMAIN_GROUP = 7011;
@@ -280,7 +280,7 @@ async function patchDivergentFist() {
   // Clear overflow from original skill1 frames (7010,0-4) that leaked into row 12
   // and re-draw skill2 frames (group 40) into row 12
   sCtx.clearRect(0, 12 * CELL, CELL * 6, CELL);
-  const skill2Frames = [[40, 0], [40, 1]];
+  const skill2Frames = [[6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], [6, 6], [4, 3], [4, 4], [4, 5]];
   for (let colIdx = 0; colIdx < skill2Frames.length; colIdx++) {
     const [g, n] = skill2Frames[colIdx];
     const spr = ssData.sprites.find(s => s.group === g && s.number === n);
