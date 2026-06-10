@@ -788,14 +788,12 @@ export class Hud {
 
   _drawFlameFrame(ctx, character, frameIdx, w, h) {
     if (!this.recoveryFlameImg.complete || this.recoveryFlameImg.naturalWidth === 0) return;
-    if (!this._flameOffscreen) {
-      this._flameOffscreen = document.createElement("canvas");
-      this._flameOffscreen.width = this._flameFrameW;
-      this._flameOffscreen.height = this._flameFrameH;
-    }
+    const offscreen = document.createElement("canvas");
+    offscreen.width = this._flameFrameW;
+    offscreen.height = this._flameFrameH;
+    const offCtx = offscreen.getContext("2d");
     const col = frameIdx % this._flameCols;
     const row = Math.floor(frameIdx / this._flameCols);
-    const offCtx = this._flameOffscreen.getContext("2d");
     offCtx.drawImage(
       this.recoveryFlameImg,
       col * this._flameFrameW, row * this._flameFrameH, this._flameFrameW, this._flameFrameH,
@@ -823,7 +821,7 @@ export class Hud {
       }
     }
     offCtx.putImageData(imageData, 0, 0);
-    ctx.drawImage(this._flameOffscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
+    ctx.drawImage(offscreen, 0, 0, this._flameFrameW, this._flameFrameH, 0, 0, w, h);
   }
 
   updateBuffs(status) {

@@ -321,15 +321,11 @@ export class YujiVisualSystem {
         drawY = screenY - targetH * 0.5;
       }
 
-      if (!this._soulOffscreen) {
-        this._soulOffscreen = document.createElement("canvas");
-        this._soulOffscreen.width = IMPACT_FRAME_W;
-        this._soulOffscreen.height = IMPACT_FRAME_H;
-      }
-      const offCtx = this._soulOffscreen.getContext("2d");
-
       const drawTinted = (cr, cg, cb, dx, dy) => {
-        offCtx.clearRect(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
+        const offscreen = document.createElement("canvas");
+        offscreen.width = IMPACT_FRAME_W;
+        offscreen.height = IMPACT_FRAME_H;
+        const offCtx = offscreen.getContext("2d");
         offCtx.drawImage(this.impactSheet, sx, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
         const imageData = offCtx.getImageData(0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H);
         const pixels = imageData.data;
@@ -341,7 +337,7 @@ export class YujiVisualSystem {
           pixels[i + 2] = cb;
         }
         offCtx.putImageData(imageData, 0, 0);
-        ctx.drawImage(this._soulOffscreen, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
+        ctx.drawImage(offscreen, 0, 0, IMPACT_FRAME_W, IMPACT_FRAME_H, dx, dy, targetW, targetH);
       };
 
       const outlineOff = 5;
