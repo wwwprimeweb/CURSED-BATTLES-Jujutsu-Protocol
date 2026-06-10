@@ -13,7 +13,7 @@ export const YUJI_ANIMATIONS = {
   domain_prepare: { row: 9, frames: 6, speed: 7, loop: false },
   domain: { row: 10, frames: 1, speed: 1, loop: true },
   skill1: { row: 11, frames: 6, speed: 8, loop: false },
-  skill2: { row: 12, frames: 10, speed: 10, loop: false },
+  skill2: { row: 12, frames: 10, speed: 20, loop: false },
   skill3: { row: 2, frames: 4, speed: 10, loop: false },
   skill3_prepare: { row: 11, frames: 6, speed: 10, loop: false },
   q: { row: 2, frames: 4, speed: 8.2, loop: false },
