@@ -1747,6 +1747,16 @@ export class Renderer {
       col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
       x, y, w, h
     );
+    if (!this._erMask) this._erMask = document.createElement("canvas");
+    this._erMask.width = w;
+    this._erMask.height = h;
+    const maskCtx = this._erMask.getContext("2d", { willReadFrequently: true });
+    maskCtx.drawImage(
+      this.energyRecoverImg,
+      col * this._erFrameW, row * this._erFrameH, this._erFrameW, this._erFrameH,
+      0, 0, w, h
+    );
+    const maskData = maskCtx.getImageData(0, 0, w, h);
     const imageData = ctx.getImageData(x, y, w, h);
     const pixels = imageData.data;
     const colors = {
@@ -1758,15 +1768,15 @@ export class Renderer {
     const alphaMuls = { yuta: 0.7 };
     const am = (alphaMuls[character] || 0.5) * globalAlphaMul;
     for (let i = 0; i < pixels.length; i += 4) {
-      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
-      if (a < 10) continue;
-      const brightness = Math.max(r, g, b);
+      const mA = maskData.data[i + 3];
+      if (mA < 10) continue;
+      const brightness = Math.max(maskData.data[i], maskData.data[i + 1], maskData.data[i + 2]);
       if (brightness < 25) {
         pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0;
-        pixels[i + 3] = Math.round(a * am);
+        pixels[i + 3] = Math.round(mA * am);
       } else {
         pixels[i] = c.r; pixels[i + 1] = c.g; pixels[i + 2] = c.b;
-        pixels[i + 3] = Math.round(a * am);
+        pixels[i + 3] = Math.round(mA * am);
       }
     }
     ctx.putImageData(imageData, x, y);
