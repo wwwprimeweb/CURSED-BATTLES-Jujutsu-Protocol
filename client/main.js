@@ -252,6 +252,16 @@ function handleEvents(events) {
   for (let i = 0; i < events.length; i += 1) {
     const ev = events[i];
     if (ev.type === "hit") {
+      console.log("HIT EVENT:", JSON.stringify(ev));
+      if (ev.amount > 0) {
+        let category = "other";
+        if (ev.targetId === state.playerId) {
+          category = "self";
+        } else if (ev.sourceId === state.playerId) {
+          category = "dealt";
+        }
+        renderer.spawnDamageNumber(ev.targetId, ev.amount, category, ev.x, ev.y);
+      }
       if (ev.kind !== "divergentFist" && ev.kind !== "divergentFistDelayed") {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffd7e2", count: 6, speed: 140, life: 0.15, size: 2 });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 4, speed: 80, life: 0.12, size: 3 });

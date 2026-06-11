@@ -71,6 +71,8 @@ export class Renderer {
     this._erFrameW = 136;
     this._erFrameH = 292;
 
+    this.damageNumbers = [];
+
     this.crawlerExplosions = [];
     this.acidPuddles = [];
 
@@ -476,6 +478,15 @@ export class Renderer {
         this.blackFlashes.splice(i, 1);
       }
     }
+    for (let i = this.damageNumbers.length - 1; i >= 0; i -= 1) {
+      const dn = this.damageNumbers[i];
+      dn.floatOffset += dn.vy * dt;
+      dn.life -= dt;
+      if (dn.life <= 0) {
+        this.damageNumbers.splice(i, 1);
+      }
+    }
+
     for (let i = this.crawlerExplosions.length - 1; i >= 0; i -= 1) {
       const e = this.crawlerExplosions[i];
       e.life -= dt;
@@ -587,6 +598,33 @@ export class Renderer {
     }
   }
 
+  spawnDamageNumber(targetId, amount, category = "other", fallbackX, fallbackY) {
+    for (let i = 0; i < this.damageNumbers.length; i += 1) {
+      const dn = this.damageNumbers[i];
+      if (dn.targetId === targetId && dn.category === category) {
+        dn.value += amount;
+        dn.life = dn.maxLife;
+        dn.floatOffset = 0;
+        dn.vy = -60 - Math.random() * 40;
+        dn.scale = Math.min(2, 0.8 + dn.value * 0.004);
+        return;
+      }
+    }
+    this.damageNumbers.push({
+      targetId,
+      value: amount,
+      life: 1.2,
+      maxLife: 1.2,
+      offsetX: (Math.random() - 0.5) * 30,
+      floatOffset: 0,
+      vy: -60 - Math.random() * 40,
+      scale: Math.min(2, 0.8 + amount * 0.004),
+      category,
+      fallbackX,
+      fallbackY,
+    });
+  }
+
   clearEffects() {
     this.markers = [];
     this.redExplosions = [];
@@ -595,6 +633,7 @@ export class Renderer {
     this.blackFlashes = [];
     this.crawlerExplosions = [];
     this.acidPuddles = [];
+    this.damageNumbers = [];
     this.gojoVisual.m1Slashes = [];
     this.gojoVisual.effects.projectiles = [];
     this.gojoVisual.effects.beams = [];
@@ -1829,6 +1868,80 @@ export class Renderer {
     ctx.restore();
   }
 
+  drawDamageNumbers() {
+    const ctx = this.ctx;
+    const z = this.camera.zoom || 1;
+
+    for (let i = 0; i < this.damageNumbers.length; i += 1) {
+      const dn = this.damageNumbers[i];
+      let targetX, targetY;
+      if (dn.targetId && this.interpolationRef) {
+        const entity = this.interpolationRef.players.get(dn.targetId) || this.interpolationRef.enemies.get(dn.targetId);
+        if (entity) {
+          targetX = entity.x;
+          targetY = entity.y;
+          dn._lastX = targetX;
+          dn._lastY = targetY;
+        } else if (dn._lastX != null) {
+          targetX = dn._lastX;
+          targetY = dn._lastY;
+        } else if (dn.fallbackX != null) {
+          targetX = dn.fallbackX;
+          targetY = dn.fallbackY;
+        } else {
+          continue;
+        }
+      } else {
+        targetX = dn.x;
+        targetY = dn.y;
+      }
+      const p = worldToScreen(this.camera, this.canvas, targetX + dn.offsetX, targetY + (dn.floatOffset || 0));
+      const t = Math.max(0, dn.life / dn.maxLife);
+      let alpha = Math.min(1, t * 3) * (t > 0.7 ? 1 : t / 0.7);
+      if (alpha <= 0) continue;
+
+      let fillColor, strokeColor, scaleMul;
+      if (dn.category === "self") {
+        fillColor = `rgba(255,51,51,${alpha})`;
+        strokeColor = `rgba(102,0,0,${0.7 * alpha})`;
+        scaleMul = 1.1;
+      } else if (dn.category === "dealt") {
+        fillColor = `rgba(255,255,255,${alpha})`;
+        strokeColor = `rgba(0,0,0,${0.7 * alpha})`;
+        scaleMul = 1.0;
+      } else {
+        fillColor = `rgba(170,170,170,${alpha * 0.35})`;
+        strokeColor = `rgba(85,85,85,${0.7 * alpha * 0.35})`;
+        scaleMul = 0.6;
+      }
+
+      const fontSize = Math.round(14 * dn.scale * scaleMul * z);
+      ctx.save();
+
+      ctx.font = `800 ${fontSize}px "Rajdhani", Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
+      ctx.shadowBlur = 6 * z;
+
+      ctx.fillStyle = fillColor;
+      ctx.fillText(Math.round(dn.value), p.x, p.y);
+
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = Math.max(2, 3 * z);
+      ctx.lineJoin = "round";
+      ctx.strokeText(Math.round(dn.value), p.x, p.y);
+
+      ctx.fillStyle = fillColor;
+      ctx.fillText(Math.round(dn.value), p.x, p.y);
+
+      ctx.restore();
+    }
+  }
+
   render({ interpolation, youId, you, localPred }) {
     const now = performance.now();
     this._renderDt = this._lastRenderTime ? Math.min((now - this._lastRenderTime) / 1000, 0.05) : 1 / 60;
@@ -1870,6 +1983,7 @@ export class Renderer {
       this.hakariVisual.renderEffects(this.ctx, this.camera);
       this.drawM1PunchEffects();
       this.particles.render(this.ctx, this.camera);
+      this.drawDamageNumbers();
       this.ctx.save();
       this.drawDomainPrivacy(interpolation.domains, you, localPred, this.camera.zoom, this.camera.x, this.camera.y, this.canvas.clientWidth, this.canvas.clientHeight);
       this.ctx.restore();

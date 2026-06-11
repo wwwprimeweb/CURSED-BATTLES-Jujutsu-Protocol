@@ -75,6 +75,11 @@ class CombatSystem {
       x: target.x,
       y: target.y,
       kind,
+      amount: Math.round(finalDamage),
+      targetKind: target.kind,
+      targetId: target.id,
+      sourceKind: source?.kind,
+      sourceId: source?.id,
     });
 
     if (target.hp <= 0) {
