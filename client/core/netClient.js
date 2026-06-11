@@ -1,4 +1,4 @@
-export class NetworkClient {
+﻿export class NetworkClient {
   constructor({ onJoined, onSnapshot, onPong, onConnectionState }) {
     this.onJoined = onJoined;
     this.onSnapshot = onSnapshot;
@@ -16,7 +16,7 @@ export class NetworkClient {
   connect({ name, sessionToken, character }) {
     this.name = name || this.name;
     this.sessionToken = typeof sessionToken === "string" ? sessionToken : "";
-    this.character = character || 'gojo';
+    this.character = character || 'o-honrado';
     this.manualClose = false;
     this.connVersion += 1;
     const version = this.connVersion;

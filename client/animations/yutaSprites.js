@@ -28,7 +28,7 @@ export const YUTA_SPRITE_CONFIG = {
   renderScale: 1.7,
 };
 
-export const YUTA_SHEET_PATH = "/assets/sprites/yuta_shinjuku_spritesheet.png";
+export const YUTA_SHEET_PATH = "/assets/sprites/portador-do-vinculo_shinjuku_spritesheet.png";
 
 export function mapServerStateToAnim(serverState) {
   const map = {

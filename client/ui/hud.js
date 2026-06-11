@@ -1,58 +1,58 @@
 import { HELP_DATA } from "./helpData.js";
 
 const CHARACTER_SKILLS = {
-  gojo: [
-    { key: "q", hotkey: "Q", icon: "Az", name: "Azul", cost: 35, baseCooldown: 10, tag: "controle" },
-    { key: "e", hotkey: "E", icon: "Vm", name: "Vermelho", cost: 45, baseCooldown: 14, tag: "burst" },
-    { key: "r", hotkey: "R", icon: "Pr", name: "Purple", cost: 80, baseCooldown: 24, tag: "beam" },
-    { key: "space", hotkey: "Space", icon: "Tp", name: "Teleporte", cost: 45, baseCooldown: 12, tag: "mobilidade" },
-    { key: "f", hotkey: "F", icon: "Dm", name: "Dominio", cost: 80, baseCooldown: 70, tag: "dominio" },
+  "o-honrado": [
+    { key: "q", hotkey: "Q", icon: "Ag", name: "Atração Gravitacional", cost: 35, baseCooldown: 10, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Er", name: "Explosão Repulsiva", cost: 45, baseCooldown: 14, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "An", name: "Aniquilador", cost: 80, baseCooldown: 24, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Sd", name: "Salto Dimensional", cost: 45, baseCooldown: 12, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Vazio Absoluto", cost: 80, baseCooldown: 70, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
-  yuta: [
-    { key: "q", hotkey: "Q", icon: "Rk", name: "Rika", cost: 40, baseCooldown: 12, tag: "area" },
-    { key: "e", hotkey: "E", icon: "Fr", name: "Full Rika", cost: 55, baseCooldown: 35, tag: "invocacao" },
-    { key: "r", hotkey: "R", icon: "Pl", name: "Pure Love", cost: 90, baseCooldown: 45, tag: "ultimate" },
-    { key: "space", hotkey: "Space", icon: "Ds", name: "Dash Slash", cost: 40, baseCooldown: 4, tag: "mobilidade" },
-    { key: "f", hotkey: "F", icon: "Dm", name: "Mutual Love", cost: 80, baseCooldown: 75, tag: "dominio" },
+  "portador-do-vinculo": [
+    { key: "q", hotkey: "Q", icon: "Ga", name: "Guardião Amaldiçoado", cost: 40, baseCooldown: 12, tag: "area" },
+    { key: "e", hotkey: "E", icon: "Lg", name: "Libertação do Guardião", cost: 55, baseCooldown: 35, tag: "invocacao" },
+    { key: "r", hotkey: "R", icon: "Rp", name: "Raio Purificador", cost: 90, baseCooldown: 45, tag: "ultimate" },
+    { key: "space", hotkey: "Space", icon: "Ic", name: "Investida Cortante", cost: 40, baseCooldown: 4, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Laço Eterno", cost: 80, baseCooldown: 75, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
-  sukuna: [
-    { key: "q", hotkey: "Q", icon: "Cl", name: "Cleave", cost: 35, baseCooldown: 10, tag: "controle" },
-    { key: "e", hotkey: "E", icon: "Fc", name: "Furnace", cost: 45, baseCooldown: 14, tag: "burst" },
-    { key: "r", hotkey: "R", icon: "Fo", name: "Full Output", cost: 80, baseCooldown: 22, tag: "beam" },
-    { key: "space", hotkey: "Space", icon: "Fs", name: "Flash Step", cost: 40, baseCooldown: 10, tag: "mobilidade" },
-    { key: "f", hotkey: "F", icon: "Dm", name: "Malevolent Shrine", cost: 80, baseCooldown: 75, tag: "dominio" },
+  "rei-amaldicoado": [
+    { key: "q", hotkey: "Q", icon: "Cp", name: "Corte Perseguidor", cost: 35, baseCooldown: 10, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Ei", name: "Explosão Infernal", cost: 45, baseCooldown: 14, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Rs", name: "Rajada Suprema", cost: 80, baseCooldown: 22, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Dr", name: "Deslocamento Relâmpago", cost: 40, baseCooldown: 10, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Santuário Devastador", cost: 80, baseCooldown: 75, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
-  yuji: [
-    { key: "q", hotkey: "Q", icon: "Df", name: "Divergent Fist", cost: 30, baseCooldown: 8, tag: "controle" },
-    { key: "e", hotkey: "E", icon: "Si", name: "Soul Impact", cost: 40, baseCooldown: 12, tag: "burst" },
-    { key: "r", hotkey: "R", icon: "Td", name: "Taido Beatdown", cost: 50, baseCooldown: 15, tag: "burst" },
-    { key: "space", hotkey: "Space", icon: "Fk", name: "Flying Knee", cost: 30, baseCooldown: 8, tag: "mobilidade" },
-    { key: "f", hotkey: "F", icon: "Dm", name: "Self-Embodiment", cost: 75, baseCooldown: 65, tag: "dominio" },
+  "punho-indomavel": [
+    { key: "q", hotkey: "Q", icon: "Sd", name: "Soco Defasado", cost: 30, baseCooldown: 8, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Pe", name: "Pancada Espiritual", cost: 40, baseCooldown: 12, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Sb", name: "Séquência Brutal", cost: 50, baseCooldown: 15, tag: "burst" },
+    { key: "space", hotkey: "Space", icon: "Jv", name: "Joelhada Voadora", cost: 30, baseCooldown: 8, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Manifestação Interior", cost: 75, baseCooldown: 65, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
-  megumi: [
-    { key: "q", hotkey: "Q", icon: "Nu", name: "Nue", cost: 35, baseCooldown: 10, tag: "controle" },
-    { key: "e", hotkey: "E", icon: "Or", name: "Orochi", cost: 50, baseCooldown: 30, tag: "invocacao" },
-    { key: "r", hotkey: "R", icon: "Mh", name: "Mahoraga", cost: 85, baseCooldown: 42, tag: "ultimate" },
-    { key: "space", hotkey: "Space", icon: "Ss", name: "Shadow Step", cost: 20, baseCooldown: 4, tag: "mobilidade" },
-    { key: "f", hotkey: "F", icon: "Dm", name: "Chimera Shadow", cost: 75, baseCooldown: 70, tag: "dominio" },
+  "invocador-de-sombras": [
+    { key: "q", hotkey: "Q", icon: "Cs", name: "Coruja Sombria", cost: 35, baseCooldown: 10, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Sp", name: "Serpente Perfurante", cost: 50, baseCooldown: 30, tag: "invocacao" },
+    { key: "r", hotkey: "R", icon: "Ba", name: "Besta Adaptativa", cost: 85, baseCooldown: 42, tag: "ultimate" },
+    { key: "space", hotkey: "Space", icon: "Ms", name: "Mergulho na Sombra", cost: 20, baseCooldown: 4, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Jardim das Sombras", cost: 75, baseCooldown: 70, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
-  hakari: [
-    { key: "q", hotkey: "Q", icon: "Jr", name: "Jackpot Rush", cost: 30, baseCooldown: 7, tag: "controle" },
-    { key: "e", hotkey: "E", icon: "Rg", name: "Restless Gambler", cost: 40, baseCooldown: 12, tag: "burst" },
-    { key: "r", hotkey: "R", icon: "Lr", name: "Lucky Roll", cost: 80, baseCooldown: 22, tag: "beam" },
-    { key: "space", hotkey: "Space", icon: "Ss", name: "Sudden Strike", cost: 25, baseCooldown: 7, tag: "mobilidade" },
-    { key: "f", hotkey: "F", icon: "Dm", name: "Idle Death Gamble", cost: 80, baseCooldown: 65, tag: "dominio" },
+  "lutador-de-sorte": [
+    { key: "q", hotkey: "Q", icon: "Rs", name: "Rajada Sortuda", cost: 30, baseCooldown: 7, tag: "controle" },
+    { key: "e", hotkey: "E", icon: "Ai", name: "Apostador Implacável", cost: 40, baseCooldown: 12, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Rl", name: "Rolagem da Sorte", cost: 80, baseCooldown: 22, tag: "beam" },
+    { key: "space", hotkey: "Space", icon: "Gs", name: "Golpe Súbito", cost: 25, baseCooldown: 7, tag: "mobilidade" },
+    { key: "f", hotkey: "F", icon: "Dm", name: "Roleta da Morte", cost: 80, baseCooldown: 65, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
   ],
 };
 
 function getSkills(character) {
-  return CHARACTER_SKILLS[character] || CHARACTER_SKILLS.gojo;
+  return CHARACTER_SKILLS[character] || CHARACTER_SKILLS["o-honrado"];
 }
 
 const RARITY_LABELS = {
@@ -132,12 +132,12 @@ function upgradeIcon(id) {
 }
 
 const ENERGY_BAR_COLORS = {
-  gojo:   "#50ebff",
-  yuta:   "#ff148c",
-  sukuna: "#e63232",
-  yuji:   "#50ebff",
-  megumi: "#50ebff",
-  hakari: "#32dc50",
+  "o-honrado":        "#50ebff",
+  "portador-do-vinculo": "#ff148c",
+  "rei-amaldicoado":     "#e63232",
+  "punho-indomavel":     "#50ebff",
+  "invocador-de-sombras":"#50ebff",
+  "lutador-de-sorte":    "#32dc50",
 };
 
 function createBarsHtml(stats, flags) {
@@ -147,14 +147,14 @@ function createBarsHtml(stats, flags) {
   const hpState = hpPercent <= 18 ? "critical" : hpPercent <= 35 ? "low" : hpPercent <= 65 ? "mid" : "high";
   const energyDry = energyPercent <= 18;
 
-  const chara = stats.character || "gojo";
+  const chara = stats.character || "o-honrado";
   const namesMap = {
-    gojo: "Satoru Gojo",
-    sukuna: "Ryomen Sukuna",
-    yuji: "Yuji Itadori",
-    yuta: "Yuta Okkotsu",
-    megumi: "Megumi Fushiguro",
-    hakari: "Kinji Hakari"
+    "o-honrado": "O Honrado",
+    "rei-amaldicoado": "Rei Amaldiçoado",
+    "punho-indomavel": "Punho Indomável",
+    "portador-do-vinculo": "Portador do Vínculo",
+    "invocador-de-sombras": "Invocador de Sombras",
+    "lutador-de-sorte": "Lutador de Sorte"
   };
   const charaLabel = namesMap[chara] || chara.toUpperCase();
   const portraitUrl = `/assets/${chara}-icon.png`;
@@ -366,7 +366,7 @@ export class Hud {
     const energyPercent = pct(you.energy, you.maxEnergy);
     const now = performance.now();
 
-    const chara = you.character || "gojo";
+    const chara = you.character || "o-honrado";
 
     const healthRegenActive = (you.status && you.status.healthRegenTime > 0) && you.alive;
     const barsHtml = createBarsHtml(you, { tookDamage, healthRegenActive });

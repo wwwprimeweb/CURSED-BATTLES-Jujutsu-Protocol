@@ -2,7 +2,7 @@ import { SpriteAnimator } from "./spriteAnimator.js";
 import { loadImage } from "./imageLoader.js";
 import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH } from "./yutaSprites.js";
 
-const ALT_SHEET_PATH = "/assets/sprites/yuta_m1_alt.png";
+const ALT_SHEET_PATH = "/assets/sprites/portador-do-vinculo_m1_alt.png";
 const ALT_ANIMATIONS = {
   m1_2: { row: 0, frames: 5, speed: 10, loop: false },
   m1_4: { row: 0, frames: 5, speed: 10, loop: false },
@@ -48,11 +48,11 @@ export class YutaSpriteRenderer {
 
   async loadRikaSprite() {
     const paths = [
-      "/assets/sprites/rika-yuta.png",
-      "/client/assets/sprites/rika-yuta.png",
-      "./assets/sprites/rika-yuta.png",
-      "../client/assets/sprites/rika-yuta.png",
-      "rika-yuta.png",
+      "/assets/sprites/rika-portador-do-vinculo.png",
+      "/client/assets/sprites/rika-portador-do-vinculo.png",
+      "./assets/sprites/rika-portador-do-vinculo.png",
+      "../client/assets/sprites/rika-portador-do-vinculo.png",
+      "rika-portador-do-vinculo.png",
     ];
     for (const path of paths) {
       try {
@@ -67,11 +67,11 @@ export class YutaSpriteRenderer {
 
   async loadDomainPrepSprite() {
     const paths = [
-      "/assets/sprites/yutade.png",
-      "/client/assets/sprites/yutade.png",
-      "./assets/sprites/yutade.png",
-      "../client/assets/sprites/yutade.png",
-      "yutade.png",
+      "/assets/sprites/portador-do-vinculode.png",
+      "/client/assets/sprites/portador-do-vinculode.png",
+      "./assets/sprites/portador-do-vinculode.png",
+      "../client/assets/sprites/portador-do-vinculode.png",
+      "portador-do-vinculode.png",
     ];
     for (const path of paths) {
       try {

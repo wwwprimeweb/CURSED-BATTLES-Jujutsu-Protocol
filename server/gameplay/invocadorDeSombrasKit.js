@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const MEGUMI = {
+const INVOCADOR_DE_SOMBRAS = {
   m1: {
     name: "Shadow Strike",
     damage: 20,
@@ -77,5 +77,5 @@ const MEGUMI = {
 };
 
 module.exports = {
-  MEGUMI,
+  INVOCADOR_DE_SOMBRAS,
 };

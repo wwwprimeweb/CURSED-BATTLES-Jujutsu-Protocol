@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { normalize } = require("../utils/math");
 const { getEnemyDef } = require("../entities/enemyRegistry");

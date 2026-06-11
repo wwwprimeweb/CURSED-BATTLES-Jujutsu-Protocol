@@ -1,43 +1,43 @@
-"use strict";
+﻿"use strict";
 
 const BASE_STATS = {
-  gojo: {
+  "o-honrado": {
     maxHp: 307, maxEnergy: 560, energyRegen: 3, moveSpeed: 172,
     armor: 0, ccResist: 0.5, dodgeCooldown: 2.0, dodgeDistance: 125, radius: 38,
   },
-  yuta: {
+  "portador-do-vinculo": {
     maxHp: 293, maxEnergy: 600, energyRegen: 3, moveSpeed: 178,
     armor: 0, ccResist: 0.5, dodgeCooldown: 2.0, dodgeDistance: 125, radius: 38,
   },
-  sukuna: {
+  "rei-amaldicoado": {
     maxHp: 367, maxEnergy: 480, energyRegen: 2, moveSpeed: 168,
     armor: 5, ccResist: 0.6, dodgeCooldown: 2.0, dodgeDistance: 130, radius: 40,
   },
-  yuji: {
+  "punho-indomavel": {
     maxHp: 333, maxEnergy: 520, energyRegen: 3, moveSpeed: 180,
     armor: 3, ccResist: 0.4, dodgeCooldown: 2.0, dodgeDistance: 140, radius: 36,
   },
-  megumi: {
+  "invocador-de-sombras": {
     maxHp: 283, maxEnergy: 640, energyRegen: 3, moveSpeed: 175,
     armor: 0, ccResist: 0.5, dodgeCooldown: 2.0, dodgeDistance: 125, radius: 36,
   },
-  hakari: {
+  "lutador-de-sorte": {
     maxHp: 317, maxEnergy: 680, energyRegen: 4, moveSpeed: 170,
     armor: 0, ccResist: 0.3, dodgeCooldown: 2.0, dodgeDistance: 135, radius: 38,
   },
 };
 
 function resolveBaseStats(character) {
-  return BASE_STATS[character] || BASE_STATS.gojo;
+  return BASE_STATS[character] || BASE_STATS["o-honrado"];
 }
 
 function createPlayer({ id, sessionToken, name, x, y, now, character }) {
-  const base = resolveBaseStats(character || "gojo");
+  const base = resolveBaseStats(character || "o-honrado");
   return {
     id,
     sessionToken,
     name,
-    character: character || "gojo",
+    character: character || "o-honrado",
     kind: "player",
     x,
     y,

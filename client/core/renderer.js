@@ -1,4 +1,4 @@
-import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
+﻿import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
 import { YutaVisualSystem } from "../animations/yutaVisualSystem.js";
 import { YujiVisualSystem } from "../animations/yujiVisualSystem.js";
 import { GenericVisualSystem } from "../animations/genericVisualSystem.js";
@@ -24,10 +24,10 @@ export class Renderer {
     this.particles = particleSystem;
     this.gojoVisual = new GojoVisualSystem();
     this.yutaVisual = new YutaVisualSystem();
-    this.sukunaVisual = new GenericVisualSystem("sukuna");
+    this.sukunaVisual = new GenericVisualSystem("rei-amaldicoado");
     this.yujiVisual = new YujiVisualSystem();
-    this.megumiVisual = new GenericVisualSystem("megumi");
-    this.hakariVisual = new GenericVisualSystem("hakari");
+    this.megumiVisual = new GenericVisualSystem("invocador-de-sombras");
+    this.hakariVisual = new GenericVisualSystem("lutador-de-sorte");
     this.domainVisual = new DomainVisualSystem();
     this.map = null;
     this.camera = {
@@ -400,11 +400,11 @@ export class Renderer {
 
   getVisualForPlayer(character) {
     switch (character) {
-      case "yuta": return this.yutaVisual;
-      case "sukuna": return this.sukunaVisual;
-      case "yuji": return this.yujiVisual;
-      case "megumi": return this.megumiVisual;
-      case "hakari": return this.hakariVisual;
+      case "portador-do-vinculo": return this.yutaVisual;
+      case "rei-amaldicoado": return this.sukunaVisual;
+      case "punho-indomavel": return this.yujiVisual;
+      case "invocador-de-sombras": return this.megumiVisual;
+      case "lutador-de-sorte": return this.hakariVisual;
       default: return this.gojoVisual;
     }
   }
@@ -934,7 +934,7 @@ export class Renderer {
           ctx.stroke();
         };
 
-        // Main bolt: glow thickness 4 → 2, black core 1.5 → 1
+        // Main bolt: glow thickness 4 â†’ 2, black core 1.5 â†’ 1
         drawBolt(bolt.points, 4 - localT * 2, 1.5 - localT * 0.5);
 
         // Branches: thinner
@@ -1105,7 +1105,7 @@ export class Renderer {
         char = this.domainVisual.getCharacter(ownerId);
       } catch (e) {
         console.error("getCharacter failed:", e);
-        char = "gojo";
+        char = "o-honrado";
       }
       try {
         this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, entry.x, entry.y, p, vz, z, expandProgress, isMine, now);
@@ -1136,7 +1136,7 @@ export class Renderer {
         }
       }
 
-      if (char !== 'yuta') {
+      if (char !== 'portador-do-vinculo') {
         for (let i = 0; i < 12; i++) {
           const a = (i / 12) * Math.PI * 2 + now * 0.001;
           const rx = p.x + Math.cos(a) * vz;
@@ -1545,7 +1545,6 @@ export class Renderer {
         ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
         ctx.fillStyle = "#ff6e8f";
         ctx.fillRect(hpBarX, hpBarY, hpBarW * hpPct, hpBarH);
-
         if (e.type === "fleshmaw" && e.windupTimer > 0) {
           const progress = 1 - Math.max(0, e.windupTimer) / (e.attackWindup || 0.5);
           const frameIdx = Math.min(4, Math.floor(progress * 5));
@@ -1648,7 +1647,7 @@ export class Renderer {
     players.forEach((entry) => {
       const p = entry.raw;
       const isYou = p.id === youId;
-      const chara = p.character || "gojo";
+      const chara = p.character || "o-honrado";
       const visual = this.getVisualForPlayer(chara);
 
       const tween = this.dashTweens.get(p.id);

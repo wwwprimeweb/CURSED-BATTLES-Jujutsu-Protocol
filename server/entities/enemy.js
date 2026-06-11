@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { registerAll } = require("./enemies/index");
 const { getEnemyDef, getGradeTier } = require("./enemyRegistry");

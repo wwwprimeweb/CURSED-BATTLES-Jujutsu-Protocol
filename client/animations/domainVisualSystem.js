@@ -1,12 +1,12 @@
-import { loadImage } from "./imageLoader.js";
+﻿import { loadImage } from "./imageLoader.js";
 
 const CHAR_COLORS = {
-  gojo: [0, 229, 255],
-  sukuna: [255, 0, 51],
-  yuta: [255, 255, 255],
-  yuji: [255, 107, 157],
-  megumi: [10, 26, 74],
-  hakari: [170, 68, 255],
+  "o-honrado": [0, 229, 255],
+  "rei-amaldicoado": [255, 0, 51],
+  "portador-do-vinculo": [255, 255, 255],
+  "punho-indomavel": [255, 107, 157],
+  "invocador-de-sombras": [10, 26, 74],
+  "lutador-de-sorte": [170, 68, 255],
 };
 
 const EXPAND_DURATION = 1.2;
@@ -96,7 +96,7 @@ export class DomainVisualSystem {
   }
 
   getCharacter(ownerId) {
-    return this.charByOwner.get(ownerId) || "gojo";
+    return this.charByOwner.get(ownerId) || "o-honrado";
   }
 
   getBackground(ownerId) {
@@ -147,7 +147,7 @@ export class DomainVisualSystem {
 
     const seed = this.hashString(ownerId);
     const rng = this.mulberry32(seed);
-    const colors = CHAR_COLORS[char] || CHAR_COLORS.gojo;
+    const colors = CHAR_COLORS[char] || CHAR_COLORS["o-honrado"];
 
     const mid = [];
     const midCount = 5 + Math.floor(rng() * 2);
@@ -315,7 +315,7 @@ export class DomainVisualSystem {
       ctx.clip();
 
       const layerData = this.getOrCreateParallaxData(ownerId, char);
-      const layers = char === 'yuta' ? ['far', 'mid', 'close'] : ['far', 'close', 'mid'];
+      const layers = char === 'portador-do-vinculo' ? ['far', 'mid', 'close'] : ['far', 'close', 'mid'];
 
       for (const key of layers) {
         const config = PARALLAX_DEPTHS[key];
@@ -343,7 +343,7 @@ export class DomainVisualSystem {
         let effectiveScale = LAYER_SCALE[key];
         let effectiveParallax = config ? (config.factor || config) : 0;
 
-        if (char === 'yuta') {
+        if (char === 'portador-do-vinculo') {
           if (key === 'far') {
             effectiveScale = 2.0;
             effectiveOffset = { x: -0.2, y: 0.4 };
@@ -357,11 +357,11 @@ export class DomainVisualSystem {
           }
         }
 
-        if (char === 'gojo' && key === 'mid') {
+        if (char === 'o-honrado' && key === 'mid') {
           effectiveOffset = { x: 0.3, y: -0.3 };
         }
 
-        if (char === 'yuji' && key === 'mid') continue;
+        if (char === 'punho-indomavel' && key === 'mid') continue;
 
         const camX = camera.x || 0;
         const camY = camera.y || 0;
@@ -376,11 +376,11 @@ export class DomainVisualSystem {
           const cy2 = p.y + lo.y * vz + dy;
           ctx.save();
           ctx.translate(cx2, cy2);
-          if (char === 'gojo' && key === 'mid') {
+          if (char === 'o-honrado' && key === 'mid') {
             ctx.rotate(this.rotationTime * 0.01);
           }
           ctx.globalAlpha = alpha * (LAYER_ALPHA[key] ?? 1);
-          if (char === 'yuji' && key === 'far') ctx.filter = 'blur(1.5px)';
+          if (char === 'punho-indomavel' && key === 'far') ctx.filter = 'blur(1.5px)';
           this.drawScaledImage(ctx, img, 0, 0, vz, 0, 0, effectiveScale);
           ctx.globalAlpha = 1;
           ctx.restore();
@@ -404,7 +404,7 @@ export class DomainVisualSystem {
           ctx.fill();
           ctx.globalAlpha = 1;
 
-          if (char === "gojo") {
+          if (char === "o-honrado") {
             const innerR = vz * 0.95;
             for (let i = 0; i < 80; i++) {
               const seed = i * 137.508;
@@ -430,7 +430,7 @@ export class DomainVisualSystem {
             ctx.fill();
           }
           ctx.globalAlpha = 1;
-        } else if (key === 'close' && layerData.close && char !== 'yuta') {
+        } else if (key === 'close' && layerData.close && char !== 'portador-do-vinculo') {
           ctx.globalAlpha = alpha;
           for (const d of layerData.close) {
             ctx.fillStyle = d.color;
@@ -442,8 +442,8 @@ export class DomainVisualSystem {
         }
       }
 
-      if (char === 'yuji') {
-        const overlay = this.getLayerImage('yuji', '1');
+      if (char === 'punho-indomavel') {
+        const overlay = this.getLayerImage('punho-indomavel', '1');
         if (overlay && overlay.width) {
           const overlayAlpha = Math.min(0.4, expandProgress * 2.5);
           if (overlayAlpha > 0.01) {
@@ -476,7 +476,7 @@ export class DomainVisualSystem {
               const trainX = p.x + tNormX * vz + dx;
               const trainY = p.y + tNormY * vz + dy + vz * 0.3;
 
-              const trainImg = this.getLayerImage('yuji', '2');
+              const trainImg = this.getLayerImage('punho-indomavel', '2');
               if (trainImg && trainImg.width) {
                 ctx.save();
                 ctx.translate(trainX, trainY);
@@ -522,7 +522,7 @@ export class DomainVisualSystem {
     if (!this.getLayerImage(char, '3') && bg) {
       this.drawScaledImage(ctx, bg, cx, cy, r, 0, 0);
     } else if (!this.getLayerImage(char, '3') && !bg) {
-      const rgb = CHAR_COLORS[char] || CHAR_COLORS.gojo;
+      const rgb = CHAR_COLORS[char] || CHAR_COLORS["o-honrado"];
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
       grad.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.3)`);
       grad.addColorStop(0.4, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.12)`);

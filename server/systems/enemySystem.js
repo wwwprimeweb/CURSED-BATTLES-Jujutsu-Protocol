@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { createEnemy } = require("../entities/enemy");
 const { getEnemyDef, getAllByGrade } = require("../entities/enemyRegistry");

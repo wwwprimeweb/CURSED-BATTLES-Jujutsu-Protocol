@@ -1,4 +1,4 @@
-import { SpriteAnimator } from "./spriteAnimator.js";
+﻿import { SpriteAnimator } from "./spriteAnimator.js";
 import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH } from "./gojoSprites.js";
 import { GojoSkillEffects } from "./proceduralGojo.js";
 import { drawHitReaction } from "./gojoEffects.js";
@@ -20,13 +20,13 @@ export class GojoVisualSystem {
     this.m1Slashes = [];
     this.time = 0;
     this.gojoAttackSprite = new Image();
-    this.gojoAttackSprite.src = "/assets/habilit/gojoattack.png";
+    this.gojoAttackSprite.src = "/assets/habilit/o-honradoattack.png";
     this.dashImage = new Image();
-    this.dashImage.src = "/assets/sprites/gojo-dash.png";
+    this.dashImage.src = "/assets/sprites/o-honrado-dash.png";
     this.domainPrepFrames = [];
     for (let i = 0; i < 5; i++) {
       const img = new Image();
-      img.src = `/assets/sprites/gojo_shinjuku/domain_prep_${i}.png`;
+      img.src = `/assets/sprites/o-honrado_shinjuku/domain_prep_${i}.png`;
       this.domainPrepFrames.push(img);
     }
     this.domainPrepTime = 0;
@@ -126,7 +126,7 @@ export class GojoVisualSystem {
         ctx.fillStyle = "#dce9ff";
         ctx.font = "600 14px Rajdhani";
         ctx.textAlign = "center";
-        ctx.fillText(p.name || "Gojo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+        ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
       }
       return;
     }
@@ -145,7 +145,7 @@ export class GojoVisualSystem {
         ctx.fillStyle = "#dce9ff";
         ctx.font = "600 14px Rajdhani";
         ctx.textAlign = "center";
-        ctx.fillText(p.name || "Gojo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+        ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
       }
       return;
     }
@@ -176,7 +176,7 @@ export class GojoVisualSystem {
      ctx.fillStyle = "#dce9ff";
      ctx.font = "600 14px Rajdhani";
      ctx.textAlign = "center";
-     ctx.fillText(p.name || "Gojo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+     ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
 
   }
 

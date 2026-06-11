@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { Rng } = require("../utils/rng");
 const { circleIntersectsRect, distanceSq } = require("../utils/math");

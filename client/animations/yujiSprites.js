@@ -30,4 +30,4 @@ export const YUJI_SPRITE_CONFIG = {
   renderScale: 1.9,
 };
 
-export const YUJI_SHEET_PATH = "/assets/sprites/yuji_shinjuku/yuji_shinjuku_spritesheet.png";
+export const YUJI_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/punho-indomavel_shinjuku_spritesheet.png";

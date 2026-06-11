@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const SUKUNA = {
+const REI_AMALDICOADO = {
   m1: {
     name: "Dismantle",
     damage: 28,
@@ -76,5 +76,5 @@ const SUKUNA = {
 };
 
 module.exports = {
-  SUKUNA,
+  REI_AMALDICOADO,
 };

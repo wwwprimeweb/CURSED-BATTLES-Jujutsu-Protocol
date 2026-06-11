@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 function createProjectile(data) {
   return {

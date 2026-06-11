@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const GOJO = {
+const O_HONRADO = {
   m1: {
     name: "Cursed Jab Combo",
     damage: 22,
@@ -76,5 +76,5 @@ const GOJO = {
 };
 
 module.exports = {
-  GOJO,
+  O_HONRADO,
 };

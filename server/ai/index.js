@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { updateGrade3 } = require("./grade3AI");
 const { updateGrade2 } = require("./grade2AI");

@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const HAKARI = {
+const LUTADOR_DE_SORTE = {
   m1: {
     name: "Brawling Beatdown",
     damage: 22,
@@ -76,5 +76,5 @@ const HAKARI = {
 };
 
 module.exports = {
-  HAKARI,
+  LUTADOR_DE_SORTE,
 };

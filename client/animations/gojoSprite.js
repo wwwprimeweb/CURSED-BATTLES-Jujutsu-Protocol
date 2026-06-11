@@ -17,11 +17,11 @@ export class GojoSpriteRenderer {
 
   async loadIdleSprite() {
     const paths = [
-      "/assets/sprites/gojo.png",
-      "/client/assets/sprites/gojo.png",
-      "./assets/sprites/gojo.png",
-      "../client/assets/sprites/gojo.png",
-      "gojo.png",
+      "/assets/sprites/o-honrado.png",
+      "/client/assets/sprites/o-honrado.png",
+      "./assets/sprites/o-honrado.png",
+      "../client/assets/sprites/o-honrado.png",
+      "o-honrado.png",
     ];
 
     for (const path of paths) {
@@ -39,11 +39,11 @@ export class GojoSpriteRenderer {
 
   async loadDashSprite() {
     const paths = [
-      "/assets/sprites/gojo-dash.png",
-      "/client/assets/sprites/gojo-dash.png",
-      "./assets/sprites/gojo-dash.png",
-      "../client/assets/sprites/gojo-dash.png",
-      "gojo-dash.png",
+      "/assets/sprites/o-honrado-dash.png",
+      "/client/assets/sprites/o-honrado-dash.png",
+      "./assets/sprites/o-honrado-dash.png",
+      "../client/assets/sprites/o-honrado-dash.png",
+      "o-honrado-dash.png",
     ];
 
     for (const path of paths) {

@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { register } = require("./grade3/grade3_enemies");
 const { register: registerGrade2 } = require("./grade2/grade2_enemies");

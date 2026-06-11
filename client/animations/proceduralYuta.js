@@ -8,7 +8,7 @@ export class YutaSkillEffects {
     this.katanaSlashes = [];
     this.time = 0;
     this.m1Spritesheet = new Image();
-    this.m1Spritesheet.src = "/assets/habilit/yuta_m1_7033.png";
+    this.m1Spritesheet.src = "/assets/habilit/portador-do-vinculo_m1_7033.png";
   }
 
   update(dt) {

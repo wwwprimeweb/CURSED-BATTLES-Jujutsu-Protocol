@@ -18,14 +18,14 @@
   --panel-strong: rgba(5, 5, 5, 0.92);
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
 
-  --gojo: #00e5ff;
-  --sukuna: #ff0033;
-  --yuta: #ffffff;
-  --yuji: #ff6b9d;
-  --megumi: #0a1a4a;
-  --hakari: #aa44ff;
+  --o-honrado: #00e5ff;
+  --rei-amaldicoado: #ff0033;
+  --portador-do-vinculo: #ffffff;
+  --punho-indomavel: #ff6b9d;
+  --invocador-de-sombras: #0a1a4a;
+  --lutador-de-sorte: #aa44ff;
 
-  --accent: var(--gojo);
+  --accent: var(--o-honrado);
   --accent-rgb: 0, 229, 255;
 
   --blue: #4ccaff;
@@ -413,12 +413,12 @@ input {
   font-size: 0.85rem;
 }
 
-.character-card[data-character="gojo"] { --char-color: var(--gojo); }
-.character-card[data-character="sukuna"] { --char-color: var(--sukuna); }
-.character-card[data-character="yuta"] { --char-color: var(--yuta); }
-.character-card[data-character="yuji"] { --char-color: var(--yuji); }
-.character-card[data-character="megumi"] { --char-color: var(--megumi); }
-.character-card[data-character="hakari"] { --char-color: var(--hakari); }
+.character-card[data-character="o-honrado"] { --char-color: var(--o-honrado); }
+.character-card[data-character="rei-amaldicoado"] { --char-color: var(--rei-amaldicoado); }
+.character-card[data-character="portador-do-vinculo"] { --char-color: var(--portador-do-vinculo); }
+.character-card[data-character="punho-indomavel"] { --char-color: var(--punho-indomavel); }
+.character-card[data-character="invocador-de-sombras"] { --char-color: var(--invocador-de-sombras); }
+.character-card[data-character="lutador-de-sorte"] { --char-color: var(--lutador-de-sorte); }
 
 @keyframes cardFadeIn {
   from { opacity: 0; translate: 0 30px; }
@@ -508,33 +508,33 @@ input {
   height: 66px;
   border-radius: 50%;
   padding: 3px;
-  background: linear-gradient(135deg, var(--accent, var(--gojo)), rgba(255, 255, 255, 0.03));
+  background: linear-gradient(135deg, var(--accent, var(--o-honrado)), rgba(255, 255, 255, 0.03));
   box-shadow: 0 0 15px rgba(var(--accent-rgb, 0, 229, 255), 0.25);
   flex-shrink: 0;
 }
 
-.portrait-outer-ring.char-border-gojo {
-  background: linear-gradient(135deg, var(--gojo), rgba(255,255,255,0.05));
+.portrait-outer-ring.char-border-o-honrado {
+  background: linear-gradient(135deg, var(--o-honrado), rgba(255,255,255,0.05));
   box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
 }
-.portrait-outer-ring.char-border-sukuna {
-  background: linear-gradient(135deg, var(--sukuna), rgba(255,255,255,0.05));
+.portrait-outer-ring.char-border-rei-amaldicoado {
+  background: linear-gradient(135deg, var(--rei-amaldicoado), rgba(255,255,255,0.05));
   box-shadow: 0 0 15px rgba(255, 0, 51, 0.3);
 }
-.portrait-outer-ring.char-border-yuji {
-  background: linear-gradient(135deg, var(--yuji), rgba(255,255,255,0.05));
+.portrait-outer-ring.char-border-punho-indomavel {
+  background: linear-gradient(135deg, var(--punho-indomavel), rgba(255,255,255,0.05));
   box-shadow: 0 0 15px rgba(255, 107, 157, 0.3);
 }
-.portrait-outer-ring.char-border-yuta {
-  background: linear-gradient(135deg, var(--yuta), rgba(255,255,255,0.05));
+.portrait-outer-ring.char-border-portador-do-vinculo {
+  background: linear-gradient(135deg, var(--portador-do-vinculo), rgba(255,255,255,0.05));
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
-.portrait-outer-ring.char-border-megumi {
-  background: linear-gradient(135deg, var(--megumi), rgba(255,255,255,0.05));
+.portrait-outer-ring.char-border-invocador-de-sombras {
+  background: linear-gradient(135deg, var(--invocador-de-sombras), rgba(255,255,255,0.05));
   box-shadow: 0 0 15px rgba(10, 26, 74, 0.3);
 }
-.portrait-outer-ring.char-border-hakari {
-  background: linear-gradient(135deg, var(--hakari), rgba(255,255,255,0.05));
+.portrait-outer-ring.char-border-lutador-de-sorte {
+  background: linear-gradient(135deg, var(--lutador-de-sorte), rgba(255,255,255,0.05));
   box-shadow: 0 0 15px rgba(170, 68, 255, 0.3);
 }
 
@@ -569,7 +569,7 @@ input {
   bottom: -4px;
   right: -4px;
   background: #060913;
-  border: 1.5px solid var(--accent, var(--gojo));
+  border: 1.5px solid var(--accent, var(--o-honrado));
   border-radius: 6px;
   padding: 1px 5px;
   font-size: 0.7rem;
@@ -909,7 +909,7 @@ input {
 }
 
 .skill-slot:hover {
-  border-color: var(--accent, var(--gojo));
+  border-color: var(--accent, var(--o-honrado));
   background: rgba(var(--accent-rgb, 0, 229, 255), 0.1);
   box-shadow: 0 0 22px rgba(var(--accent-rgb, 0, 229, 255), 0.25), 0 8px 24px rgba(0,0,0,0.6);
 }
@@ -1152,7 +1152,7 @@ input {
    ========================================================================= */
 .slot-key-m1 .skill-icon-face { font-size: 0.75rem; }
 .skill-slot.is-active {
-  border-color: var(--accent, var(--gojo));
+  border-color: var(--accent, var(--o-honrado));
   box-shadow: 0 0 15px rgba(var(--accent-rgb, 0, 229, 255), 0.25);
 }
 
@@ -1443,7 +1443,7 @@ input {
   width: 7.5px;
   height: 7.5px;
   background: #ffffff;
-  box-shadow: 0 0 12px var(--accent, var(--gojo));
+  box-shadow: 0 0 12px var(--accent, var(--o-honrado));
   z-index: 5;
 }
 
@@ -1551,7 +1551,7 @@ input {
 }
 
 .upgrade-head span {
-  color: var(--accent, var(--gojo));
+  color: var(--accent, var(--o-honrado));
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.24em;
@@ -2121,7 +2121,7 @@ input {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--accent, var(--gojo));
+  background: var(--accent, var(--o-honrado));
   border: 2px solid var(--bg-deep);
   box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.3);
   cursor: pointer;
@@ -2134,7 +2134,7 @@ input {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--accent, var(--gojo));
+  background: var(--accent, var(--o-honrado));
   border: 2px solid var(--bg-deep);
   cursor: pointer;
 }

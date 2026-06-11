@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const path = require("path");
 const http = require("http");
@@ -52,7 +52,7 @@ wss.on("connection", (socket) => {
       const name = sanitizeName(msg.name, config.antiCheat.maxNameLength);
       const requestedToken = sanitizeSessionToken(msg.sessionToken);
       const sessionToken = requestedToken || crypto.randomBytes(12).toString("hex");
-      const character = typeof msg.character === "string" ? msg.character : "gojo";
+      const character = typeof msg.character === "string" ? msg.character : "o-honrado";
 
       const result = game.addPlayer({
         sessionToken,

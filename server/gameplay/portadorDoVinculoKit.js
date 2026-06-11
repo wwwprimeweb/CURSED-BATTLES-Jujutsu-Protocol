@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const YUTA = {
+const PORTADOR_DO_VINCULO = {
   m1: {
     name: "Katana Combat",
     damage: 42,
@@ -115,5 +115,5 @@ const YUTA = {
 };
 
 module.exports = {
-  YUTA,
+  PORTADOR_DO_VINCULO,
 };

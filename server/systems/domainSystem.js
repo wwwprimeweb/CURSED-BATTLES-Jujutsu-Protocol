@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const { GOJO } = require("../gameplay/gojoKit");
+const { O_HONRADO } = require("../gameplay/oHonradoKit");
 const { CHARACTER_REGISTRY } = require("../gameplay/characterRegistry");
 const { distance } = require("../utils/math");
 
@@ -11,7 +11,7 @@ class DomainSystem {
   }
 
   getDomainKit(player) {
-    return CHARACTER_REGISTRY[player.character]?.domain || GOJO.domain;
+    return CHARACTER_REGISTRY[player.character]?.domain || O_HONRADO.domain;
   }
 
   activateDomain(player) {
@@ -31,7 +31,7 @@ class DomainSystem {
     const domain = {
       id: `d_${player.id}`,
       ownerId: player.id,
-      character: player.character || "gojo",
+      character: player.character || "o-honrado",
       x: player.x,
       y: player.y,
       radius,
@@ -50,7 +50,7 @@ class DomainSystem {
       trainHits: new Set(),
     };
 
-    if (domain.character === "yuta") {
+    if (domain.character === "portador-do-vinculo") {
       domain.copiedCharacter = null;
       this.server.players.forEach((p) => {
         if (p.id === player.id || !p.alive) return;
@@ -75,7 +75,7 @@ class DomainSystem {
 
   getKitByDomain(domain) {
     const kit = CHARACTER_REGISTRY[domain.character];
-    return kit ? kit.domain : GOJO.domain;
+    return kit ? kit.domain : O_HONRADO.domain;
   }
 
   isSkillLocked() {
@@ -92,7 +92,7 @@ class DomainSystem {
       if (locked) {
         return;
       }
-      if (domain.character !== "gojo") {
+      if (domain.character !== "o-honrado") {
         return;
       }
       if (domain.ownerId === player.id) {
@@ -126,12 +126,12 @@ class DomainSystem {
       owner.energy -= domain.drain * 4 * dt;
 
       domain.hitTimer += dt;
-      domain.shouldHit = domain.character === "yuji" && domain.hitTimer >= 1;
+      domain.shouldHit = domain.character === "punho-indomavel" && domain.hitTimer >= 1;
       if (domain.shouldHit) {
         domain.hitTimer -= 1;
       }
 
-      if (domain.character === "yuji") {
+      if (domain.character === "punho-indomavel") {
         if (domain.trainInitialDelay > 0) {
           if (domain.trainInitialDelay <= 3 && domain.trainInitialDelay + dt > 3) {
             this.server.emitEventNear(domain.x, domain.y, { type: "trainApproach", x: domain.x, y: domain.y }, domain.radius);
@@ -197,7 +197,7 @@ class DomainSystem {
         if (!owner || !owner.alive) return;
         const d = distance(targetPlayer.x, targetPlayer.y, domain.x, domain.y);
         if (d <= domain.radius) {
-          if (domain.character === "yuji") {
+          if (domain.character === "punho-indomavel") {
             targetPlayer.domainFrozen = false;
             if (domain.shouldHit) {
               this.server.combat.applyDamage({
@@ -209,7 +209,7 @@ class DomainSystem {
                 fromY: domain.y,
               });
               this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
-                type: "yujiDomainHit",
+                type: "punhoIndomavelDominioImpacto",
                 x: targetPlayer.x,
                 y: targetPlayer.y,
               });
@@ -268,7 +268,7 @@ class DomainSystem {
       const kit = this.getKitByDomain(sourceDomain);
       const owner = this.server.players.get(sourceDomain.ownerId) || null;
 
-      if (sourceDomain.character === "yuji") {
+      if (sourceDomain.character === "punho-indomavel") {
         if (sourceDomain.shouldHit) {
           this.server.combat.applyDamage({
             target: enemy,
@@ -279,7 +279,7 @@ class DomainSystem {
             fromY: sourceDomain.y,
           });
           this.server.emitEventNear(enemy.x, enemy.y, {
-            type: "yujiDomainHit",
+            type: "punhoIndomavelDominioImpacto",
             x: enemy.x,
             y: enemy.y,
           });
@@ -303,7 +303,7 @@ class DomainSystem {
 
   applyYujiTrainHit(dt) {
     this.domains.forEach((domain) => {
-      if (domain.character !== "yuji") return;
+      if (domain.character !== "punho-indomavel") return;
       if (domain.trainInitialDelay > 0) return;
       const progress = domain.trainTimer;
       if (progress > 2) return;

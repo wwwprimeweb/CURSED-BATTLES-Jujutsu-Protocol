@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const YUJI = {
+const PUNHO_INDOMAVEL = {
   m1: {
     name: "Black Flash Combo",
     damage: 24,
@@ -76,5 +76,5 @@ const YUJI = {
 };
 
 module.exports = {
-  YUJI,
+  PUNHO_INDOMAVEL,
 };

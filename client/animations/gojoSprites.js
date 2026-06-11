@@ -30,7 +30,7 @@ export const SPRITE_CONFIG = {
   renderScale: 1.7,
 };
 
-export const GOJO_MANGA_SPRITE_PATH = "/assets/sprites/gojo_manga_spritesheet.png";
+export const GOJO_MANGA_SPRITE_PATH = "/assets/sprites/o-honrado_manga_spritesheet.png";
 
 export function mapServerStateToAnim(serverState) {
   const map = {

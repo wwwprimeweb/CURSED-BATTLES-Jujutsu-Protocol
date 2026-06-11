@@ -1,4 +1,4 @@
-import { InputManager } from "./core/input.js";
+﻿import { InputManager } from "./core/input.js";
 import { NetworkClient } from "./core/netClient.js";
 import { InterpolationBuffer } from "./core/interpolation.js";
 import { Renderer } from "./core/renderer.js";
@@ -126,7 +126,7 @@ const state = {
   spectating: false,
   spectateTargetId: null,
   spectateIndex: 0,
-  selectedChar: "gojo",
+  selectedChar: "o-honrado",
 };
 
 const net = new NetworkClient({
@@ -168,7 +168,7 @@ function handlePong(msg) {
 }
 
 const CHAR_MOVE_SPEED = {
-  gojo: 172, yuta: 178, sukuna: 168, yuji: 180, megumi: 175, hakari: 170,
+  "o-honrado": 172, "portador-do-vinculo": 178, "rei-amaldicoado": 168, "punho-indomavel": 180, "invocador-de-sombras": 175, "lutador-de-sorte": 170,
 };
 
 function applyInputPrediction(pred, payload, dt) {
@@ -266,13 +266,13 @@ function handleEvents(events) {
       const dirX = ev.dirX || (renderer.playerFacing.get(ev.playerId) || 1);
       const dirY = ev.dirY || 0;
       const combo = ev.combo || 1;
-      const attackerCharacter = ev.character || "gojo";
-      if (attackerCharacter === "yuta") {
+      const attackerCharacter = ev.character || "o-honrado";
+      if (attackerCharacter === "portador-do-vinculo") {
         const slashRange = Number.isFinite(ev.slashRange) ? ev.slashRange : 160;
         const coneAngle = Number.isFinite(ev.coneAngle) ? ev.coneAngle : 1.4;
 
         renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange, coneAngle);
-      } else if (attackerCharacter === "gojo") {
+      } else if (attackerCharacter === "o-honrado") {
         renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo, ev.playerId);
       } else {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 5, speed: 100, life: 0.12, size: 1.5 });
@@ -332,7 +332,7 @@ function handleEvents(events) {
     } else if (ev.type === "teleportEnd") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 120, life: 0.18, size: 1.5 });
       renderer.gojoVisual.addTeleport(ev.x, ev.y);
-    } else if (ev.type === "yujiDivergentPunch") {
+    } else if (ev.type === "punhoIndomavelSocoDefasado") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 12, speed: 220, life: 0.3, size: 2.8 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 6, speed: 140, life: 0.2, size: 1.8 });
     } else if (ev.type === "divergentFistDelayed") {
@@ -527,7 +527,7 @@ function handleEvents(events) {
       });
     } else if (ev.type === "freezeTick") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f8fdff", count: 8, speed: 125, life: 0.18, size: 2.1 });
-    } else if (ev.type === "yujiDomainHit") {
+    } else if (ev.type === "punhoIndomavelDominioImpacto") {
       renderer.yujiVisual.addCutLine(ev.x, ev.y);
     } else if (ev.type === "trainHit") {
       renderer.yujiVisual.addTrainImpact(ev.x, ev.y);
@@ -583,7 +583,7 @@ function handleEvents(events) {
     } else if (ev.type === "skillNoTarget") {
       hud.pushNotice("Sem alvos", "info", ev.skill + " sem inimigos no alcance");
     } else if (ev.type === "domainCopyUsed") {
-      hud.pushNotice("Cópia já utilizada", "info", "só pode copiar 1 vez por expansão");
+      hud.pushNotice("CÃ³pia jÃ¡ utilizada", "info", "sÃ³ pode copiar 1 vez por expansÃ£o");
     }
   }
 }
@@ -666,7 +666,7 @@ function start() {
   audio.resume();
   audio.stopMusic(300);
 
-  const char = state.selectedChar || 'gojo';
+  const char = state.selectedChar || 'o-honrado';
   state.sessionToken = state.sessionToken || localStorage.getItem(SESSION_KEY) || "";
 
   if (state.connected || state.reconnecting || state.joined) {
@@ -804,12 +804,12 @@ playBtn.addEventListener("click", () => {
 playBtn.addEventListener("mouseenter", () => playHoverSound(audio));
 
 const CHAR_COLORS = {
-  gojo: [0, 229, 255],
-  sukuna: [255, 0, 51],
-  yuta: [255, 255, 255],
-  yuji: [255, 107, 157],
-  megumi: [10, 26, 74],
-  hakari: [170, 68, 255],
+  "o-honrado": [0, 229, 255],
+  "rei-amaldicoado": [255, 0, 51],
+  "portador-do-vinculo": [255, 255, 255],
+  "punho-indomavel": [255, 107, 157],
+  "invocador-de-sombras": [10, 26, 74],
+  "lutador-de-sorte": [170, 68, 255],
 };
 
 function setAccentColor(charId) {
@@ -931,17 +931,17 @@ function updateBindingsUI() {
 
 function formatCode(code) {
   const map = {
-    Space: "ESPAÇO",
+    Space: "ESPAÃ‡O",
     ShiftLeft: "SHIFT",
     ShiftRight: "SHIFT",
     ControlLeft: "CTRL",
     ControlRight: "CTRL",
     AltLeft: "ALT",
     AltRight: "ALT",
-    ArrowUp: "↑",
-    ArrowDown: "↓",
-    ArrowLeft: "←",
-    ArrowRight: "→",
+    ArrowUp: "â†‘",
+    ArrowDown: "â†“",
+    ArrowLeft: "â†",
+    ArrowRight: "â†’",
     Enter: "ENTER",
     Escape: "ESC",
     Tab: "TAB",

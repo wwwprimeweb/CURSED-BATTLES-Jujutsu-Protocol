@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { generateMap } = require("./mapGenerator");
 const { createPlayer, BASE_STATS } = require("../entities/player");
@@ -7,9 +7,9 @@ const { CombatSystem } = require("../systems/combatSystem");
 const { EnemySystem } = require("../systems/enemySystem");
 const { ProgressionSystem } = require("../systems/progressionSystem");
 const { DomainSystem } = require("../systems/domainSystem");
-const { GOJO } = require("../gameplay/gojoKit");
-const { YUTA } = require("../gameplay/yutaKit");
-const { YUJI } = require("../gameplay/yujiKit");
+const { O_HONRADO } = require("../gameplay/oHonradoKit");
+const { PORTADOR_DO_VINCULO } = require("../gameplay/portadorDoVinculoKit");
+const { PUNHO_INDOMAVEL } = require("../gameplay/punhoIndomavelKit");
 const { CHARACTER_REGISTRY } = require("../gameplay/characterRegistry");
 const {
   clamp,
@@ -102,7 +102,7 @@ class GameServer {
   }
 
   getSpawnPoint() {
-    const radius = BASE_STATS.gojo.radius;
+    const radius = BASE_STATS["o-honrado"].radius;
     const jitter = 20;
     const anchoredAttempts = Math.max(1, this.map.spawnPoints.length * 6);
 
@@ -158,7 +158,7 @@ class GameServer {
   }
 
   addPlayer({ sessionToken, name, character, socket }) {
-    console.log(`[DIAG] addPlayer called: name="${name}", character="${character || 'gojo'}", sessionToken="${sessionToken.slice(0,8)}..."`);
+    console.log(`[DIAG] addPlayer called: name="${name}", character="${character || 'o-honrado'}", sessionToken="${sessionToken.slice(0,8)}..."`);
 
     const existingId = this.sessionToPlayer.get(sessionToken);
     if (existingId) {
@@ -399,7 +399,7 @@ class GameServer {
     this.enemySystem.bossSpawned = false;
 
     this.players.forEach((player) => {
-      const base = BASE_STATS[player.character] || BASE_STATS.gojo;
+      const base = BASE_STATS[player.character] || BASE_STATS["o-honrado"];
       player.maxHp = base.maxHp;
       player.maxEnergy = base.maxEnergy;
       player.energyRegen = base.energyRegen;
@@ -533,7 +533,7 @@ class GameServer {
   }
 
   isYujiInsideOwnDomain(player) {
-    if (!player || !player.alive || player.character !== "yuji") {
+    if (!player || !player.alive || player.character !== "punho-indomavel") {
       return false;
     }
     const ownDomain = this.domainSystem.domains.get(player.id);
@@ -637,7 +637,7 @@ class GameServer {
     player.invulnTimer = 0.7;
     player.respawnTimer = 0;
     player.domainExhaustionTimer = 0;
-    if (player.character === "yuta") {
+    if (player.character === "portador-do-vinculo") {
       this.rikas.delete(player.id);
       this.pureLoveBeams.delete(player.id);
     }
@@ -906,9 +906,9 @@ class GameServer {
     const fPressed = input.f && !player.prevInput.f;
 
     if (!player.cast && !skillLockedAtTickStart && player.domainExhaustionTimer <= 0) {
-      const chara = player.character || "gojo";
+      const chara = player.character || "o-honrado";
       const domainActive = this.domainSystem.hasActiveDomain(player.id);
-      if (chara === "yuta" || chara === "megumi") {
+      if (chara === "portador-do-vinculo" || chara === "invocador-de-sombras") {
         if (qPressed) {
           this.tryCastRika(player);
         } else if (ePressed) {
@@ -920,7 +920,7 @@ class GameServer {
         } else if (fPressed && !domainActive) {
           this.tryCastDomain(player);
         }
-      } else if (chara === "yuji") {
+      } else if (chara === "punho-indomavel") {
         if (qPressed) {
           this.tryCastDivergentFist(player);
         } else if (ePressed) {
@@ -1112,10 +1112,10 @@ class GameServer {
       return false;
     }
     const kit = this.getKit(player);
-    const isYutaSlash = player.character === "yuta";
+    const isYutaSlash = player.character === "portador-do-vinculo";
 
     const baseM1Damage = kit.m1.damage * player.modifiers.m1DamageMul;
-    const baseBlackFlashChance = player.character === "gojo" ? 0.01 : player.character === "yuji" ? 0.07 : 0.01;
+    const baseBlackFlashChance = player.character === "o-honrado" ? 0.01 : player.character === "punho-indomavel" ? 0.07 : 0.01;
     const blackFlashChance = this.isYujiInsideOwnDomain(player)
       ? Math.min(1, baseBlackFlashChance + YUJI_OWN_DOMAIN_BLACK_FLASH_BONUS)
       : baseBlackFlashChance;
@@ -1135,7 +1135,7 @@ class GameServer {
     const coneAngle = isYutaSlash ? (kit.m1.coneAngle || 1.4) : 0;
 
     let coneThreshold = 0.2;
-    if (player.character === "yuji") {
+    if (player.character === "punho-indomavel") {
       const step = (player.comboStep - 1) % 4;
       slashRange = (kit.m1.stepRanges || [])[step] ?? kit.m1.range;
       coneThreshold = (kit.m1.stepCones || [])[step] ?? 0.2;
@@ -1226,7 +1226,7 @@ class GameServer {
       dirY: slashDirY,
       combo: player.comboStep,
       playerId: player.id,
-      character: player.character || "gojo",
+      character: player.character || "o-honrado",
       slashRange: isYutaSlash ? slashRange : undefined,
       coneAngle: isYutaSlash ? coneAngle : undefined,
       blackFlash: isBlackFlash || undefined,
@@ -1251,13 +1251,13 @@ class GameServer {
   }
 
   tryCastBlue(player) {
-    if (!this.canUseSkill(player, GOJO.blue.energy, "q", GOJO.blue.cooldown)) {
+    if (!this.canUseSkill(player, O_HONRADO.blue.energy, "q", O_HONRADO.blue.cooldown)) {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
       type: "blue",
-      timer: GOJO.blue.startup,
+      timer: O_HONRADO.blue.startup,
       dirX: aim.x,
       dirY: aim.y,
     };
@@ -1274,13 +1274,13 @@ class GameServer {
       y: player.y + cast.dirY * 28,
       vx: cast.dirX,
       vy: cast.dirY,
-      speed: GOJO.blue.speed,
-      radius: GOJO.blue.radius,
-      lifetime: GOJO.blue.lifetime * player.modifiers.blueDurationMul,
-      damage: GOJO.blue.tickDamage * player.modifiers.blueTickDamageMul,
-      tickRate: GOJO.blue.tickRate,
-      pullRadius: GOJO.blue.pullRadius * player.modifiers.blueRadiusMul,
-      pullStrength: GOJO.blue.pullStrength * player.modifiers.bluePullMul,
+      speed: O_HONRADO.blue.speed,
+      radius: O_HONRADO.blue.radius,
+      lifetime: O_HONRADO.blue.lifetime * player.modifiers.blueDurationMul,
+      damage: O_HONRADO.blue.tickDamage * player.modifiers.blueTickDamageMul,
+      tickRate: O_HONRADO.blue.tickRate,
+      pullRadius: O_HONRADO.blue.pullRadius * player.modifiers.blueRadiusMul,
+      pullStrength: O_HONRADO.blue.pullStrength * player.modifiers.bluePullMul,
       color: "#4cb4ff",
       persistent: true,
     });
@@ -1298,13 +1298,13 @@ class GameServer {
   }
 
   tryCastRed(player) {
-    if (!this.canUseSkill(player, GOJO.red.energy, "e", GOJO.red.cooldown)) {
+    if (!this.canUseSkill(player, O_HONRADO.red.energy, "e", O_HONRADO.red.cooldown)) {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
       type: "red",
-      timer: GOJO.red.startup,
+      timer: O_HONRADO.red.startup,
       dirX: aim.x,
       dirY: aim.y,
     };
@@ -1321,14 +1321,14 @@ class GameServer {
       y: player.y + cast.dirY * 30,
       vx: cast.dirX,
       vy: cast.dirY,
-      speed: GOJO.red.speed,
-      radius: GOJO.red.radius,
-      lifetime: GOJO.red.lifetime,
-      damage: GOJO.red.damage * player.modifiers.redDamageMul,
-      knockback: GOJO.red.knockback * player.modifiers.redKnockbackMul,
+      speed: O_HONRADO.red.speed,
+      radius: O_HONRADO.red.radius,
+      lifetime: O_HONRADO.red.lifetime,
+      damage: O_HONRADO.red.damage * player.modifiers.redDamageMul,
+      knockback: O_HONRADO.red.knockback * player.modifiers.redKnockbackMul,
       color: "#ff4d6d",
       meta: {
-        explosionRadius: GOJO.red.explosionRadius * player.modifiers.redExplosionMul,
+        explosionRadius: O_HONRADO.red.explosionRadius * player.modifiers.redExplosionMul,
       },
     });
     if (this.domainSystem.hasActiveDomain(player.id)) {
@@ -1345,13 +1345,13 @@ class GameServer {
   }
 
   tryCastPurple(player) {
-    if (!this.canUseSkill(player, GOJO.purple.energy, "r", GOJO.purple.cooldown)) {
+    if (!this.canUseSkill(player, O_HONRADO.purple.energy, "r", O_HONRADO.purple.cooldown)) {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
       type: "purple",
-      timer: GOJO.purple.charge,
+      timer: O_HONRADO.purple.charge,
       dirX: aim.x,
       dirY: aim.y,
     };
@@ -1360,7 +1360,7 @@ class GameServer {
       x: player.x,
       y: player.y,
       ownerId: player.id,
-      delay: GOJO.purple.charge,
+      delay: O_HONRADO.purple.charge,
     });
     return true;
   }
@@ -1375,13 +1375,13 @@ class GameServer {
       y: player.y,
       vx: cast.dirX,
       vy: cast.dirY,
-      speed: GOJO.purple.speed,
+      speed: O_HONRADO.purple.speed,
       radius: 0,
-      lifetime: GOJO.purple.length / GOJO.purple.speed + 0.08,
-      damage: GOJO.purple.damage * player.modifiers.purpleDamageMul,
+      lifetime: O_HONRADO.purple.length / O_HONRADO.purple.speed + 0.08,
+      damage: O_HONRADO.purple.damage * player.modifiers.purpleDamageMul,
       penetration: true,
-      width: GOJO.purple.width * player.modifiers.purpleWidthMul,
-      length: GOJO.purple.length * player.modifiers.purpleLengthMul,
+      width: O_HONRADO.purple.width * player.modifiers.purpleWidthMul,
+      length: O_HONRADO.purple.length * player.modifiers.purpleLengthMul,
       color: "#9b5cff",
       meta: {
         startX: player.x,
@@ -1406,14 +1406,14 @@ class GameServer {
   }
 
   tryCastTeleport(player) {
-    const cooldown = GOJO.teleport.cooldown * player.modifiers.teleportCooldownMul;
-    if (!this.canUseSkill(player, GOJO.teleport.energy, "space", cooldown)) {
+    const cooldown = O_HONRADO.teleport.cooldown * player.modifiers.teleportCooldownMul;
+    if (!this.canUseSkill(player, O_HONRADO.teleport.energy, "space", cooldown)) {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
       type: "teleport",
-      timer: GOJO.teleport.startup,
+      timer: O_HONRADO.teleport.startup,
       dirX: aim.x,
       dirY: aim.y,
     };
@@ -1421,7 +1421,7 @@ class GameServer {
   }
 
   fireTeleport(player, cast) {
-    const distanceValue = GOJO.teleport.distance * player.modifiers.teleportDistanceMul;
+    const distanceValue = O_HONRADO.teleport.distance * player.modifiers.teleportDistanceMul;
     const dest = this.findTeleportDestination(player, cast.dirX, cast.dirY, distanceValue);
 
     this.emitEventNear(player.x, player.y, {
@@ -1435,7 +1435,7 @@ class GameServer {
     player.y = dest.y;
     player.stunTimer = Math.max(
       player.stunTimer,
-      GOJO.teleport.recovery * player.modifiers.teleportRecoveryMul
+      O_HONRADO.teleport.recovery * player.modifiers.teleportRecoveryMul
     );
 
     this.emitEventNear(player.x, player.y, {
@@ -1509,7 +1509,7 @@ class GameServer {
     if (hitTargets.length > 0) {
       hitTargets.forEach((target) => {
         this.emitEventNear(target.x, target.y, {
-          type: "yujiDivergentPunch",
+          type: "punhoIndomavelSocoDefasado",
           x: target.x,
           y: target.y,
           playerId: player.id,
@@ -1596,7 +1596,7 @@ class GameServer {
             type: "redExplosion",
             x: projectile.x,
             y: projectile.y,
-            radius: projectile.meta ? projectile.meta.explosionRadius : GOJO.red.explosionRadius,
+            radius: projectile.meta ? projectile.meta.explosionRadius : O_HONRADO.red.explosionRadius,
           });
         } else if (projectile.type === "blue") {
           this.triggerBlueExplosion(projectile);
@@ -1949,7 +1949,7 @@ class GameServer {
     }
 
     this.projectiles.delete(reaction.id);
-    this.queueDelayedAction(GOJO.collapse.delay, () => {
+    this.queueDelayedAction(O_HONRADO.collapse.delay, () => {
       this.spawnSpatialCollapse(reaction.x, reaction.y, redProjectile.ownerId);
     });
     this.emitEventAll({
@@ -1957,7 +1957,7 @@ class GameServer {
       x: reaction.x,
       y: reaction.y,
       ownerId: redProjectile.ownerId,
-      delay: GOJO.collapse.delay,
+      delay: O_HONRADO.collapse.delay,
     });
     return true;
   }
@@ -1967,12 +1967,12 @@ class GameServer {
     this.players.forEach((player) => {
       if (!player.alive) return;
       const d = distance(player.x, player.y, x, y);
-      if (d <= GOJO.collapse.radius + player.radius) {
-        const distRatio = Math.max(0, d - player.radius) / GOJO.collapse.radius;
+      if (d <= O_HONRADO.collapse.radius + player.radius) {
+        const distRatio = Math.max(0, d - player.radius) / O_HONRADO.collapse.radius;
         const falloff = Math.max(150 / 700, 1 - distRatio);
         const isOwner = player.id === ownerId;
-        let amount = Math.round(GOJO.collapse.damage * falloff);
-        let kb = GOJO.collapse.knockback;
+        let amount = Math.round(O_HONRADO.collapse.damage * falloff);
+        let kb = O_HONRADO.collapse.knockback;
         if (isOwner) {
           amount = Math.round(amount * 0.35);
           kb = kb * 0.4;
@@ -1994,16 +1994,16 @@ class GameServer {
         return;
       }
       const d = distance(enemy.x, enemy.y, x, y);
-      if (d <= GOJO.collapse.radius + enemy.radius) {
-        const distRatio = Math.max(0, d - enemy.radius) / GOJO.collapse.radius;
+      if (d <= O_HONRADO.collapse.radius + enemy.radius) {
+        const distRatio = Math.max(0, d - enemy.radius) / O_HONRADO.collapse.radius;
         const falloff = Math.max(150 / 700, 1 - distRatio);
-        const amount = Math.round(GOJO.collapse.damage * falloff);
+        const amount = Math.round(O_HONRADO.collapse.damage * falloff);
         this.combat.applyDamage({
           target: enemy,
           source: owner,
           amount,
           kind: "spatialCollapse",
-          knockback: GOJO.collapse.knockback * 0.8,
+          knockback: O_HONRADO.collapse.knockback * 0.8,
           fromX: x,
           fromY: y,
         });
@@ -2014,13 +2014,13 @@ class GameServer {
       type: "spatialCollapse",
       x,
       y,
-      radius: GOJO.collapse.radius,
+      radius: O_HONRADO.collapse.radius,
     });
   }
 
   explodeRed(projectile) {
     const owner = this.players.get(projectile.ownerId) || null;
-    const radius = projectile.meta.explosionRadius || GOJO.red.explosionRadius;
+    const radius = projectile.meta.explosionRadius || O_HONRADO.red.explosionRadius;
     this.players.forEach((target) => {
       if (!target.alive || target.id === projectile.ownerId) {
         return;
@@ -2157,12 +2157,12 @@ class GameServer {
     let factor = this.domainSystem.getEnemySlowAt(enemy.x, enemy.y, enemy.id);
 
     this.players.forEach((player) => {
-      if (!player.alive || player.character !== "gojo") {
+      if (!player.alive || player.character !== "o-honrado") {
         return;
       }
       const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d <= GOJO.passive.radius + enemy.radius) {
-        factor *= 1 - GOJO.passive.dashSlow;
+      if (d <= O_HONRADO.passive.radius + enemy.radius) {
+        factor *= 1 - O_HONRADO.passive.dashSlow;
       }
     });
     return clamp(factor, 0.2, 1);
@@ -2171,22 +2171,22 @@ class GameServer {
   getPassiveProjectileFactor(projectile) {
     let factor = 1;
     this.players.forEach((player) => {
-      if (!player.alive || player.id === projectile.ownerId || player.character !== "gojo") {
+      if (!player.alive || player.id === projectile.ownerId || player.character !== "o-honrado") {
         return;
       }
       if (this.domainSystem.hasActiveDomain(player.id)) {
         return;
       }
       const d = distance(player.x, player.y, projectile.x, projectile.y);
-      if (d <= GOJO.passive.radius) {
-        factor *= 1 - GOJO.passive.projectileSlow;
+      if (d <= O_HONRADO.passive.radius) {
+        factor *= 1 - O_HONRADO.passive.projectileSlow;
       }
     });
     return clamp(factor, 0.2, 1);
   }
 
   getKit(player) {
-    return CHARACTER_REGISTRY[player.character] || GOJO;
+    return CHARACTER_REGISTRY[player.character] || O_HONRADO;
   }
 
   updateRikas(dt) {
@@ -2210,7 +2210,7 @@ class GameServer {
         return;
       }
 
-      const companion = YUTA.rikaCompanion;
+      const companion = PORTADOR_DO_VINCULO.rikaCompanion;
       rika.attackTimer = Math.max(0, (Number.isFinite(rika.attackTimer) ? rika.attackTimer : 0) - dt);
 
       // Full Rika timer-based auto-attack (enemies and players in range)
@@ -2219,34 +2219,34 @@ class GameServer {
         this.enemies.forEach((enemy) => {
           if (!enemy.alive) return;
           const d = distance(rika.x, rika.y, enemy.x, enemy.y);
-          if (d <= YUTA.fullRika.range + enemy.radius) hasTarget = true;
+          if (d <= PORTADOR_DO_VINCULO.fullRika.range + enemy.radius) hasTarget = true;
         });
         this.players.forEach((p) => {
           if (!p.alive || p.id === ownerId) return;
           if (!this.config.match.friendlyFire) return;
           const d = distance(rika.x, rika.y, p.x, p.y);
-          if (d <= YUTA.fullRika.range + p.radius) hasTarget = true;
+          if (d <= PORTADOR_DO_VINCULO.fullRika.range + p.radius) hasTarget = true;
         });
         if (!hasTarget) {
           rika.attackTimer = 0;
         } else {
-          rika.attackTimer = YUTA.fullRika.attackInterval;
+          rika.attackTimer = PORTADOR_DO_VINCULO.fullRika.attackInterval;
           rika.attackCounter = (Number.isFinite(rika.attackCounter) ? rika.attackCounter : 0) + 1;
           const isHeavy = rika.attackCounter % 10 === 0;
 
           const attackType = Math.random() < 0.4 ? "slam" : Math.random() < 0.6 ? "grab" : "swipe";
-          const baseDamage = attackType === "slam" ? YUTA.fullRika.slamDamage
-            : attackType === "grab" ? YUTA.fullRika.grabDamage
-            : YUTA.fullRika.swipeDamage;
+          const baseDamage = attackType === "slam" ? PORTADOR_DO_VINCULO.fullRika.slamDamage
+            : attackType === "grab" ? PORTADOR_DO_VINCULO.fullRika.grabDamage
+            : PORTADOR_DO_VINCULO.fullRika.swipeDamage;
           const damage = (isHeavy ? baseDamage * 2 : baseDamage) * owner.modifiers.fullRikaPowerMul;
           const knockback = isHeavy
-            ? (attackType === "slam" ? YUTA.fullRika.slamKnockback * 2
-              : attackType === "grab" ? YUTA.fullRika.grabThrow * 2
-              : YUTA.fullRika.swipeKnockback * 2)
-            : (attackType === "slam" ? YUTA.fullRika.slamKnockback
-              : attackType === "grab" ? YUTA.fullRika.grabThrow
-              : YUTA.fullRika.swipeKnockback);
-          const range = isHeavy ? YUTA.fullRika.range * 0.75 : YUTA.fullRika.range;
+            ? (attackType === "slam" ? PORTADOR_DO_VINCULO.fullRika.slamKnockback * 2
+              : attackType === "grab" ? PORTADOR_DO_VINCULO.fullRika.grabThrow * 2
+              : PORTADOR_DO_VINCULO.fullRika.swipeKnockback * 2)
+            : (attackType === "slam" ? PORTADOR_DO_VINCULO.fullRika.slamKnockback
+              : attackType === "grab" ? PORTADOR_DO_VINCULO.fullRika.grabThrow
+              : PORTADOR_DO_VINCULO.fullRika.swipeKnockback);
+          const range = isHeavy ? PORTADOR_DO_VINCULO.fullRika.range * 0.75 : PORTADOR_DO_VINCULO.fullRika.range;
 
           this.enemies.forEach((enemy) => {
             if (!enemy.alive) return;
@@ -2656,9 +2656,9 @@ class GameServer {
 
   tryCastDashSlash(player) {
     const kit = this.getKit(player);
-    const comboActive = player.rikaBuffTime > 0 && player.character === "yuta";
-    const energyCost = comboActive ? YUTA.cursedWave.energy : kit.dashSlash.energy;
-    const cd = comboActive ? YUTA.cursedWave.cooldown : kit.dashSlash.cooldown;
+    const comboActive = player.rikaBuffTime > 0 && player.character === "portador-do-vinculo";
+    const energyCost = comboActive ? PORTADOR_DO_VINCULO.cursedWave.energy : kit.dashSlash.energy;
+    const cd = comboActive ? PORTADOR_DO_VINCULO.cursedWave.cooldown : kit.dashSlash.cooldown;
     if (!this.canUseSkill(player, energyCost, "space", cd)) {
       return false;
     }
@@ -2670,7 +2670,7 @@ class GameServer {
       player.rikaBuffTime = 0;
       player.cast = {
         type: "cursedWave",
-        timer: YUTA.cursedWave.startup,
+        timer: PORTADOR_DO_VINCULO.cursedWave.startup,
         dirX: aim.x,
         dirY: aim.y,
       };
@@ -2745,7 +2745,7 @@ class GameServer {
 
   tryCastFullRika(player) {
     const kit = this.getKit(player);
-    if (player.character !== "yuta") return false;
+    if (player.character !== "portador-do-vinculo") return false;
     if (this.rikas.has(player.id)) return false;
     if (!this.canUseSkill(player, kit.fullRika.energy, "e", kit.fullRika.cooldown)) {
       return false;
@@ -2789,7 +2789,7 @@ class GameServer {
 
   tryCastPureLove(player) {
     const kit = this.getKit(player);
-    if (player.character !== "yuta") return false;
+    if (player.character !== "portador-do-vinculo") return false;
     if (!this.rikas.has(player.id)) return false;
     if (!this.canUseSkill(player, kit.pureLove.energy, "r", kit.pureLove.cooldown)) {
       return false;
@@ -3284,7 +3284,7 @@ class GameServer {
       players.push({
         id: player.id,
         name: player.name,
-        character: player.character || "gojo",
+        character: player.character || "o-honrado",
         x: Math.round(player.x),
         y: Math.round(player.y),
         vx: Math.round(player.vx * 100) / 100,
@@ -3532,7 +3532,7 @@ class GameServer {
 
   fireCopiedPureLove(player, cast) {
     const playerKit = this.getKit(player);
-    const kit = YUTA.pureLove;
+    const kit = PORTADOR_DO_VINCULO.pureLove;
     const dir = normalize(cast.dirX, cast.dirY);
     const width = kit.radius;
 
@@ -3553,7 +3553,7 @@ class GameServer {
 
   fireCopiedPurple(player, cast) {
     const aim = normalize(cast.dirX, cast.dirY);
-    const kit = { damage: GOJO.purple.damage * 0.7, speed: GOJO.purple.speed, length: GOJO.purple.length, width: GOJO.purple.width };
+    const kit = { damage: O_HONRADO.purple.damage * 0.7, speed: O_HONRADO.purple.speed, length: O_HONRADO.purple.length, width: O_HONRADO.purple.width };
     this.projectiles.set(crypto.randomUUID(), {
       id: crypto.randomUUID(),
       type: "purple",
@@ -3622,8 +3622,8 @@ class GameServer {
     const domain = this.domainSystem.domains.get(player.id);
     const copiedChar = domain ? domain.copiedCharacter : null;
 
-    if (copiedChar === "yuji") {
-      const { range } = YUJI.taidoBeatdown;
+    if (copiedChar === "punho-indomavel") {
+      const { range } = PUNHO_INDOMAVEL.taidoBeatdown;
       let hasTarget = false;
       const canHit = (t) => {
         if (!t.alive || t.id === player.id) return false;
@@ -3636,14 +3636,14 @@ class GameServer {
       if (!hasTarget) {
         this.emitEventToPlayer(player.id, {
           type: "skillNoTarget",
-          skill: "Taido Beatdown (cópia)",
+          skill: "Taido Beatdown (cÃ³pia)",
         });
         return;
       }
 
       if (domain) domain.copyUsed = true;
       const originalChar = player.character;
-      player.character = "yuji";
+      player.character = "punho-indomavel";
       this.fireTaidoBeatdown(player, cast);
       player.character = originalChar;
       return;
@@ -3651,7 +3651,7 @@ class GameServer {
 
     if (domain) domain.copyUsed = true;
 
-    if (copiedChar === "gojo" || copiedChar === "sukuna" || copiedChar === "hakari") {
+    if (copiedChar === "o-honrado" || copiedChar === "rei-amaldicoado" || copiedChar === "lutador-de-sorte") {
       this.firePurple(player, cast);
       return;
     }
@@ -3938,7 +3938,7 @@ class GameServer {
         events: player._eventQueue ? player._eventQueue.splice(0) : [],
         you: {
           id: player.id,
-          character: player.character || "gojo",
+          character: player.character || "o-honrado",
           x: Math.round(player.x),
           y: Math.round(player.y),
           hp: Number(player.hp.toFixed(1)),
@@ -4017,7 +4017,7 @@ class GameServer {
         events: player._eventQueue ? player._eventQueue.splice(0) : [],
         you: {
           id: player.id,
-          character: player.character || "gojo",
+          character: player.character || "o-honrado",
           x: Math.round(player.x),
           y: Math.round(player.y),
           hp: Number(player.hp.toFixed(1)),

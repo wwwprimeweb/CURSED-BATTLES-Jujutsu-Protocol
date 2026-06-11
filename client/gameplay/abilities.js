@@ -1,32 +1,32 @@
-export const GOJO_SKILLS = {
-  m1: "Cursed Jab Combo",
-  q: "Blue Singularity",
-  e: "Red Repulsion",
-  r: "Hollow Purple",
-  space: "Spatial Step",
-  f: "Domain Expansion: Infinite Void",
+export const O_HONRADO_SKILLS = {
+  m1: "Golpe Concentrado",
+  q: "Atração Gravitacional",
+  e: "Explosão Repulsiva",
+  r: "Aniquilador",
+  space: "Salto Dimensional",
+  f: "Vazio Absoluto",
 };
 
-export const YUTA_SKILLS = {
-  m1: "Katana Combat",
-  q: "Rika",
-  e: "Dash Slash",
-  r: "Full Rika Manifestation",
-  space: "True Mutual Love",
-  f: "Pure Love",
+export const PORTADOR_DO_VINCULO_SKILLS = {
+  m1: "Corte Laminar",
+  q: "Guardião Amaldiçoado",
+  e: "Investida Cortante",
+  r: "Raio Purificador",
+  space: "Laço Eterno",
+  f: "Libertação do Guardião",
 };
 
-export const YUJI_SKILLS = {
-  m1: "Black Flash Combo",
-  q: "Divergent Fist",
-  e: "Soul Impact",
-  r: "Taido Beatdown",
-  space: "Flying Knee",
-  f: "Self-Embodiment",
+export const PUNHO_INDOMAVEL_SKILLS = {
+  m1: "Golpe Impactante",
+  q: "Soco Defasado",
+  e: "Pancada Espiritual",
+  r: "Séquência Brutal",
+  space: "Joelhada Voadora",
+  f: "Manifestação Interior",
 };
 
 export function getSkillsForCharacter(character) {
-  if (character === "yuta") return YUTA_SKILLS;
-  if (character === "yuji") return YUJI_SKILLS;
-  return GOJO_SKILLS;
+  if (character === "portadorDoVinculo") return PORTADOR_DO_VINCULO_SKILLS;
+  if (character === "punhoIndomavel") return PUNHO_INDOMAVEL_SKILLS;
+  return O_HONRADO_SKILLS;
 }

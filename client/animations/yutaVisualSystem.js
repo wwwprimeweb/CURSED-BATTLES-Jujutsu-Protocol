@@ -1,4 +1,4 @@
-import { YutaSpriteRenderer } from "./yutaSprite.js";
+﻿import { YutaSpriteRenderer } from "./yutaSprite.js";
 import { YutaSkillEffects } from "./proceduralYuta.js";
 import { drawHitReaction } from "./gojoEffects.js";
 import { drawRowOfKatanas, drawRikaAreaExplosion, drawRikaClawScratch, drawRikaShockwave, drawPinkSlashCuts, drawEnergyWaveTrail } from "./yutaEffects.js";
@@ -315,7 +315,7 @@ export class YutaVisualSystem {
        return;
      }
 
-      const isYuta = p.character === "yuta";
+      const isYuta = p.character === "portador-do-vinculo";
       if (!p.rikaActive) {
         this.rikaRenderPos.delete(p.id);
       }
@@ -374,7 +374,7 @@ export class YutaVisualSystem {
      ctx.fillStyle = "#ffe0f0";
      ctx.font = "600 14px Rajdhani";
      ctx.textAlign = "center";
-     ctx.fillText(p.name || "Yuta", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+     ctx.fillText(p.name || "portador-do-vinculo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
 
   }
 

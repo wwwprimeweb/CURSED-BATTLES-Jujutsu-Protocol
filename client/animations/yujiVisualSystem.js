@@ -1,18 +1,18 @@
-import { SpriteAnimator } from "./spriteAnimator.js";
+﻿import { SpriteAnimator } from "./spriteAnimator.js";
 import { YUJI_ANIMATIONS, YUJI_SPRITE_CONFIG, YUJI_SHEET_PATH } from "./yujiSprites.js";
 import { drawHitReaction, drawDodgeEffect, drawDeathPose } from "./gojoEffects.js";
 
-const IMPACT_SHEET_PATH = "/assets/sprites/yuji_shinjuku/impact_sheet.png";
+const IMPACT_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/impact_sheet.png";
 const IMPACT_FRAME_W = 132;
 const IMPACT_FRAME_H = 96;
 const IMPACT_FRAMES = 21;
 
-const DOMAIN_SHEET_PATH = "/assets/sprites/yuji_shinjuku/domain_sheet.png";
+const DOMAIN_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/domain_sheet.png";
 const DOMAIN_FRAME_W = 110;
 const DOMAIN_FRAME_H = 125;
 const DOMAIN_FRAMES = 12;
 
-const SOUL_STRIKE_SHEET_PATH = "/assets/sprites/yuji_shinjuku/soul_impact_strike.png";
+const SOUL_STRIKE_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/soul_impact_strike.png";
 const SOUL_STRIKE_FRAMES = 3;
 
 
@@ -54,7 +54,7 @@ export class YujiVisualSystem {
       const img = new Image();
       img.onload = () => { loaded++; if (loaded === 14) this.trainSpritesReady = true; };
       img.onerror = () => { loaded++; if (loaded === 14) this.trainSpritesReady = true; };
-      img.src = `/assets/sprites/megumi/7123_${i}.png`;
+      img.src = `/assets/sprites/invocador-de-sombras/7123_${i}.png`;
       this.trainImpactSprites.push(img);
     }
     this.trainImpacts = [];
@@ -244,7 +244,7 @@ export class YujiVisualSystem {
     ctx.fillStyle = "#f2f6ff";
     ctx.font = "600 14px Rajdhani";
     ctx.textAlign = "center";
-    ctx.fillText(p.name || "Yuji", pos.x, pos.y - (65 * 2.05 + 10) * zoom);
+    ctx.fillText(p.name || "punho-indomavel", pos.x, pos.y - (65 * 2.05 + 10) * zoom);
   }
 
   drawImpactFrame(ctx, x, y, zoom, frameIndex, alpha = 1, sizeMul = 1, flipX = false) {
