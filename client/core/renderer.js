@@ -1,4 +1,4 @@
-﻿import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
+import { GojoVisualSystem } from "../animations/gojoVisualSystem.js";
 import { YutaVisualSystem } from "../animations/yutaVisualSystem.js";
 import { YujiVisualSystem } from "../animations/yujiVisualSystem.js";
 import { GenericVisualSystem } from "../animations/genericVisualSystem.js";
@@ -78,6 +78,7 @@ export class Renderer {
 
     this.monsterSprites = {};
     this.enemyFacing = new Map();
+    this.enemyHpVisuals = new Map();
     this._loadMonsterSprite("crawler_nest", "/assets/spritesmonsters/Crawler Nest.png");
     this._loadMonsterSprite("crawler_baby", "/assets/spritesmonsters/Crawler Nest Baby.png");
     this.monsterSprites["fleshmaw"] = new Image();
@@ -1529,6 +1530,16 @@ export class Renderer {
     const zoom = this.camera.zoom || 1;
     const now = Date.now();
 
+    // Prune visual HP tracking map
+    if (this.enemyHpVisuals) {
+      const activeIds = new Set(enemies.keys());
+      for (const id of this.enemyHpVisuals.keys()) {
+        if (!activeIds.has(id)) {
+          this.enemyHpVisuals.delete(id);
+        }
+      }
+    }
+
     const spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25 };
     const bobConfig = {
       crawler_nest: { freq: 3, amp: 3, minSpeed: 2 },
@@ -1574,16 +1585,8 @@ export class Renderer {
         }
         ctx.restore();
 
-        const hpBarRadius = baseRadius * mult * 0.5;
-        const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
-        const hpBarW = hpBarRadius * 2 * zoom;
-        const hpBarH = 4 * zoom;
-        const hpBarX = p.x - hpBarW / 2;
-        const hpBarY = drawY - h / 2 - 6 * zoom;
-        ctx.fillStyle = "rgba(14,18,27,0.8)";
-        ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
-        ctx.fillStyle = "#ff6e8f";
-        ctx.fillRect(hpBarX, hpBarY, hpBarW * hpPct, hpBarH);
+        this.drawEnemyHealthBar(ctx, p.x, drawY - h / 2 - 8 * zoom, e, zoom);
+
         if (e.type === "fleshmaw" && e.windupTimer > 0) {
           const progress = 1 - Math.max(0, e.windupTimer) / (e.attackWindup || 0.5);
           const frameIdx = Math.min(4, Math.floor(progress * 5));
@@ -1670,13 +1673,200 @@ export class Renderer {
         }
         ctx.restore();
 
-        const hpPct = e.maxHp > 0 ? e.hp / e.maxHp : 0;
-        ctx.fillStyle = "rgba(14,18,27,0.8)";
-        ctx.fillRect(p.x - baseRadius * zoom, drawY - baseRadius * zoom - 10 * zoom, baseRadius * 2 * zoom, 4 * zoom);
-        ctx.fillStyle = "#ff6e8f";
-        ctx.fillRect(p.x - baseRadius * zoom, drawY - baseRadius * zoom - 10 * zoom, baseRadius * 2 * zoom * hpPct, 4 * zoom);
+        this.drawEnemyHealthBar(ctx, p.x, drawY - baseRadius * zoom - 12 * zoom, e, zoom);
       }
     });
+  }
+
+  drawEnemyHealthBar(ctx, x, y, e, zoom) {
+    const hpPct = e.maxHp > 0 ? Math.max(0, Math.min(1, e.hp / e.maxHp)) : 0;
+
+    // Visual catch-up bar for damage lag
+    if (!this.enemyHpVisuals) {
+      this.enemyHpVisuals = new Map();
+    }
+    let visualHp = this.enemyHpVisuals.get(e.id);
+    if (visualHp === undefined) {
+      visualHp = hpPct;
+    } else {
+      // Interpolate towards actual hp percentage
+      const dt = this._renderDt || 0.016;
+      if (visualHp > hpPct) {
+        visualHp = Math.max(hpPct, visualHp - dt * 0.5);
+      } else {
+        visualHp = hpPct;
+      }
+    }
+    this.enemyHpVisuals.set(e.id, visualHp);
+
+    const grade = e.grade;
+
+    ctx.save();
+
+    if (grade === "special") {
+      // BOSS / SPECIAL GRADE HEALTH BAR: highly detailed, gothic/fantasy style
+      const barW = 125 * zoom;
+      const barH = 10 * zoom;
+      const bx = x - barW / 2;
+      const by = y - 4 * zoom;
+
+      // Draw shadow and glow
+      ctx.shadowColor = "#ff0055";
+      ctx.shadowBlur = 10 * zoom;
+
+      // Background fill
+      ctx.fillStyle = "rgba(10, 10, 15, 0.85)";
+      ctx.strokeStyle = "rgba(220, 180, 100, 0.85)"; // Golden border
+      ctx.lineWidth = 1.5 * zoom;
+
+      // Draw ornamental border (hexagonal/winged shape)
+      ctx.beginPath();
+      ctx.moveTo(bx - 6 * zoom, by + barH / 2);
+      ctx.lineTo(bx, by);
+      ctx.lineTo(bx + barW, by);
+      ctx.lineTo(bx + barW + 6 * zoom, by + barH / 2);
+      ctx.lineTo(bx + barW, by + barH);
+      ctx.lineTo(bx, by + barH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.shadowBlur = 0; // Turn off shadow blur for inside bars
+
+      // Damage lag bar (yellow/orange catch-up)
+      if (visualHp > hpPct) {
+        ctx.fillStyle = "#ffb703";
+        ctx.fillRect(bx + 1 * zoom, by + 1 * zoom, (barW - 2 * zoom) * visualHp, barH - 2 * zoom);
+      }
+
+      // Actual HP bar (Cursed crimson gradient)
+      const grad = ctx.createLinearGradient(bx, by, bx + barW, by);
+      grad.addColorStop(0, "#800020"); // Deep burgundy
+      grad.addColorStop(0.5, "#d90429"); // Crimson
+      grad.addColorStop(1, "#ef233c"); // Bright red
+      ctx.fillStyle = grad;
+      ctx.fillRect(bx + 1 * zoom, by + 1 * zoom, (barW - 2 * zoom) * hpPct, barH - 2 * zoom);
+
+      // Phase segments / notches
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.lineWidth = 1.5 * zoom;
+      const segments = 4;
+      for (let i = 1; i < segments; i++) {
+        const sx = bx + (barW / segments) * i;
+        ctx.beginPath();
+        ctx.moveTo(sx, by + 1 * zoom);
+        ctx.lineTo(sx, by + barH - 1 * zoom);
+        ctx.stroke();
+      }
+
+      // Fancy golden tips
+      ctx.fillStyle = "#ffd166";
+      ctx.beginPath();
+      // Left diamond tip
+      ctx.moveTo(bx - 9 * zoom, by + barH / 2);
+      ctx.lineTo(bx - 6 * zoom, by + barH / 2 - 3 * zoom);
+      ctx.lineTo(bx - 3 * zoom, by + barH / 2);
+      ctx.lineTo(bx - 6 * zoom, by + barH / 2 + 3 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right diamond tip
+      ctx.beginPath();
+      ctx.moveTo(bx + barW + 9 * zoom, by + barH / 2);
+      ctx.lineTo(bx + barW + 6 * zoom, by + barH / 2 - 3 * zoom);
+      ctx.lineTo(bx + barW + 3 * zoom, by + barH / 2);
+      ctx.lineTo(bx + barW + 6 * zoom, by + barH / 2 + 3 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+    } else if (grade === 1) {
+      // GRADE 1: wider, distinct crimson gradient, white/silver border
+      const barW = 75 * zoom;
+      const barH = 7 * zoom;
+      const bx = x - barW / 2;
+      const by = y;
+
+      // Background
+      ctx.fillStyle = "rgba(15, 20, 30, 0.8)";
+      ctx.strokeStyle = "rgba(220, 225, 235, 0.75)"; // Silver-ish border
+      ctx.lineWidth = 1.2 * zoom;
+
+      // Rounded/slanted rectangle for base
+      ctx.beginPath();
+      ctx.moveTo(bx - 3 * zoom, by);
+      ctx.lineTo(bx + barW + 3 * zoom, by);
+      ctx.lineTo(bx + barW, by + barH);
+      ctx.lineTo(bx, by + barH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Damage lag bar
+      if (visualHp > hpPct) {
+        ctx.fillStyle = "#ffb703";
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 1 * zoom);
+        ctx.lineTo(bx + barW * visualHp, by + 1 * zoom);
+        ctx.lineTo(bx + barW * visualHp - 1 * zoom, by + barH - 1 * zoom);
+        ctx.lineTo(bx, by + barH - 1 * zoom);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // HP Fill (Fire gradient)
+      const grad = ctx.createLinearGradient(bx, by, bx + barW, by);
+      grad.addColorStop(0, "#d90429");
+      grad.addColorStop(1, "#ff5d8f");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(bx, by + 1 * zoom);
+      ctx.lineTo(bx + (barW - 1 * zoom) * hpPct, by + 1 * zoom);
+      ctx.lineTo(bx + (barW - 1 * zoom) * hpPct - 1 * zoom, by + barH - 1 * zoom);
+      ctx.lineTo(bx, by + barH - 1 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+    } else if (grade === 2) {
+      // GRADE 2: similar to grade 3 but slightly wider and has clean styling
+      const barW = 48 * zoom;
+      const barH = 5 * zoom;
+      const bx = x - barW / 2;
+      const by = y + 2 * zoom;
+
+      // Background
+      ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.fillRect(bx, by, barW, barH);
+      ctx.strokeRect(bx, by, barW, barH);
+
+      // Damage lag bar
+      if (visualHp > hpPct) {
+        ctx.fillStyle = "rgba(255, 183, 3, 0.7)";
+        ctx.fillRect(bx + 0.5 * zoom, by + 0.5 * zoom, (barW - 1 * zoom) * visualHp, barH - 1 * zoom);
+      }
+
+      // HP Fill (Coral red)
+      ctx.fillStyle = "#ff4d6d";
+      ctx.fillRect(bx + 0.5 * zoom, by + 0.5 * zoom, (barW - 1 * zoom) * hpPct, barH - 1 * zoom);
+
+    } else {
+      // GRADE 3 or default: smaller, simpler
+      const barW = 34 * zoom;
+      const barH = 4 * zoom;
+      const bx = x - barW / 2;
+      const by = y + 3 * zoom;
+
+      // Background
+      ctx.fillStyle = "rgba(10, 12, 18, 0.7)";
+      ctx.fillRect(bx, by, barW, barH);
+
+      // HP Fill (Simple red/pink)
+      ctx.fillStyle = "#ff6e8f";
+      ctx.fillRect(bx, by, barW * hpPct, barH);
+    }
+
+    ctx.restore();
   }
 
   drawPlayers(players, youId, localPred) {

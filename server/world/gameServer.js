@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const { generateMap } = require("./mapGenerator");
 const { createPlayer, BASE_STATS } = require("../entities/player");
@@ -3326,6 +3326,7 @@ class GameServer {
       enemies.push({
         id: enemy.id,
         type: enemy.type,
+        grade: enemy.grade,
         x: Math.round(enemy.x),
         y: Math.round(enemy.y),
         vx: Math.round(enemy.vx * 100) / 100,
