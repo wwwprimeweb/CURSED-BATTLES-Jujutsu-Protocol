@@ -141,11 +141,16 @@ const ENERGY_BAR_COLORS = {
 };
 
 function createBarsHtml(stats, flags) {
-  const hpPercent = pct(stats.hp, stats.maxHp);
-  const energyPercent = pct(stats.energy, stats.maxEnergy);
+  const realHp = stats.realHp !== undefined ? stats.realHp : stats.hp;
+  const realEnergy = stats.realEnergy !== undefined ? stats.realEnergy : stats.energy;
+
+  const hpPercent = pct(realHp, stats.maxHp);
+  const lagHpPercent = pct(stats.hp, stats.maxHp);
+  const energyPercent = pct(realEnergy, stats.maxEnergy);
   const xpPercent = pct(stats.xp, stats.xpToNext);
   const hpState = hpPercent <= 18 ? "critical" : hpPercent <= 35 ? "low" : hpPercent <= 65 ? "mid" : "high";
   const energyDry = energyPercent <= 18;
+  const isFullEnergy = energyPercent >= 90;
 
   const chara = stats.character || "o-honrado";
   const namesMap = {
@@ -160,7 +165,7 @@ function createBarsHtml(stats, flags) {
   const portraitUrl = `/assets/${chara}-icon.png`;
 
   return `
-    <div class="player-hud-core-panel ${flags.tookDamage ? "is-hit" : ""} hp-${hpState}">
+    <div class="player-hud-core-panel hud-char-${chara} ${flags.tookDamage ? "is-hit" : ""} hp-${hpState}">
       <!-- Portrait & Level Badge -->
       <div class="portrait-outer-ring char-border-${chara}">
         <div class="portrait-image-wrapper">
@@ -177,14 +182,14 @@ function createBarsHtml(stats, flags) {
             <span class="bar-row-label">${charaLabel}</span>
             <span class="bar-row-value">${Math.ceil(stats.hp)} <span class="bar-max-val">/ ${stats.maxHp}</span></span>
           </div>
-          <div class="track hp-track">
-            <div class="fill hp-lag-fill" style="width:${hpPercent}%"></div>
+          <div class="track hp-track ${flags.tookDamage ? "is-damaged" : ""}">
+            <div class="fill hp-lag-fill" style="width:${lagHpPercent}%"></div>
             <div class="fill hp" style="width:${hpPercent}%"></div>
             ${stats.shield ? `<div class="fill shield-fill" style="width:${pct(stats.shield, stats.maxHp)}%"></div>` : ""}
           </div>
         </div>
 
-        <div class="bar-row-block energy-block ${energyDry ? "is-dry" : ""}" style="--energy-glow:${ENERGY_BAR_COLORS[chara] || "#50ebff"}">
+        <div class="bar-row-block energy-block ${energyDry ? "is-dry" : ""} ${isFullEnergy ? "is-full" : ""}" style="--energy-glow:${ENERGY_BAR_COLORS[chara] || "#50ebff"}">
           <div class="bar-row-header compact">
             <span class="bar-row-label">Energia Amaldiçoada</span>
             <span class="bar-row-value">${Math.ceil(stats.energy)} <span class="bar-max-val">/ ${stats.maxEnergy}</span></span>
@@ -360,6 +365,21 @@ export class Hud {
       return;
     }
 
+    // Interpolate displayed HP and Energy for smooth counting transition
+    if (this._displayedHp === undefined || this._displayedHp === null || Math.abs(this._displayedHp - you.hp) > you.maxHp * 0.5) {
+      this._displayedHp = you.hp;
+    } else {
+      this._displayedHp += (you.hp - this._displayedHp) * 0.1;
+      if (Math.abs(this._displayedHp - you.hp) < 0.1) this._displayedHp = you.hp;
+    }
+
+    if (this._displayedEnergy === undefined || this._displayedEnergy === null) {
+      this._displayedEnergy = you.energy;
+    } else {
+      this._displayedEnergy += (you.energy - this._displayedEnergy) * 0.1;
+      if (Math.abs(this._displayedEnergy - you.energy) < 0.1) this._displayedEnergy = you.energy;
+    }
+
     const tookDamage = this.prevHp !== null && you.hp < this.prevHp - 0.5;
     const energyDrop = this.prevEnergy !== null && you.energy < this.prevEnergy - 4;
     const hpPercent = pct(you.hp, you.maxHp);
@@ -369,7 +389,16 @@ export class Hud {
     const chara = you.character || "o-honrado";
 
     const healthRegenActive = (you.status && you.status.healthRegenTime > 0) && you.alive;
-    const barsHtml = createBarsHtml(you, { tookDamage, healthRegenActive });
+
+    const displayStats = {
+      ...you,
+      hp: this._displayedHp,
+      energy: this._displayedEnergy,
+      realHp: you.hp,
+      realEnergy: you.energy,
+    };
+
+    const barsHtml = createBarsHtml(displayStats, { tookDamage, healthRegenActive });
     if (barsHtml !== this._barsHtml) {
       this._barsHtml = barsHtml;
       this.barsEl.innerHTML = barsHtml;

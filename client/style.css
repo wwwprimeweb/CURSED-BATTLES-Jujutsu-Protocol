@@ -481,15 +481,28 @@ input {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border: 1px solid var(--line);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(16, 20, 35, 0.92) 0%, rgba(8, 10, 18, 0.97) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 16px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(14px);
-  clip-path: polygon(0 0, 93% 0, 100% 30%, 100% 100%, 0 100%);
-  transition: all 0.25s ease;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.15), 0 0 20px var(--hud-glow, rgba(80, 235, 255, 0.05));
+  backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.player-hud-core-panel:hover {
+  transform: translateY(-2px) scale(1.01);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), inset 0 1px 3px rgba(255, 255, 255, 0.25), 0 0 30px var(--hud-glow-hover, rgba(80, 235, 255, 0.15));
+}
+
+/* Character Specific HUD Glow Variables */
+.player-hud-core-panel.hud-char-o-honrado { --hud-glow: rgba(80, 235, 255, 0.08); --hud-glow-hover: rgba(80, 235, 255, 0.22); }
+.player-hud-core-panel.hud-char-portador-do-vinculo { --hud-glow: rgba(255, 20, 140, 0.08); --hud-glow-hover: rgba(255, 20, 140, 0.22); }
+.player-hud-core-panel.hud-char-rei-amaldicoado { --hud-glow: rgba(230, 50, 50, 0.08); --hud-glow-hover: rgba(230, 50, 50, 0.22); }
+.player-hud-core-panel.hud-char-punho-indomavel { --hud-glow: rgba(80, 235, 255, 0.08); --hud-glow-hover: rgba(80, 235, 255, 0.22); }
+.player-hud-core-panel.hud-char-invocador-de-sombras { --hud-glow: rgba(80, 235, 255, 0.08); --hud-glow-hover: rgba(80, 235, 255, 0.22); }
+.player-hud-core-panel.hud-char-lutador-de-sorte { --hud-glow: rgba(50, 220, 80, 0.08); --hud-glow-hover: rgba(50, 220, 80, 0.22); }
 
 .player-hud-core-panel.is-hit::before {
   content: "";
@@ -675,11 +688,11 @@ input {
 .track {
   position: relative;
   width: 100%;
-  height: 12px;
-  background: rgba(10, 14, 25, 0.9);
-  border-radius: 4px;
+  height: 16px; /* Thicker life bar */
+  background: rgba(10, 14, 25, 0.92);
+  border-radius: 6px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .fill {
@@ -687,18 +700,18 @@ input {
   left: 0;
   top: 0;
   height: 100%;
-  border-radius: 3px;
+  border-radius: 5px;
   transition: width 120ms linear;
 }
 
 .fill.hp {
   background: linear-gradient(90deg, #c92c4b, var(--hp));
-  box-shadow: 0 0 12px rgba(255, 68, 104, 0.35);
+  box-shadow: 0 0 14px rgba(255, 68, 104, 0.4);
   z-index: 3;
 }
 
 .fill.hp-lag-fill {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.3);
   z-index: 2;
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -711,11 +724,95 @@ input {
 }
 
 .energy-track {
-  height: 8px;
+  height: 10px; /* Stylized height */
+  background: rgba(8, 10, 18, 0.95);
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease;
+  overflow: hidden;
 }
 .fill.energy {
   background: linear-gradient(90deg, #1f62e6, var(--energy-glow, #42c9ff));
-  box-shadow: 0 0 10px rgba(66, 201, 255, 0.25);
+  box-shadow: 0 0 12px var(--energy-glow, rgba(66, 201, 255, 0.35));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fill.energy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(8, 10, 18, 0.5) 7px, rgba(8, 10, 18, 0.5) 9px);
+  pointer-events: none;
+}
+
+/* 1. Damage Burst & Sweep Animations */
+@keyframes hpDamageBurst {
+  0% { transform: scaleY(1); filter: brightness(1); }
+  20% { transform: scaleY(1.35); filter: brightness(1.8); }
+  50% { transform: scaleY(0.92); filter: brightness(1.2); }
+  80% { transform: scaleY(1.05); }
+  100% { transform: scaleY(1); filter: brightness(1); }
+}
+
+@keyframes hpDamageSweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.hp-track.is-damaged {
+  animation: hpDamageBurst 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.hp-track.is-damaged::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  z-index: 10;
+  animation: hpDamageSweep 0.45s ease-out forwards;
+}
+
+/* 2. Full Energy Hum Animations */
+@keyframes energyFullPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--energy-glow, #42c9ff), 0 0 4px var(--energy-glow, #42c9ff);
+    transform: scaleY(1);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 22px var(--energy-glow, #42c9ff), 0 0 8px var(--energy-glow, #42c9ff);
+    transform: scaleY(1.25);
+    filter: brightness(1.35);
+  }
+}
+
+.energy-block.is-full .fill.energy {
+  animation: energyFullPulse 1.5s ease-in-out infinite;
+}
+.energy-block.is-full .energy-track {
+  box-shadow: 0 0 8px rgba(66, 201, 255, 0.15);
+  border-color: rgba(66, 201, 255, 0.35);
+}
+
+/* 3. Low HP Shaking and Pulsing */
+@keyframes lowHpShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-2.5px); }
+  40%, 80% { transform: translateX(2.5px); }
+}
+
+@keyframes lowHpPulse {
+  0%, 100% { background: #c92c4b; box-shadow: 0 0 10px rgba(255, 0, 50, 0.45); }
+  50% { background: #ff204e; box-shadow: 0 0 22px rgba(255, 0, 50, 0.95); }
+}
+
+.player-hud-core-panel.hp-critical .hp-track {
+  animation: lowHpShake 0.12s infinite;
+}
+.player-hud-core-panel.hp-critical .fill.hp {
+  animation: lowHpPulse 0.7s ease-in-out infinite !important;
 }
 
 @keyframes hpRegenFlow {
