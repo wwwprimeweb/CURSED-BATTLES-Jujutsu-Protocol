@@ -192,8 +192,11 @@ export class YujiVisualSystem {
     }
 
     let drawY = pos.y;
-    if (animState === "walk" || animState === "run") {
-      drawY += Math.sin(this.time * 10) * 2.5;
+    if (animState !== "idle" && animState !== "death" && animState !== "walk" && animState !== "run") {
+      const isMoving = Math.abs(p.vx) > 5 || Math.abs(p.vy) > 5;
+      if (isMoving) {
+        drawY += Math.sin(this.time * 40) * 4;
+      }
     }
 
     this.yujiSprite.render(ctx, pos.x, drawY, animState, facing, zoom, entry.id);
@@ -215,7 +218,7 @@ export class YujiVisualSystem {
       ];
       const offset = frameOffsets[qPhase] || frameOffsets[0];
       const fistX = pos.x + facing * offset.x * zoom;
-      const fistY = pos.y + offset.y * zoom;
+      const fistY = drawY + offset.y * zoom;
 
       if (this.domainSheet.complete && this.domainSheet.naturalWidth > 0) {
         const sx = domainIdx * DOMAIN_FRAME_W;

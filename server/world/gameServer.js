@@ -1463,7 +1463,7 @@ class GameServer {
 
   fireDivergentFist(player, cast) {
     const kit = this.getKit(player);
-    const { damage, delayedDamage, delay, stunDuration, delayedKnockback, range, width } = kit.divergentFist;
+    const { damage, delayedDamage, delay, stunDuration, knockback, delayedKnockback, range, width } = kit.divergentFist;
     const { dirX, dirY } = cast;
     const hitTargets = [];
 
@@ -1494,7 +1494,7 @@ class GameServer {
         source: player,
         amount: damage * player.modifiers.damageMul,
         kind: "divergentFist",
-        knockback: 80,
+        knockback: kit.divergentFist.knockback,
         fromX: player.x,
         fromY: player.y,
       });
