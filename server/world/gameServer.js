@@ -3331,6 +3331,8 @@ class GameServer {
         y: Math.round(enemy.y),
         vx: Math.round(enemy.vx * 100) / 100,
         vy: Math.round(enemy.vy * 100) / 100,
+        attackDirX: enemy.attackDirX || 0,
+        attackDirY: enemy.attackDirY || 0,
         hp: Math.round(enemy.hp * 10) / 10,
         maxHp: enemy.maxHp,
         alive: enemy.alive,

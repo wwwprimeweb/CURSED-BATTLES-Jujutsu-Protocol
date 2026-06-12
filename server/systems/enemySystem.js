@@ -205,21 +205,18 @@ class EnemySystem {
         : target;
 
       if (enemy.windupTimer > 0) {
-        if (enemy.type === "crawler_nest") {
-          if (enemy.windupTimer <= 0.02) {
-            enemy.windupTimer = 0;
+        if (enemy.windupTimer <= 0.02) {
+          enemy.windupTimer = 0;
+          if (enemy.type === "crawler_nest") {
             enemy.attackCooldown = enemy.attackCooldownBase;
             enemy.isCharging = true;
             enemy.chargeTimer = 0.35;
             const chargeDir = normalize(targetPoint.x - enemy.x, targetPoint.y - enemy.y);
             enemy.vx = chargeDir.x * 400;
             enemy.vy = chargeDir.y * 400;
+          } else {
+            this.executeAttack(enemy, target, barrierContext);
           }
-          return;
-        }
-
-        if (enemy.windupTimer <= 0.02) {
-          this.executeAttack(enemy, target, barrierContext);
         }
         return;
       }
@@ -234,6 +231,9 @@ class EnemySystem {
       if (canAttack && enemy.attackCooldown <= 0) {
         enemy.windupTimer = enemy.attackWindup;
         enemy.state = "windup";
+        const dir = normalize(targetPoint.x - enemy.x, targetPoint.y - enemy.y);
+        enemy.attackDirX = dir.x;
+        enemy.attackDirY = dir.y;
         const telegraphX = canAttackBarrier ? barrierContext.hitX : enemy.x;
         const telegraphY = canAttackBarrier ? barrierContext.hitY : enemy.y;
         this.server.emitEventNear(enemy.x, enemy.y, {

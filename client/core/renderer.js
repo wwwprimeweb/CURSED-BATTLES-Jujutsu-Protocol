@@ -1645,15 +1645,15 @@ export class Renderer {
           const progress = 1 - Math.max(0, e.windupTimer) / (e.attackWindup || 0.7);
           const frameIdx = Math.min(17, Math.floor(progress * 18));
           const atkSprite = this.crawlerAttackFrames[frameIdx];
-          const mlen = Math.sqrt((e.vx || 0) * (e.vx || 0) + (e.vy || 0) * (e.vy || 0));
-          const dirX = mlen > 0.01 ? (e.vx || 0) / mlen : (facing < 0 ? 1 : -1);
-          const dirY = mlen > 0.01 ? (e.vy || 0) / mlen : 0.01;
+          const attackMlen = Math.sqrt((e.attackDirX || 0) * (e.attackDirX || 0) + (e.attackDirY || 0) * (e.attackDirY || 0));
+          const dirX = attackMlen > 0.01 ? (e.attackDirX || 0) / attackMlen : (facing < 0 ? 1 : -1);
+          const dirY = attackMlen > 0.01 ? (e.attackDirY || 0) / attackMlen : 0.01;
           if (atkSprite && atkSprite.naturalWidth > 0) {
             const atkAspect = atkSprite.naturalWidth / atkSprite.naturalHeight;
             const atkW = w * 0.5;
             const atkH = atkW / atkAspect;
             ctx.save();
-            ctx.translate(p.x, drawY + h * (e.type === "crawler_baby" ? 0.3 : 0));
+            ctx.translate(p.x, drawY);
             if (dirX < 0) ctx.scale(-1, 1);
             ctx.rotate(Math.atan2(dirY, Math.abs(dirX || 0.01)));
             ctx.drawImage(atkSprite, -atkW / 2 + h * 0.2, -atkH / 2, atkW, atkH);
@@ -1661,7 +1661,7 @@ export class Renderer {
           } else if (atkSprite) {
             ctx.fillStyle = "rgba(50,70,40,0.7)";
             ctx.beginPath();
-            ctx.arc(p.x, drawY + h * (e.type === "crawler_baby" ? 0.3 : 0), h * 0.2, 0, Math.PI * 2);
+            ctx.arc(p.x, drawY, h * 0.2, 0, Math.PI * 2);
             ctx.fill();
           }
         }
