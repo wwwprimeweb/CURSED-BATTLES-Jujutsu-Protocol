@@ -12,8 +12,8 @@ function clamp(v, min, max) {
 function worldToScreen(camera, canvas, x, y) {
   const zoom = camera.zoom || 1;
   return {
-    x: (x - camera.x) * zoom + canvas.width * 0.5,
-    y: (y - camera.y) * zoom + canvas.height * 0.5,
+    x: (x - camera.x) * zoom + canvas.width * 0.5 + (camera.shakeX || 0),
+    y: (y - camera.y) * zoom + canvas.height * 0.5 + (camera.shakeY || 0),
   };
 }
 
@@ -34,6 +34,8 @@ export class Renderer {
       x: 0,
       y: 0,
       zoom: 1,
+      shakeX: 0,
+      shakeY: 0,
     };
     this.zoomTween = {
       startZoom: 1,
@@ -44,6 +46,10 @@ export class Renderer {
     this.zoomSeq = null;
     this.zoomSeqIndex = 0;
     this.zoomSeqTime = 0;
+
+    this.shakeIntensity = 0;
+    this.shakeDuration = 0;
+    this.shakeTime = 0;
 
     this.domainOverlayAlpha = 0;
     this.activeDomainOwnerIds = new Set();
@@ -129,6 +135,12 @@ export class Renderer {
     this.camera.x = map.width * 0.5;
     this.camera.y = map.height * 0.5;
     this.localVisualPos = null;
+  }
+
+  triggerScreenShake(intensity, duration) {
+    this.shakeIntensity = intensity;
+    this.shakeDuration = duration;
+    this.shakeTime = 0;
   }
 
   updateCamera(targetX, targetY, dt = 1 / 60) {
@@ -497,6 +509,23 @@ export class Renderer {
       const p = this.acidPuddles[i];
       p.life -= dt;
       if (p.life <= 0) this.acidPuddles.splice(i, 1);
+    }
+
+    if (this.shakeIntensity > 0) {
+      this.shakeTime += dt;
+      if (this.shakeTime >= this.shakeDuration) {
+        this.shakeIntensity = 0;
+        this.camera.shakeX = 0;
+        this.camera.shakeY = 0;
+      } else {
+        const decay = 1 - this.shakeTime / this.shakeDuration;
+        const intensity = this.shakeIntensity * decay;
+        this.camera.shakeX = (Math.random() * 2 - 1) * intensity;
+        this.camera.shakeY = (Math.random() * 2 - 1) * intensity;
+      }
+    } else {
+      this.camera.shakeX = 0;
+      this.camera.shakeY = 0;
     }
   }
 

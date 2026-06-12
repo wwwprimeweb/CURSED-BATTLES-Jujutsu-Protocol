@@ -203,8 +203,8 @@ export class YujiVisualSystem {
         this.qStartTimes.set(entry.id, this.time);
       }
       const elapsed = this.time - this.qStartTimes.get(entry.id);
-      const progress = Math.min(1, elapsed / 0.6);
-      const domainIdx = Math.min(DOMAIN_FRAMES - 1, Math.floor(progress * DOMAIN_FRAMES));
+      const progress = Math.min(1, elapsed / 0.35);
+      const domainIdx = Math.floor(elapsed * DOMAIN_FRAMES / 0.35) % DOMAIN_FRAMES;
 
       const qPhase = Math.min(3, Math.floor(progress * 4));
       const frameOffsets = [
@@ -224,7 +224,6 @@ export class YujiVisualSystem {
 
         ctx.save();
         ctx.globalAlpha = 0.9;
-
         ctx.translate(fistX, fistY);
         ctx.rotate(facing > 0 ? -Math.PI / 2 : Math.PI / 2);
         ctx.drawImage(

@@ -12,6 +12,8 @@ export class ParticleSystem {
         maxLife: 0,
         size: 1,
         color: "#ffffff",
+        borderColor: null,
+        borderWidth: 0,
       });
     }
   }
@@ -34,7 +36,7 @@ export class ParticleSystem {
     }
   }
 
-  spawnBurst({ x, y, color = "#ffffff", count = 8, speed = 220, life = 0.26, size = 2.2 }) {
+  spawnBurst({ x, y, color = "#ffffff", count = 8, speed = 220, life = 0.26, size = 2.2, borderColor, borderWidth }) {
     for (let i = 0; i < count; i += 1) {
       if (this.pool.length === 0) {
         return;
@@ -50,6 +52,8 @@ export class ParticleSystem {
       p.maxLife = life;
       p.size = size * (0.7 + Math.random() * 0.7);
       p.color = color;
+      p.borderColor = borderColor || null;
+      p.borderWidth = borderWidth || 0;
       this.active.push(p);
     }
   }
@@ -98,20 +102,33 @@ export class ParticleSystem {
 
   render(ctx, camera) {
     const zoom = camera.zoom || 1;
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < this.active.length; i += 1) {
       const p = this.active[i];
       const t = p.life / p.maxLife;
+      const alpha = Math.max(0.08, t);
       const sx = (p.x - camera.x) * zoom + ctx.canvas.width * 0.5;
       const sy = (p.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+      const r = p.size * t * zoom;
+
+      if (p.borderColor) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.borderColor;
+        ctx.beginPath();
+        ctx.arc(sx, sy, r + (p.borderWidth || 3) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.save();
+      if (!p.borderColor) ctx.globalCompositeOperation = "lighter";
       ctx.fillStyle = p.color;
-      ctx.globalAlpha = Math.max(0.08, t);
+      ctx.globalAlpha = alpha;
       ctx.beginPath();
-      ctx.arc(sx, sy, p.size * t * zoom, 0, Math.PI * 2);
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
-    ctx.restore();
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
   }

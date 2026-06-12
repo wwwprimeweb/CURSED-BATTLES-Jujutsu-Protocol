@@ -38,7 +38,7 @@ class CombatSystem {
       target.lastDamageTaken = this.server.now;
       finalDamage = Math.max(1, finalDamage - target.armor);
       finalDamage *= target.modifiers.damageReductionMul;
-      if (target.cast && finalDamage >= 30) {
+      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist") {
         target.cast = null;
       }
     }

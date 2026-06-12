@@ -343,11 +343,13 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 120, life: 0.18, size: 1.5 });
       renderer.gojoVisual.addTeleport(ev.x, ev.y);
     } else if (ev.type === "punhoIndomavelSocoDefasado") {
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 12, speed: 220, life: 0.3, size: 2.8 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 6, speed: 140, life: 0.2, size: 1.8 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 20, speed: 260, life: 0.3, size: 3, borderColor: "#000000", borderWidth: 3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 180, life: 0.25, size: 1.5 });
+      renderer.triggerScreenShake(4, 0.15);
     } else if (ev.type === "divergentFistDelayed") {
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 18, speed: 260, life: 0.35, size: 3.2 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 150, life: 0.25, size: 2 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 30, speed: 320, life: 0.4, size: 4, borderColor: "#000000", borderWidth: 4 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 14, speed: 220, life: 0.3, size: 2 });
+      renderer.triggerScreenShake(7, 0.3);
     } else if (ev.type === "flyingKneeStart") {
       particles.spawnLine({ x: ev.x, y: ev.y, dirX: ev.dirX, dirY: ev.dirY, color: "#ffaa44", count: 15, life: 0.3 });
     } else if (ev.type === "flyingKnee") {

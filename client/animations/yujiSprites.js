@@ -16,7 +16,7 @@ export const YUJI_ANIMATIONS = {
   skill2: { row: 12, frames: 10, speed: 20, loop: false },
   skill3: { row: 2, frames: 4, speed: 10, loop: false },
   skill3_prepare: { row: 11, frames: 6, speed: 10, loop: false },
-  q: { row: 2, frames: 4, speed: 8.2, loop: false },
+  q: { row: 2, frames: 4, speed: 14, loop: false },
   teleport: { row: 6, frames: 3, speed: 10, loop: false },
 };
 

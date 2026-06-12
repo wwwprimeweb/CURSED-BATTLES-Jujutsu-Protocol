@@ -1504,7 +1504,7 @@ class GameServer {
     this.players.forEach(processTarget);
     this.enemies.forEach(processTarget);
 
-    player.animLockTimer = 0.6;
+    player.animLockTimer = 0.35;
 
     if (hitTargets.length > 0) {
       hitTargets.forEach((target) => {
