@@ -459,8 +459,10 @@ export class DomainVisualSystem {
 
         // Train (yuji2.png animado nos trilhos)
         const trainEntry = this.expanding.get(ownerId);
+        console.log(`[DOMAIN TRAIN] char=${char} ownerId=${ownerId} trainEntry=${!!trainEntry}`);
         if (trainEntry) {
           const elapsed = (performance.now() - trainEntry.startTime) / 1000;
+          console.log(`[DOMAIN TRAIN] elapsed=${elapsed.toFixed(2)}s image2=${!!this.getLayerImage('punho-indomavel', '2')} expandProgress=${expandProgress.toFixed(2)} vz=${vz.toFixed(0)}`);
           if (elapsed >= 6) {
             const adjustedElapsed = elapsed - 6;
             const progress = adjustedElapsed % 10;
@@ -477,6 +479,7 @@ export class DomainVisualSystem {
               const trainY = p.y + tNormY * vz + dy + vz * 0.3;
 
               const trainImg = this.getLayerImage('punho-indomavel', '2');
+              console.log(`[DOMAIN TRAIN] DRAWING trainImg=${!!trainImg} w=${trainImg?.width} trainX=${trainX.toFixed(0)} trainY=${trainY.toFixed(0)}`);
               if (trainImg && trainImg.width) {
                 ctx.save();
                 ctx.translate(trainX, trainY);
