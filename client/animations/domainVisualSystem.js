@@ -316,6 +316,8 @@ export class DomainVisualSystem {
 
       const layerData = this.getOrCreateParallaxData(ownerId, char);
       const layers = char === 'portador-do-vinculo' ? ['far', 'mid', 'close'] : ['far', 'close', 'mid'];
+      const camX = camera.x || 0;
+      const camY = camera.y || 0;
 
       for (const key of layers) {
         const config = PARALLAX_DEPTHS[key];
@@ -363,8 +365,6 @@ export class DomainVisualSystem {
 
         if (char === 'punho-indomavel' && key === 'mid') continue;
 
-        const camX = camera.x || 0;
-        const camY = camera.y || 0;
         const dx = (worldX - camX) * effectiveParallax * zoom;
         const dy = (worldY - camY) * effectiveParallax * zoom;
 
@@ -459,10 +459,8 @@ export class DomainVisualSystem {
 
         // Train (yuji2.png animado nos trilhos)
         const trainEntry = this.expanding.get(ownerId);
-        console.log(`[DOMAIN TRAIN] char=${char} ownerId=${ownerId} trainEntry=${!!trainEntry}`);
         if (trainEntry) {
           const elapsed = (performance.now() - trainEntry.startTime) / 1000;
-          console.log(`[DOMAIN TRAIN] elapsed=${elapsed.toFixed(2)}s image2=${!!this.getLayerImage('punho-indomavel', '2')} expandProgress=${expandProgress.toFixed(2)} vz=${vz.toFixed(0)}`);
           if (elapsed >= 6) {
             const adjustedElapsed = elapsed - 6;
             const progress = adjustedElapsed % 10;
@@ -471,15 +469,12 @@ export class DomainVisualSystem {
               const tNormX = 65 / (380 * 1.2);
               const tNormY = (-1400 + t * 2800) / (380 * 1.2);
               const parallaxDepth = 0.25;
-              const camX = camera.x || 0;
-              const camY = camera.y || 0;
               const dx = (worldX - camX) * parallaxDepth * zoom;
               const dy = (worldY - camY) * parallaxDepth * zoom;
               const trainX = p.x + tNormX * vz + dx;
               const trainY = p.y + tNormY * vz + dy + vz * 0.3;
 
               const trainImg = this.getLayerImage('punho-indomavel', '2');
-              console.log(`[DOMAIN TRAIN] DRAWING trainImg=${!!trainImg} w=${trainImg?.width} trainX=${trainX.toFixed(0)} trainY=${trainY.toFixed(0)}`);
               if (trainImg && trainImg.width) {
                 ctx.save();
                 ctx.translate(trainX, trainY);
