@@ -165,45 +165,82 @@ function createBarsHtml(stats, flags) {
   const portraitUrl = `/assets/${chara}-icon.png`;
 
   return `
-    <div class="player-hud-core-panel hud-char-${chara} ${flags.tookDamage ? "is-hit" : ""} hp-${hpState}">
+    <div class="player-hud-core-panel hud-char-${chara} hp-${hpState}">
       <!-- Portrait & Level Badge -->
       <div class="portrait-outer-ring char-border-${chara}">
+        <!-- glowing vertex points -->
+        <span class="vertex-dot t"></span>
+        <span class="vertex-dot r"></span>
+        <span class="vertex-dot b"></span>
+        <span class="vertex-dot l"></span>
         <div class="portrait-image-wrapper">
           <img class="char-portrait-img" src="${portraitUrl}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
           <div class="portrait-fallback-badge">${chara.slice(0, 2).toUpperCase()}</div>
         </div>
-        <div class="hud-level-badge">Lv.${stats.level}</div>
+        <div class="hud-level-badge-diamond">
+          <div class="hud-level-text-wrapper">
+            <span class="lvl-lbl">LV.</span>
+            <span class="lvl-val">${stats.level}</span>
+          </div>
+        </div>
       </div>
 
       <!-- Bars Block -->
       <div class="bars-block-wrapper">
-        <div class="bar-row-block health-block ${flags.healthRegenActive ? "is-regen" : ""}">
-          <div class="bar-row-header">
-            <span class="bar-row-label">${charaLabel}</span>
-            <span class="bar-row-value">${Math.ceil(stats.hp)} <span class="bar-max-val">/ ${stats.maxHp}</span></span>
-          </div>
-          <div class="track hp-track ${flags.tookDamage ? "is-damaged" : ""}">
-            <div class="fill hp-lag-fill" style="width:${lagHpPercent}%"></div>
-            <div class="fill hp" style="width:${hpPercent}%"></div>
-            ${stats.shield ? `<div class="fill shield-fill" style="width:${pct(stats.shield, stats.maxHp)}%"></div>` : ""}
+        <!-- Character Header -->
+        <div class="hud-chara-header">
+          <span class="hud-chara-name">${charaLabel}</span>
+          <div class="hud-chara-divider-wrapper">
+            <span class="hud-divider-point"></span>
+            <div class="hud-divider-line left"></div>
+            <span class="hud-divider-center-diamond">◇</span>
+            <div class="hud-divider-line right"></div>
+            <span class="hud-divider-point"></span>
           </div>
         </div>
 
+        <!-- HP Bar -->
+        <div class="bar-row-block health-block ${flags.healthRegenActive ? "is-regen" : ""}">
+          <div class="bar-row-header">
+            <span class="bar-row-label">HP</span>
+            <span class="bar-row-value">${Math.ceil(stats.hp)} <span class="bar-max-val">/ ${stats.maxHp}</span></span>
+          </div>
+          <div class="track hp-track">
+            <div class="fill hp-lag-fill" style="width:${lagHpPercent}%"></div>
+            <div class="fill hp" style="width:${hpPercent}%">
+              <div class="hp-particles"></div>
+            </div>
+            <div class="fill shield-fill" style="width:${stats.shield ? pct(stats.shield, stats.maxHp) : 0}%;${stats.shield ? "" : "display:none"}"></div>
+          </div>
+        </div>
+
+        <!-- Energy Bar -->
         <div class="bar-row-block energy-block ${energyDry ? "is-dry" : ""} ${isFullEnergy ? "is-full" : ""}" style="--energy-glow:${ENERGY_BAR_COLORS[chara] || "#50ebff"}">
           <div class="bar-row-header compact">
             <span class="bar-row-label">Energia Amaldiçoada</span>
             <span class="bar-row-value">${Math.ceil(stats.energy)} <span class="bar-max-val">/ ${stats.maxEnergy}</span></span>
           </div>
-          <div class="track energy-track"><div class="fill energy" style="width:${energyPercent}%"></div></div>
+          <div class="track energy-track">
+            <div class="fill energy" style="width:${energyPercent}%">
+              <div class="energy-wave-1"></div>
+              <div class="energy-wave-2"></div>
+              <div class="energy-particles"></div>
+            </div>
+          </div>
         </div>
+
+        <!-- XP Bar -->
+        <div class="bar-row-block xp-block">
+          <div class="bar-row-header compact">
+            <span class="bar-row-label">XP</span>
+            <span class="bar-row-value">${Math.floor(xpPercent)}%</span>
+          </div>
+          <div class="track xp-track-inner">
+            <div class="fill xp" style="width:${xpPercent}%"></div>
+          </div>
+        </div>
+
       </div>
-
-    </div>
-
-    <!-- XP strip underneath -->
-    <div class="xp-strip-wrapper">
-      <span class="xp-label-pct">${Math.floor(xpPercent)}% XP</span>
-      <div class="track xp-track"><div class="fill xp" style="width:${xpPercent}%"></div></div>
     </div>
   `;
 }
@@ -312,6 +349,21 @@ export class Hud {
     this._prevChar = "";
     this._prevSkillLock = false;
     this._prevBoss = false;
+    this._barsReady = false;
+
+    // Cached bar element references (populated on first render)
+    this._panelEl = null;
+    this._hpEl = null;
+    this._hpLagEl = null;
+    this._shieldEl = null;
+    this._energyEl = null;
+    this._xpEl = null;
+    this._healthBlockEl = null;
+    this._energyBlockEl = null;
+    this._hpTrackEl = null;
+    this._hpValueEl = null;
+    this._energyValueEl = null;
+    this._xpValueEl = null;
 
     this._flameImgs = {};
     this._flameFrames = 12;
@@ -360,6 +412,104 @@ export class Hud {
     if (el.innerHTML !== html) el.innerHTML = html;
   }
 
+  _cacheBarsElements() {
+    this._panelEl = this.barsEl.querySelector('.player-hud-core-panel');
+    this._hpEl = this.barsEl.querySelector('.fill.hp');
+    this._hpLagEl = this.barsEl.querySelector('.fill.hp-lag-fill');
+    this._shieldEl = this.barsEl.querySelector('.fill.shield-fill');
+    this._energyEl = this.barsEl.querySelector('.fill.energy');
+    this._xpEl = this.barsEl.querySelector('.fill.xp');
+    this._healthBlockEl = this.barsEl.querySelector('.health-block');
+    this._energyBlockEl = this.barsEl.querySelector('.energy-block');
+    this._hpTrackEl = this.barsEl.querySelector('.hp-track');
+    this._hpValueEl = this.barsEl.querySelector('.health-block .bar-row-value');
+    this._energyValueEl = this.barsEl.querySelector('.energy-block .bar-row-value');
+    this._xpValueEl = this.barsEl.querySelector('.xp-block .bar-row-value');
+  }
+
+  _updateBarsWidths(stats) {
+    const realHp = stats.realHp !== undefined ? stats.realHp : stats.hp;
+    const realEnergy = stats.realEnergy !== undefined ? stats.realEnergy : stats.energy;
+    const hpPercent = pct(realHp, stats.maxHp);
+    const lagHpPercent = pct(stats.hp, stats.maxHp);
+    const energyPercent = pct(realEnergy, stats.maxEnergy);
+    const xpPercent = pct(stats.xp, stats.xpToNext);
+
+    if (this._hpEl) this._hpEl.style.width = hpPercent + '%';
+    if (this._hpLagEl) this._hpLagEl.style.width = lagHpPercent + '%';
+    if (this._energyEl) this._energyEl.style.width = energyPercent + '%';
+    if (this._xpEl) this._xpEl.style.width = xpPercent + '%';
+
+    if (this._shieldEl) {
+      if (stats.shield) {
+        this._shieldEl.style.width = pct(stats.shield, stats.maxHp) + '%';
+        this._shieldEl.style.display = '';
+      } else {
+        this._shieldEl.style.width = '0%';
+        this._shieldEl.style.display = 'none';
+      }
+    }
+
+    if (this._hpValueEl) {
+      this._hpValueEl.innerHTML = `${Math.ceil(stats.hp)} <span class="bar-max-val">/ ${stats.maxHp}</span>`;
+    }
+    if (this._energyValueEl) {
+      this._energyValueEl.innerHTML = `${Math.ceil(stats.energy)} <span class="bar-max-val">/ ${stats.maxEnergy}</span>`;
+    }
+    if (this._xpValueEl) {
+      this._xpValueEl.textContent = `${Math.floor(xpPercent)}%`;
+    }
+  }
+
+  _updateBarsClasses(stats, flags) {
+    const realHp = stats.realHp !== undefined ? stats.realHp : stats.hp;
+    const realEnergy = stats.realEnergy !== undefined ? stats.realEnergy : stats.energy;
+    const hpPercent = pct(realHp, stats.maxHp);
+    const energyPercent = pct(realEnergy, stats.maxEnergy);
+
+    // hp-state class on panel
+    const hpState = hpPercent <= 18 ? "critical" : hpPercent <= 35 ? "low" : hpPercent <= 65 ? "mid" : "high";
+    if (this._panelEl) {
+      this._panelEl.classList.remove('hp-high', 'hp-mid', 'hp-low', 'hp-critical');
+      this._panelEl.classList.add('hp-' + hpState);
+    }
+
+    // is-dry / is-full for energy block
+    const energyDry = energyPercent <= 18;
+    const isFullEnergy = energyPercent >= 90;
+    if (this._energyBlockEl) {
+      this._energyBlockEl.classList.toggle('is-dry', energyDry);
+      this._energyBlockEl.classList.toggle('is-full', isFullEnergy);
+    }
+
+    // is-regen for health block
+    if (this._healthBlockEl) {
+      this._healthBlockEl.classList.toggle('is-regen', flags.healthRegenActive);
+    }
+
+    // is-hit damage flash on panel (remove after each frame to restore panel background)
+    if (this._panelEl) {
+      if (flags.tookDamage) {
+        this._panelEl.classList.remove('is-hit');
+        void this._panelEl.offsetWidth;
+        this._panelEl.classList.add('is-hit');
+      } else {
+        this._panelEl.classList.remove('is-hit');
+      }
+    }
+
+    // is-damaged burst on hp track (remove after each frame to allow re-trigger)
+    if (this._hpTrackEl) {
+      if (flags.tookDamage) {
+        this._hpTrackEl.classList.remove('is-damaged');
+        void this._hpTrackEl.offsetWidth;
+        this._hpTrackEl.classList.add('is-damaged');
+      } else {
+        this._hpTrackEl.classList.remove('is-damaged');
+      }
+    }
+  }
+
   update({ you, phase, elapsedSec, ping, connected, interpolation, map }) {
     if (!you) {
       return;
@@ -398,10 +548,13 @@ export class Hud {
       realEnergy: you.energy,
     };
 
-    const barsHtml = createBarsHtml(displayStats, { tookDamage, healthRegenActive });
-    if (barsHtml !== this._barsHtml) {
-      this._barsHtml = barsHtml;
-      this.barsEl.innerHTML = barsHtml;
+    if (!this._barsReady) {
+      this.barsEl.innerHTML = createBarsHtml(displayStats, { tookDamage, healthRegenActive });
+      this._cacheBarsElements();
+      this._barsReady = true;
+    } else {
+      this._updateBarsWidths(displayStats);
+      this._updateBarsClasses(displayStats, { tookDamage, healthRegenActive });
     }
 
     const skills = getSkills(chara);
