@@ -38,8 +38,10 @@ class CombatSystem {
       target.lastDamageTaken = this.server.now;
       finalDamage = Math.max(1, finalDamage - target.armor);
       finalDamage *= target.modifiers.damageReductionMul;
-      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist") {
+      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact") {
         target.cast = null;
+      } else if (target.cast && target.cast.type === "soulImpact") {
+        console.log(`[DIAG] soulImpact cast protected, damage=${finalDamage}`);
       }
     }
     if (target.kind === "enemy") {

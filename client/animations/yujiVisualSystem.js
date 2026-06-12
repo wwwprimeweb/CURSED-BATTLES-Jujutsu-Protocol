@@ -12,9 +12,6 @@ const DOMAIN_FRAME_W = 110;
 const DOMAIN_FRAME_H = 125;
 const DOMAIN_FRAMES = 12;
 
-const SOUL_STRIKE_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/soul_impact_strike.png";
-const SOUL_STRIKE_FRAMES = 3;
-
 
 
 export class YujiVisualSystem {
@@ -35,16 +32,13 @@ export class YujiVisualSystem {
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
 
-    this.soulStrikeSheet = new Image();
-    this.soulStrikeSheet.src = SOUL_STRIKE_SHEET_PATH;
-
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
     this.time = 0;
     this.qStartTimes = new Map();
 
     this.flyingKneeEffects = [];
-    this.soulImpactEffects = [];
+    this.soulImpactMissEffects = [];
     this.taidoBeatdownEffects = [];
     this.cutLines = [];
     this.trainSpritesReady = false;
@@ -83,9 +77,9 @@ export class YujiVisualSystem {
       if (this.flyingKneeEffects[i].life <= 0) this.flyingKneeEffects.splice(i, 1);
     }
 
-    for (let i = this.soulImpactEffects.length - 1; i >= 0; i -= 1) {
-      this.soulImpactEffects[i].life -= dt;
-      if (this.soulImpactEffects[i].life <= 0) this.soulImpactEffects.splice(i, 1);
+    for (let i = this.soulImpactMissEffects.length - 1; i >= 0; i -= 1) {
+      this.soulImpactMissEffects[i].life -= dt;
+      if (this.soulImpactMissEffects[i].life <= 0) this.soulImpactMissEffects.splice(i, 1);
     }
 
     for (let i = this.taidoBeatdownEffects.length - 1; i >= 0; i -= 1) {
@@ -113,8 +107,22 @@ export class YujiVisualSystem {
     });
   }
 
-  triggerSoulImpact(x, y, dirX, dirY) {
-    this.soulImpactEffects.push({ x, y, dirX: dirX || 0, dirY: dirY || 1, startTime: this.time, life: 0.35 });
+  triggerSoulImpactMiss(x, y, dirX, dirY) {
+    const n = 12;
+    for (let i = 0; i < n; i++) {
+      const spread = (Math.random() - 0.5) * 0.35;
+      const angle = Math.atan2(dirY || 0, dirX || 1) + spread;
+      const speed = 200 + Math.random() * 180;
+      this.soulImpactMissEffects.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        length: 8 + Math.random() * 18,
+        life: 0.15 + Math.random() * 0.15,
+        maxLife: 0.15 + Math.random() * 0.15,
+      });
+    }
   }
 
   triggerTaidoBeatdownHit(x, y, hitNum) {
@@ -295,43 +303,24 @@ export class YujiVisualSystem {
 
     });
 
-    this.soulImpactEffects.forEach((e) => {
-      const offsetDist = 65;
-      const fistHeight = 75;
-      const effectX = e.x + e.dirX * offsetDist;
-      const effectY = e.y - fistHeight;
-      const screenX = (effectX - camera.x) * zoom + ctx.canvas.width * 0.5;
-      const screenY = (effectY - camera.y) * zoom + ctx.canvas.height * 0.5;
-      const alpha = Math.min(1, e.life / 0.25);
-      const elapsed = 0.35 - e.life;
-      const frameIndex = Math.min(SOUL_STRIKE_FRAMES - 1, Math.floor(elapsed / 0.35 * SOUL_STRIKE_FRAMES));
-
-      if (!this.soulStrikeSheet.complete || this.soulStrikeSheet.naturalWidth === 0) return;
-      const img = this.soulStrikeSheet;
-      const fw = img.naturalWidth / SOUL_STRIKE_FRAMES;
-      const fh = img.naturalHeight;
-      const sizeMul = 0.28;
-      const targetW = fw * zoom * sizeMul;
-      const targetH = fh * zoom * sizeMul;
+    this.soulImpactMissEffects.forEach((e) => {
+      const progress = 1 - e.life / e.maxLife;
+      const alpha = (1 - progress) * 0.5;
+      const screenX = (e.x + e.vx * progress - camera.x) * zoom + ctx.canvas.width * 0.5;
+      const screenY = (e.y + e.vy * progress - camera.y) * zoom + ctx.canvas.height * 0.5;
+      const len = e.length * zoom;
 
       ctx.save();
       ctx.globalAlpha = alpha;
-
-      const flipX = e.dirX < 0;
-      let drawX, drawY;
-      if (flipX) {
-        ctx.translate(screenX, screenY);
-        ctx.scale(-1, 1);
-        drawX = -targetW * 0.5;
-        drawY = -targetH * 0.5;
-      } else {
-        drawX = screenX - targetW * 0.5;
-        drawY = screenY - targetH * 0.5;
-      }
-
-      const sx = frameIndex * fw;
-      ctx.drawImage(img, sx, 0, fw, fh, drawX, drawY, targetW, targetH);
-
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      const nx = e.vx / Math.hypot(e.vx, e.vy);
+      const ny = e.vy / Math.hypot(e.vx, e.vy);
+      ctx.moveTo(screenX - nx * len * 0.5, screenY - ny * len * 0.5);
+      ctx.lineTo(screenX + nx * len * 0.5, screenY + ny * len * 0.5);
+      ctx.stroke();
       ctx.restore();
     });
 

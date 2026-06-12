@@ -3711,57 +3711,64 @@ class GameServer {
 
   fireSoulImpact(player, cast) {
     const kit = this.getKit(player);
-    const { damage, range } = kit.soulImpact;
+    const { damage, range, knockback, debuffDuration, debuffPenalty } = kit.soulImpact;
     const dirX = cast.dirX;
     const dirY = cast.dirY;
 
-    const hitX = player.x + dirX * 65;
+    const hitX = player.x + dirX * 75;
     const hitY = player.y - 90;
-    let hitTarget = null;
+    const closeX = player.x + dirX * 30;
+    const closeY = player.y - 50;
+    const hitTargets = [];
+
+    const canHit = (target) => {
+      const distMain = distance(hitX, hitY, target.x, target.y);
+      if (distMain <= range + target.radius) {
+        const toTarget = normalize(target.x - hitX, target.y - hitY);
+        if (dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2) return true;
+      }
+      const distClose = distance(closeX, closeY, target.x, target.y);
+      if (distClose <= 60 + target.radius) return true;
+      return false;
+    };
+
     this.players.forEach((target) => {
       if (target.id === player.id || !target.alive) return;
       if (!this.config.match.friendlyFire && target.kind === "player") return;
-      const toTarget = normalize(target.x - hitX, target.y - hitY);
-      const facing = dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2;
-      const inRange = distance(hitX, hitY, target.x, target.y) <= range + target.radius;
-      if (inRange && facing) {
-        hitTarget = target;
+      if (canHit(target)) {
+        hitTargets.push(target);
       }
     });
 
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
-      const toTarget = normalize(enemy.x - hitX, enemy.y - hitY);
-      const facing = dot(dirX, dirY, toTarget.x, toTarget.y) > 0.2;
-      const inRange = distance(hitX, hitY, enemy.x, enemy.y) <= range + enemy.radius;
-      if (inRange && facing) {
-        hitTarget = enemy;
+      if (canHit(enemy)) {
+        hitTargets.push(enemy);
       }
     });
 
-    if (hitTarget) {
+    hitTargets.forEach((target) => {
       this.combat.applyDamage({
-        target: hitTarget,
+        target,
         source: player,
         amount: damage * player.modifiers.damageMul,
         kind: "soulImpact",
-        knockback: 200,
+        knockback,
         fromX: player.x,
         fromY: player.y,
       });
-      if (hitTarget.kind === "player") {
-        const { debuffDuration, debuffPenalty } = kit.soulImpact;
-        hitTarget.almaAbaladaTimer = Math.max(hitTarget.almaAbaladaTimer || 0, debuffDuration);
-        hitTarget.modifiers.energyRegenMul = 1 - debuffPenalty;
+      if (target.kind === "player") {
+        target.almaAbaladaTimer = Math.max(target.almaAbaladaTimer || 0, debuffDuration);
+        target.modifiers.energyRegenMul = 1 - debuffPenalty;
       }
-    }
+    });
 
     this.emitEventNear(player.x, player.y, {
       type: "soulImpact",
       x: player.x,
       y: player.y,
       playerId: player.id,
-      miss: !hitTarget,
+      miss: hitTargets.length === 0,
       dirX,
       dirY,
     });

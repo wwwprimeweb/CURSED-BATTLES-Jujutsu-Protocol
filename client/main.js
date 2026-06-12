@@ -355,15 +355,19 @@ function handleEvents(events) {
     } else if (ev.type === "flyingKnee") {
       renderer.yujiVisual.triggerFlyingKnee(ev.x, ev.y, 0, 0, ev.hit);
       if (ev.hit) {
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66ccff", count: 20, speed: 250, life: 0.3, size: 3 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#b6e2ff", count: 10, speed: 150, life: 0.2, size: 2 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#00d4c0", count: 25, speed: 300, life: 0.4, size: 4, borderColor: "#000000", borderWidth: 4 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 15, speed: 200, life: 0.3, size: 3, borderColor: "#000000", borderWidth: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 150, life: 0.2, size: 2, borderColor: "#000000", borderWidth: 2 });
       }
     } else if (ev.type === "soulImpact") {
-      renderer.yujiVisual.triggerSoulImpact(ev.x, ev.y, ev.dirX, ev.dirY);
       if (!ev.miss) {
         renderer.triggerBlackFlash(ev.x, ev.y, ev.dirX || 0, ev.dirY || 1);
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff0000", count: 30, speed: 300, life: 0.5, size: 4 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 200, life: 0.35, size: 2.5 });
+        renderer.triggerScreenShake(8, 0.35);
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff0000", count: 30, speed: 350, life: 0.5, size: 5, borderColor: "#000000", borderWidth: 4 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff3333", count: 20, speed: 220, life: 0.35, size: 3, borderColor: "#000000", borderWidth: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 180, life: 0.25, size: 2, borderColor: "#000000", borderWidth: 2 });
+      } else {
+        renderer.yujiVisual.triggerSoulImpactMiss(ev.x, ev.y, ev.dirX, ev.dirY);
       }
     } else if (ev.type === "taidoBeatdownHit") {
       renderer.yujiVisual.triggerTaidoBeatdownHit(ev.x, ev.y, ev.hitNum);
