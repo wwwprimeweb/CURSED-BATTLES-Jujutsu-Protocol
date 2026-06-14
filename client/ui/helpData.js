@@ -42,7 +42,7 @@ export const HELP_DATA = {
       m1: "Soco direto com energia amaldiçoada, dano médio",
       q: "Soco Defasado — Golpe que aplica dano bônus após breve delay",
       e: "Pancada Espiritual — Golpe carregado que causa dano massivo em área frontal",
-      r: "Séquência Brutal — Sequência de golpes rápidos, o último causa dano extra",
+      r: "Sequência Brutal — Sequência de golpes rápidos em curta distância com energia turquesa; o último golpe empurra mais forte",
       space: "Joelhada Voadora — Joelhada voadora que avança rápido, derruba inimigos",
       f: "Domínio: Manifestação Interior — Domínio que amplifica todos os atributos por tempo limitado",
     },

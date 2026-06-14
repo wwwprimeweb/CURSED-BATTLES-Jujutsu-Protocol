@@ -670,6 +670,7 @@ export class Renderer {
     this.gojoVisual.effects.explosions = [];
     this.gojoVisual.effects.teleports = [];
     this.gojoVisual.effects.afterimages = [];
+    this.yujiVisual.m1Fx = [];
     this.yujiVisual.flyingKneeEffects = [];
     this.yujiVisual.soulImpactEffects = [];
     this.yujiVisual.taidoBeatdownEffects = [];
@@ -1580,6 +1581,10 @@ export class Renderer {
       const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
       const baseRadius = e.type === "boss" ? 34 : e.type === "elite" ? 24 : 18;
       const frozen = Boolean(e.frozen);
+      const stunned = Boolean(e.stunVisual) && !frozen;
+      const stunSeed = e.id ? e.id.length : 0;
+      const stunShakeX = stunned ? Math.sin(now * 0.05 + stunSeed) * 3 * zoom : 0;
+      const stunShakeY = stunned ? Math.cos(now * 0.065 + stunSeed) * 2 * zoom : 0;
 
       const walkSpeed = Math.sqrt(e.vx * e.vx + e.vy * e.vy);
       const bc = bobConfig[e.type] || { freq: 1, amp: 2, minSpeed: 5 };
@@ -1587,6 +1592,8 @@ export class Renderer {
         ? Math.sin(now * 0.008 * bc.freq + (e.id ? e.id.length : 0) * 2.3) * bc.amp * zoom
         : 0;
       const drawY = p.y + bob;
+      const drawX = p.x + stunShakeX;
+      const renderY = drawY + stunShakeY;
 
       const sprite = this.monsterSprites[e.type];
       if (sprite) {
@@ -1595,6 +1602,7 @@ export class Renderer {
         const h = baseRadius * 2.5 * mult * zoom;
         const w = h * aspect;
         ctx.save();
+        if (stunned) ctx.translate(stunShakeX, stunShakeY);
         let facing = this.enemyFacing.get(e.id);
         if (Math.abs(e.vx || 0) > 1) facing = (e.vx || 0) > 0 ? -1 : 1;
         if (!facing) facing = 1;
@@ -1683,7 +1691,7 @@ export class Renderer {
         }
         ctx.lineWidth = 2 * zoom;
         ctx.beginPath();
-        ctx.arc(p.x, drawY, baseRadius * zoom, 0, Math.PI * 2);
+        ctx.arc(drawX, renderY, baseRadius * zoom, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
@@ -1948,6 +1956,10 @@ export class Renderer {
       }
 
       const dashState = this.dashVisuals.has(p.id) ? "dash" : null;
+      const stunned = Boolean(p.stunVisual) && !p.frozen;
+      const stunSeed = p.id ? p.id.length : 0;
+      const stunShakeX = stunned ? Math.sin(now * 0.05 + stunSeed) * 3 : 0;
+      const stunShakeY = stunned ? Math.cos(now * 0.065 + stunSeed) * 2 : 0;
 
       ctx.save();
       if (!p.alive) {
@@ -1960,7 +1972,7 @@ export class Renderer {
         this._drawERFrame(ctx, sp.x, sp.y, 140, erFrame, p.character, 1);
       }
 
-      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx, ry, this._renderDt);
+      visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx + stunShakeX, ry + stunShakeY, this._renderDt);
 
       if (p.recoveryActive && p.alive) {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);

@@ -412,6 +412,69 @@ export class AudioSystem {
       case "skillPurple":
         this.tone(120, 0.2, "sawtooth", 0.18);
         break;
+      case "yujiM1Start":
+        this.syntheticWhoosh(0.09, true);
+        this.tone(260, 0.045, "triangle", 0.08);
+        break;
+      case "yujiM1Impact":
+        this.syntheticClick(0.1);
+        this.noise(0.025, 0.025, 4.8);
+        this.tone(170, 0.045, "square", 0.09);
+        break;
+      case "yujiM1HeavyImpact":
+        this.syntheticClick(0.14);
+        this.noise(0.05, 0.05, 3.2);
+        this.tone(130, 0.08, "sawtooth", 0.12);
+        this.tone(72, 0.1, "square", 0.08);
+        break;
+      case "soulImpactStart":
+        this.syntheticWhoosh(0.11, true);
+        this.tone(190, 0.06, "triangle", 0.09);
+        this.tone(300, 0.04, "sine", 0.05);
+        break;
+      case "soulImpactHit":
+        this.syntheticClick(0.15);
+        this.noise(0.08, 0.08, 2.2);
+        this.tone(110, 0.14, "sawtooth", 0.2);
+        this.tone(70, 0.18, "square", 0.12);
+        break;
+      case "soulImpactMiss":
+        this.syntheticWhoosh(0.06, false);
+        this.tone(260, 0.04, "triangle", 0.05);
+        break;
+      case "divergentFistStart":
+        this.syntheticWhoosh(0.1, true);
+        this.tone(240, 0.05, "triangle", 0.08);
+        this.tone(420, 0.035, "sine", 0.05);
+        break;
+      case "divergentFistHit":
+        this.syntheticClick(0.11);
+        this.noise(0.03, 0.03, 4);
+        this.tone(180, 0.05, "square", 0.1);
+        break;
+      case "divergentFistDelayed":
+        this.syntheticClick(0.16);
+        this.noise(0.08, 0.07, 2.8);
+        this.tone(86, 0.14, "sawtooth", 0.18);
+        this.tone(52, 0.18, "square", 0.12);
+        break;
+      case "taidoBeatdownStart":
+        this.syntheticWhoosh(0.13, true);
+        this.noise(0.06, 0.04, 2.8);
+        this.tone(210, 0.08, "triangle", 0.12);
+        this.tone(340, 0.05, "sine", 0.07);
+        break;
+      case "taidoBeatdownHit":
+        this.syntheticClick(0.07);
+        this.tone(150, 0.04, "triangle", 0.09);
+        break;
+      case "taidoBeatdownFinal":
+        this.syntheticClick(0.14);
+        this.noise(0.12, 0.1, 2.4);
+        this.tone(92, 0.18, "sawtooth", 0.22);
+        this.tone(58, 0.22, "square", 0.14);
+        this.tone(440, 0.06, "sine", 0.06);
+        break;
       case "domainStart":
         if (this.buffers.domainStart) {
           this.playBuffer("domainStart", 2.0);

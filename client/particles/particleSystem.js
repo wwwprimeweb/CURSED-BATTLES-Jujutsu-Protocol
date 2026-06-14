@@ -14,6 +14,9 @@ export class ParticleSystem {
         color: "#ffffff",
         borderColor: null,
         borderWidth: 0,
+        shape: "circle",
+        rotation: 0,
+        spin: 0,
       });
     }
   }
@@ -52,8 +55,34 @@ export class ParticleSystem {
       p.maxLife = life;
       p.size = size * (0.7 + Math.random() * 0.7);
       p.color = color;
+      p.shape = "circle";
+      p.rotation = 0;
+      p.spin = 0;
       p.borderColor = borderColor || null;
       p.borderWidth = borderWidth || 0;
+      this.active.push(p);
+    }
+  }
+
+  spawnStars({ x, y, color = "#ffffff", count = 3, radius = 16, life = 0.35, size = 3 }) {
+    for (let i = 0; i < count; i += 1) {
+      if (this.pool.length === 0) return;
+      const p = this.pool.pop();
+      const angle = (Math.PI * 2 * i) / Math.max(1, count) + (Math.random() - 0.5) * 0.7;
+      const r = radius * (0.7 + Math.random() * 0.5);
+      p.x = x + Math.cos(angle) * r;
+      p.y = y - 28 + Math.sin(angle) * 4;
+      p.vx = (Math.random() - 0.5) * 18;
+      p.vy = -8 - Math.random() * 16;
+      p.life = life;
+      p.maxLife = life;
+      p.size = size * (0.8 + Math.random() * 0.4);
+      p.color = color;
+      p.borderColor = null;
+      p.borderWidth = 0;
+      p.shape = "star";
+      p.rotation = Math.random() * Math.PI * 2;
+      p.spin = (Math.random() - 0.5) * 2.0;
       this.active.push(p);
     }
   }
@@ -88,6 +117,7 @@ export class ParticleSystem {
       }
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+      p.rotation += (p.spin || 0) * dt;
       const damp = Math.pow(0.92, dt * 60);
       p.vx *= damp;
       p.vy *= damp;
@@ -124,9 +154,28 @@ export class ParticleSystem {
       if (!p.borderColor) ctx.globalCompositeOperation = "lighter";
       ctx.fillStyle = p.color;
       ctx.globalAlpha = alpha;
-      ctx.beginPath();
-      ctx.arc(sx, sy, r, 0, Math.PI * 2);
-      ctx.fill();
+      if (p.shape === "star") {
+        ctx.translate(sx, sy);
+        ctx.rotate(p.rotation || 0);
+        ctx.beginPath();
+        for (let k = 0; k < 5; k += 1) {
+          const outer = Math.PI / 2 + (k * Math.PI * 2) / 5;
+          const inner = outer + Math.PI / 5;
+          const ox = Math.cos(outer) * r;
+          const oy = Math.sin(outer) * r;
+          const ix = Math.cos(inner) * (r * 0.45);
+          const iy = Math.sin(inner) * (r * 0.45);
+          if (k === 0) ctx.moveTo(ox, oy);
+          else ctx.lineTo(ox, oy);
+          ctx.lineTo(ix, iy);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
     ctx.globalAlpha = 1;

@@ -28,7 +28,7 @@ const CHARACTER_SKILLS = {
   "punho-indomavel": [
     { key: "q", hotkey: "Q", icon: "Sd", name: "Soco Defasado", cost: 30, baseCooldown: 8, tag: "controle" },
     { key: "e", hotkey: "E", icon: "Pe", name: "Pancada Espiritual", cost: 40, baseCooldown: 12, tag: "burst" },
-    { key: "r", hotkey: "R", icon: "Sb", name: "Séquência Brutal", cost: 50, baseCooldown: 15, tag: "burst" },
+    { key: "r", hotkey: "R", icon: "Sb", name: "Sequência Brutal", cost: 50, baseCooldown: 15, tag: "burst" },
     { key: "space", hotkey: "Space", icon: "Jv", name: "Joelhada Voadora", cost: 30, baseCooldown: 8, tag: "mobilidade" },
     { key: "f", hotkey: "F", icon: "Dm", name: "Manifestação Interior", cost: 75, baseCooldown: 65, tag: "dominio" },
     { key: "dodge", hotkey: "Shift", icon: "Ev", name: "Dodge", cost: 0, baseCooldown: 1, tag: "evasao" },
@@ -571,6 +571,10 @@ export class Hud {
 
     // Only re-render DOM on character change (preserves hover state)
     if (chara !== this._prevChar) {
+      // Recriar o card completo com o personagem correto
+      this.barsEl.innerHTML = createBarsHtml(displayStats, { tookDamage, healthRegenActive });
+      this._cacheBarsElements();
+
       const m1Html = `
         <div class="skill-slot-wrapper">
           <div class="skill-slot slot-key-m1" data-key="m1" style="--cooldown:0deg">

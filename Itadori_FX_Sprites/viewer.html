@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang=pt-BR>
+<head>
+<meta charset=UTF-8>
+<title>Itadori FX - Sprites Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #10131f; color: #eee; padding: 20px; }
+h1 { text-align: center; margin-bottom: 5px; color: #40e0d0; }
+p.sub { text-align: center; color: #888; margin-bottom: 10px; font-size: 14px; }
+.stats { text-align: center; color: #aaa; margin-bottom: 12px; font-size: 13px; }
+.hint { text-align: center; color: #9fb; margin-bottom: 14px; font-size: 12px; }
+.sources, .groups { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; max-height: 140px; overflow-y: auto; padding: 8px; background: #16213e; border-radius: 8px; }
+.sources button, .groups button { padding: 3px 10px; background: #0f3460; border: 1px solid #533483; color: #eee; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: nowrap; }
+.sources button:hover, .groups button:hover { background: #533483; }
+.sources button.active, .groups button.active { background: #40e0d0; border-color: #40e0d0; color: #001; }
+.sprite-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: flex-start; }
+.sprite-item { background: #16213e; border-radius: 4px; padding: 4px; text-align: center; }
+.sprite-item img { display: block; image-rendering: pixelated; background: repeating-conic-gradient(#2a2a4a 0% 25%, transparent 0% 50%) 0 0 / 20px 20px; max-width: 300px; }
+.sprite-item .label { font-size: 11px; color: #aaa; margin-top: 2px; }
+.section-title { margin: 18px 0 8px; color: #40e0d0; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Itadori FX - Sprites</h1>
+<p class=sub>FX e impactos do Itadori / Yuji no V9</p>
+<p class=stats>16 grupos | 150 sprites</p>
+<p class=hint>FX úteis para análise: 30001, 30003, 30007, 30008, 30009, 30010, 30011, 6120, 7001, 7002, 30200-30206</p>
+
+<div class=section-title>Fontes</div>
+<div class=sources id=source-nav></div>
+
+<div class=section-title>Grupos</div>
+<div class=groups id=group-nav></div>
+<div class=sprite-grid id=grid></div>
+
+<script>
+var viewerData = {"Shibuya":{"30001":["30001_0.png","30001_1.png","30001_2.png","30001_3.png","30001_4.png","30001_5.png","30001_6.png","30001_7.png"],"30003":["30003_0.png","30003_1.png","30003_2.png","30003_3.png","30003_4.png","30003_5.png","30003_6.png","30003_7.png"],"30007":["30007_0.png","30007_1.png","30007_2.png","30007_3.png","30007_4.png","30007_5.png","30007_6.png"],"30008":["30008_0.png","30008_1.png","30008_2.png","30008_3.png","30008_4.png","30008_5.png","30008_6.png","30008_7.png"],"30009":["30009_0.png","30009_1.png","30009_2.png","30009_3.png","30009_4.png","30009_5.png","30009_6.png","30009_7.png","30009_8.png","30009_9.png"],"30010":["30010_0.png","30010_1.png","30010_2.png","30010_3.png","30010_4.png","30010_5.png","30010_6.png","30010_7.png","30010_8.png","30010_9.png"],"30011":["30011_0.png","30011_1.png","30011_2.png","30011_3.png","30011_4.png","30011_5.png"]},"Shinjuku":{"1043":["1043_0.png","1043_1.png","1043_2.png","1043_3.png","1043_4.png","1043_5.png","1043_6.png","1043_7.png","1043_8.png","1043_9.png","1043_10.png","1043_11.png","1043_12.png"],"1044":["1044_0.png","1044_1.png","1044_2.png","1044_3.png","1044_4.png","1044_5.png","1044_6.png","1044_7.png"],"6120":["6120_0.png","6120_1.png","6120_2.png","6120_3.png","6120_4.png","6120_5.png","6120_6.png","6120_7.png","6120_8.png","6120_9.png","6120_10.png","6120_11.png","6120_12.png","6120_13.png"],"7001":["7001_0.png","7001_1.png","7001_2.png","7001_3.png"],"7002":["7002_0.png","7002_1.png","7002_2.png","7002_3.png","7002_4.png","7002_5.png","7002_6.png","7002_7.png","7002_8.png"],"30201":["30201_0.png","30201_1.png","30201_2.png","30201_3.png","30201_4.png","30201_5.png","30201_6.png","30201_7.png","30201_8.png","30201_9.png","30201_10.png","30201_11.png","30201_12.png","30201_13.png","30201_14.png"],"30202":["30202_0.png","30202_1.png","30202_2.png","30202_3.png","30202_4.png","30202_5.png","30202_6.png","30202_7.png"],"30203":["30203_0.png","30203_1.png","30203_2.png","30203_3.png","30203_4.png","30203_5.png","30203_6.png","30203_7.png","30203_8.png","30203_9.png","30203_10.png","30203_11.png","30203_12.png","30203_13.png"],"30206":["30206_0.png","30206_1.png","30206_2.png","30206_3.png","30206_4.png","30206_5.png","30206_6.png","30206_7.png"]}};
+var sources = ["Shibuya","Shinjuku"];
+var sourceBaseDirs = {"Shibuya":"Itadori FX Shibuya Base","Shinjuku":"Itadori FX Shinjuku Base"};
+var currentSource = sources[0];
+
+var sourceNav = document.getElementById('source-nav');
+var groupNav = document.getElementById('group-nav');
+
+function setActiveButtons(container, labelPrefix, value) {
+  var buttons = container.querySelectorAll('button');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].classList.remove('active');
+    if (buttons[i].textContent.indexOf(labelPrefix + value + ' ') === 0) {
+      buttons[i].classList.add('active');
+    }
+  }
+}
+
+function renderGroups() {
+  groupNav.innerHTML = '';
+  var groups = viewerData[currentSource] || {};
+  var ids = Object.keys(groups).sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+  for (var i = 0; i < ids.length; i++) {
+    var g = ids[i];
+    var btn = document.createElement('button');
+    btn.textContent = 'Grupo ' + g + ' (' + groups[g].length + ')';
+    btn.onclick = (function(grp) { return function() { showGroup(grp); }; })(g);
+    groupNav.appendChild(btn);
+  }
+  if (groups['30001']) {
+    showGroup('30001');
+  } else if (ids.length > 0) {
+    showGroup(ids[0]);
+  } else {
+    document.getElementById('grid').innerHTML = '';
+  }
+}
+
+for (var i = 0; i < sources.length; i++) {
+  var s = sources[i];
+  var btn = document.createElement('button');
+  btn.textContent = 'Fonte ' + s;
+  btn.onclick = (function(src) {
+    return function() {
+      currentSource = src;
+      setActiveButtons(sourceNav, 'Fonte ', src);
+      renderGroups();
+    };
+  })(s);
+  sourceNav.appendChild(btn);
+}
+
+function showGroup(groupId) {
+  setActiveButtons(groupNav, 'Grupo ', groupId);
+  var grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  var sprites = (viewerData[currentSource] || {})[groupId];
+  if (!sprites) return;
+
+  for (var i = 0; i < sprites.length; i++) {
+    var sprite = sprites[i];
+    var div = document.createElement('div');
+    div.className = 'sprite-item';
+    var img = document.createElement('img');
+    img.src = sourceBaseDirs[currentSource] + '/' + sprite;
+    img.alt = sprite;
+    img.loading = 'lazy';
+    var label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = sprite.replace('.png', '');
+    div.appendChild(img);
+    div.appendChild(label);
+    grid.appendChild(div);
+  }
+}
+
+if (sourceNav.firstChild) {
+  sourceNav.firstChild.classList.add('active');
+}
+renderGroups();
+</script>
+</body>
+</html>

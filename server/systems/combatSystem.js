@@ -17,6 +17,9 @@ class CombatSystem {
     knockbackDistanceCap = 170,
     fromX,
     fromY,
+    stunDuration = 0,
+    stunVisualDuration = 0,
+    sourceBlackFlash = false,
   }) {
     if (!target || !target.alive || amount <= 0) {
       return false;
@@ -38,7 +41,7 @@ class CombatSystem {
       target.lastDamageTaken = this.server.now;
       finalDamage = Math.max(1, finalDamage - target.armor);
       finalDamage *= target.modifiers.damageReductionMul;
-      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact") {
+      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact" && target.cast.type !== "taidoBeatdown" && target.cast.type !== "taidoBeatdownAttack") {
         target.cast = null;
       } else if (target.cast && target.cast.type === "soulImpact") {
         console.log(`[DIAG] soulImpact cast protected, damage=${finalDamage}`);
@@ -53,6 +56,18 @@ class CombatSystem {
 
     target.hp -= finalDamage;
     target.hitFlash = 0.1;
+
+    if (stunDuration > 0) {
+      if (target.kind === "enemy") {
+        target.stunTimer = Math.max(target.stunTimer || 0, stunDuration);
+      } else if (target.kind === "player") {
+        target.stunTimer = Math.max(target.stunTimer || 0, stunDuration);
+      }
+    }
+
+    if (stunVisualDuration > 0) {
+      target.stunVisualTimer = Math.max(target.stunVisualTimer || 0, stunVisualDuration);
+    }
 
     if (target.kind === "player" && this.server.domainSystem) {
       this.server.domainSystem.damageBarrier(target.id, finalDamage * 0.5);
@@ -82,6 +97,9 @@ class CombatSystem {
       targetId: target.id,
       sourceKind: source?.kind,
       sourceId: source?.id,
+      sourceCharacter: source?.character,
+      sourceCombo: source?.comboStep,
+      sourceBlackFlash,
     });
 
     if (target.hp <= 0) {

@@ -125,6 +125,9 @@ class EnemySystem {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       enemy.freezeTimer = Math.max(0, enemy.freezeTimer - dt);
       enemy.freezeFxTimer = Math.max(0, enemy.freezeFxTimer - dt);
+      enemy.stunTimer = Math.max(0, (enemy.stunTimer || 0) - dt);
+      enemy.stunFxTimer = Math.max(0, (enemy.stunFxTimer || 0) - dt);
+      enemy.stunVisualTimer = Math.max(0, (enemy.stunVisualTimer || 0) - dt);
 
       const enemyRegenConfig = {
         1:       { delay: 12000, rate: 0.03 },
@@ -150,6 +153,24 @@ class EnemySystem {
             x: enemy.x,
             y: enemy.y,
             enemyId: enemy.id,
+          });
+        }
+        return;
+      }
+
+      if (enemy.stunTimer > 0) {
+        enemy.vx = 0;
+        enemy.vy = 0;
+        enemy.windupTimer = 0;
+        enemy.state = "stunned";
+        if (enemy.stunVisualTimer > 0 && enemy.stunFxTimer <= 0) {
+          enemy.stunFxTimer = 0.12 + this.server.rng.range(0, 0.06);
+          this.server.emitEventNear(enemy.x, enemy.y, {
+            type: "stunTick",
+            x: enemy.x,
+            y: enemy.y,
+            targetKind: "enemy",
+            targetId: enemy.id,
           });
         }
         return;

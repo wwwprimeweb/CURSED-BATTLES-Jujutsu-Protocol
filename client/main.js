@@ -1,4 +1,4 @@
-﻿import { InputManager } from "./core/input.js";
+import { InputManager } from "./core/input.js";
 import { NetworkClient } from "./core/netClient.js";
 import { InterpolationBuffer } from "./core/interpolation.js";
 import { Renderer } from "./core/renderer.js";
@@ -262,16 +262,27 @@ function handleEvents(events) {
         }
         renderer.spawnDamageNumber(ev.targetId, ev.amount, category, ev.x, ev.y);
       }
-      if (ev.kind !== "divergentFist" && ev.kind !== "divergentFistDelayed") {
+      const isYujiM1Hit = ev.kind === "m1" && ev.sourceCharacter === "punho-indomavel" && !ev.sourceBlackFlash;
+      if (ev.kind !== "divergentFist" && ev.kind !== "divergentFistDelayed" && !isYujiM1Hit) {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffd7e2", count: 6, speed: 140, life: 0.15, size: 2 });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#88ccff", count: 4, speed: 80, life: 0.12, size: 3 });
       }
       if (ev.kind === "m1") {
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 260, life: 0.25, size: 3 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 14, speed: 200, life: 0.28, size: 2.5 });
-        renderer.yutaVisual && renderer.yutaVisual.triggerHit(ev.x, ev.y, 1.2);
+        if (isYujiM1Hit) {
+          const heavy = ev.sourceCombo === 3 || ev.sourceCombo === 4;
+          particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: heavy ? 8 : 6, speed: heavy ? 180 : 140, life: heavy ? 0.18 : 0.14, size: heavy ? 2.5 : 2, borderColor: "#000000", borderWidth: 3 });
+          if (heavy) renderer.triggerScreenShake(3, 0.12);
+        } else {
+          particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 260, life: 0.25, size: 3 });
+          particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 14, speed: 200, life: 0.28, size: 2.5 });
+          renderer.yutaVisual && renderer.yutaVisual.triggerHit(ev.x, ev.y, 1.2);
+        }
       }
-      audio.play("hit");
+      if (isYujiM1Hit) {
+        audio.play(ev.sourceCombo === 3 ? "yujiM1HeavyImpact" : "yujiM1Impact");
+      } else if (!(ev.kind === "m1" && ev.sourceCharacter === "punho-indomavel")) {
+        audio.play("hit");
+      }
     } else if (ev.type === "m1") {
       const dirX = ev.dirX || (renderer.playerFacing.get(ev.playerId) || 1);
       const dirY = ev.dirY || 0;
@@ -282,6 +293,11 @@ function handleEvents(events) {
         const coneAngle = Number.isFinite(ev.coneAngle) ? ev.coneAngle : 1.4;
 
         renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange, coneAngle);
+      } else if (attackerCharacter === "punho-indomavel") {
+        if (!ev.blackFlash) {
+          renderer.yujiVisual.triggerM1Fx(ev.x, ev.y, dirX, dirY, combo);
+          audio.play("yujiM1Start");
+        }
       } else if (attackerCharacter === "o-honrado") {
         renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo, ev.playerId);
       } else {
@@ -343,13 +359,17 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 120, life: 0.18, size: 1.5 });
       renderer.gojoVisual.addTeleport(ev.x, ev.y);
     } else if (ev.type === "punhoIndomavelSocoDefasado") {
+      playSoundIfNear(ev, "divergentFistHit");
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 20, speed: 260, life: 0.3, size: 3, borderColor: "#000000", borderWidth: 3 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 180, life: 0.25, size: 1.5 });
       renderer.triggerScreenShake(4, 0.15);
     } else if (ev.type === "divergentFistDelayed") {
+      playSoundIfNear(ev, "divergentFistDelayed");
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 30, speed: 320, life: 0.4, size: 4, borderColor: "#000000", borderWidth: 4 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 14, speed: 220, life: 0.3, size: 2 });
       renderer.triggerScreenShake(7, 0.3);
+    } else if (ev.type === "divergentFistStart") {
+      playSoundIfNear(ev, "divergentFistStart");
     } else if (ev.type === "flyingKneeStart") {
       particles.spawnLine({ x: ev.x, y: ev.y, dirX: ev.dirX, dirY: ev.dirY, color: "#ffaa44", count: 15, life: 0.3 });
     } else if (ev.type === "flyingKnee") {
@@ -361,30 +381,30 @@ function handleEvents(events) {
       }
     } else if (ev.type === "soulImpact") {
       if (!ev.miss) {
+        playSoundIfNear(ev, "soulImpactHit");
         renderer.triggerBlackFlash(ev.x, ev.y, ev.dirX || 0, ev.dirY || 1);
         renderer.triggerScreenShake(8, 0.35);
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff0000", count: 30, speed: 350, life: 0.5, size: 5, borderColor: "#000000", borderWidth: 4 });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff3333", count: 20, speed: 220, life: 0.35, size: 3, borderColor: "#000000", borderWidth: 3 });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 180, life: 0.25, size: 2, borderColor: "#000000", borderWidth: 2 });
       } else {
+        playSoundIfNear(ev, "soulImpactMiss");
         renderer.yujiVisual.triggerSoulImpactMiss(ev.x, ev.y, ev.dirX, ev.dirY);
       }
+    } else if (ev.type === "soulImpactStart") {
+      playSoundIfNear(ev, "soulImpactStart");
     } else if (ev.type === "taidoBeatdownHit") {
       renderer.yujiVisual.triggerTaidoBeatdownHit(ev.x, ev.y, ev.hitNum);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffaa66", count: 12, speed: 150, life: 0.15, size: 2 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 8, speed: 180, life: 0.2, size: 2.5 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 4, speed: 120, life: 0.15, size: 1.5 });
+      playSoundIfNear(ev, "taidoBeatdownHit");
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 14, speed: 170, life: 0.18, size: 2.6, borderColor: "#000000", borderWidth: 4 });
     } else if (ev.type === "taidoBeatdownFinal") {
-      renderer.yujiVisual.triggerTaidoBeatdownFinal(ev.x, ev.y, ev.hitNum, ev.blackFlash);
-      if (ev.blackFlash) {
-        renderer.triggerBlackFlash(ev.x, ev.y, ev.dirX || 0, ev.dirY || 1);
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffff00", count: 25, speed: 280, life: 0.4, size: 3.5 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#000000", count: 15, speed: 200, life: 0.35, size: 2.5 });
-      } else {
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6633", count: 20, speed: 220, life: 0.3, size: 3 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 16, speed: 260, life: 0.35, size: 3.5 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 180, life: 0.25, size: 2 });
-      }
+      renderer.yujiVisual.triggerTaidoBeatdownFinal(ev.x, ev.y, ev.hitNum, false);
+      playSoundIfNear(ev, "taidoBeatdownFinal");
+      renderer.triggerScreenShake(ev.shakeIntensity || 10, ev.shakeDuration || 0.16);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 26, speed: 280, life: 0.34, size: 3.8, borderColor: "#000000", borderWidth: 5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#40e0d0", count: 10, speed: 180, life: 0.22, size: 2.4, borderColor: "#000000", borderWidth: 4 });
+    } else if (ev.type === "taidoBeatdown") {
+      playSoundIfNear(ev, "taidoBeatdownStart");
     } else if (ev.type === "rika") {
       const dirX = Number.isFinite(ev.dirX) ? ev.dirX : (renderer.playerFacing.get(ev.playerId) || 1);
       const dirY = Number.isFinite(ev.dirY) ? ev.dirY : 0;
@@ -543,6 +563,8 @@ function handleEvents(events) {
       });
     } else if (ev.type === "freezeTick") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f8fdff", count: 8, speed: 125, life: 0.18, size: 2.1 });
+    } else if (ev.type === "stunTick") {
+      particles.spawnStars({ x: ev.x, y: ev.y, color: "#ffffff", count: 3, radius: 14, life: 0.34, size: 3.1 });
     } else if (ev.type === "punhoIndomavelDominioImpacto") {
       renderer.yujiVisual.addCutLine(ev.x, ev.y);
     } else if (ev.type === "trainHit") {

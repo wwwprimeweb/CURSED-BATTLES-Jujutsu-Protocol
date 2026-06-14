@@ -428,6 +428,8 @@ class GameServer {
       player.comboStep = 0;
       player.comboResetTimer = 0;
       player.m1Timer = 0;
+      player.m1AnimTimer = 0;
+      player.taidoBeatdownAnimState = null;
       player.dodgeCooldown = 0;
       player.respawnTimer = 0;
       Object.keys(player.cooldowns).forEach((key) => {
@@ -548,8 +550,11 @@ class GameServer {
       player.hitFlash = Math.max(0, player.hitFlash - dt);
       player.invulnTimer = Math.max(0, player.invulnTimer - dt);
       player.stunTimer = Math.max(0, player.stunTimer - dt);
+      player.stunFxTimer = Math.max(0, (player.stunFxTimer || 0) - dt);
+      player.stunVisualTimer = Math.max(0, (player.stunVisualTimer || 0) - dt);
       player.comboResetTimer = Math.max(0, player.comboResetTimer - dt);
       player.m1Timer = Math.max(0, player.m1Timer - dt);
+      player.m1AnimTimer = Math.max(0, player.m1AnimTimer - dt);
       player.animLockTimer = Math.max(0, player.animLockTimer - dt);
       player.dodgeTimer = Math.max(0, player.dodgeTimer - dt);
       if (player.rikaBuffTime > 0) {
@@ -565,6 +570,17 @@ class GameServer {
       if (!player.alive) {
         player.respawnTimer = -1;
         return;
+      }
+
+      if (player.stunVisualTimer > 0 && player.stunFxTimer <= 0) {
+        player.stunFxTimer = 0.12 + this.rng.range(0, 0.06);
+        this.emitEventNear(player.x, player.y, {
+          type: "stunTick",
+          x: player.x,
+          y: player.y,
+          targetKind: "player",
+          targetId: player.id,
+        });
       }
 
       const yujiOwnDomainRegenMul = this.isYujiInsideOwnDomain(player)
@@ -703,6 +719,7 @@ class GameServer {
 
   resolveInput(player, dt, skillLockedAtTickStart) {
     const input = player.input;
+    const isBeatdownCasting = player.cast && (player.cast.type === "taidoBeatdown" || player.cast.type === "taidoBeatdownAttack");
 
     if (player.stunTimer > 0) {
       player.vx *= 0.8;
@@ -878,16 +895,21 @@ class GameServer {
       player.cast.dirX = curAim.x;
       player.cast.dirY = curAim.y;
     }
-    const castSlow = isPureLoveCharging ? 0 : isCharging ? 0.72 : isDomainCasting ? 0 : 1;
+    const castSlow = isBeatdownCasting ? 0 : isPureLoveCharging ? 0 : isCharging ? 0.72 : isDomainCasting ? 0 : 1;
     const domainSlow = this.domainSystem.getPlayerSlowFactor(player);
     const yujiOwnDomainSpeedMul = this.isYujiInsideOwnDomain(player)
       ? YUJI_OWN_DOMAIN_SPEED_MULTIPLIER
       : 1;
     const moveSpeed = player.moveSpeed * player.modifiers.speedMul * yujiOwnDomainSpeedMul * castSlow * domainSlow;
-    player.vx = moveNorm.x * moveSpeed;
-    player.vy = moveNorm.y * moveSpeed;
+    if (isBeatdownCasting) {
+      player.vx = 0;
+      player.vy = 0;
+    } else {
+      player.vx = moveNorm.x * moveSpeed;
+      player.vy = moveNorm.y * moveSpeed;
+    }
 
-    if (!isDomainCasting) {
+    if (!isDomainCasting && !isBeatdownCasting) {
       const dodgePressed = input.dodge && !player.prevInput.dodge;
       if (dodgePressed && !skillLockedAtTickStart) {
         this.tryDodge(player, moveNorm);
@@ -1007,6 +1029,11 @@ class GameServer {
       player.statePriority = 4;
       return;
     }
+    if (player.cast && player.cast.type === "taidoBeatdown") {
+      player.animState = "skill3_prepare";
+      player.statePriority = 4;
+      return;
+    }
     if (player.cast && player.cast.type === "rika") {
       player.animState = "skill1";
       player.statePriority = 5;
@@ -1023,7 +1050,7 @@ class GameServer {
       return;
     }
     if (player.cast && player.cast.type === "taidoBeatdownAttack") {
-      player.animState = "skill3";
+      player.animState = player.taidoBeatdownAnimState || "taido_1";
       player.statePriority = 3;
       return;
     }
@@ -1060,7 +1087,7 @@ class GameServer {
     if (player.animLockTimer > 0) {
       return;
     }
-    if (player.m1Timer > 0) {
+    if (player.m1AnimTimer > 0) {
       player.animState = "m1_" + player.comboStep;
       player.statePriority = 7;
       return;
@@ -1108,19 +1135,21 @@ class GameServer {
   }
 
   tryM1(player) {
-    if (player.m1Timer > 0 || !player.alive) {
+    if (player.m1Timer > 0 || player.m1AnimTimer > 0 || !player.alive) {
       return false;
     }
     const kit = this.getKit(player);
     const isYutaSlash = player.character === "portador-do-vinculo";
+    const m1AnimDuration = kit.m1.animDuration || kit.m1.cooldown;
 
     const baseM1Damage = kit.m1.damage * player.modifiers.m1DamageMul;
-    const baseBlackFlashChance = player.character === "o-honrado" ? 0.01 : player.character === "punho-indomavel" ? 0.07 : 0.01;
+    const baseBlackFlashChance = player.character === "o-honrado" ? 0.01 : player.character === "punho-indomavel" ? 0.05 : 0.01;
     const blackFlashChance = this.isYujiInsideOwnDomain(player)
       ? Math.min(1, baseBlackFlashChance + YUJI_OWN_DOMAIN_BLACK_FLASH_BONUS)
       : baseBlackFlashChance;
 
     player.m1Timer = kit.m1.cooldown;
+    player.m1AnimTimer = m1AnimDuration;
     player.comboStep = (player.comboStep % 4) + 1;
     player.comboResetTimer = 0.9;
     player.lastAttackAt = this.now;
@@ -1155,6 +1184,19 @@ class GameServer {
         return facing > coneCos;
       }
 
+      if (player.character === "punho-indomavel") {
+        const dx = target.x - player.x;
+        const dy = target.y - player.y;
+        const isHeavy = player.comboStep >= 3;
+        const rectLength = isHeavy ? 112 : 96;
+        const rectWidth = isHeavy ? 75 : 65;
+        const forwardDist = dx * m1DirX + dy * m1DirY;
+        const sideDist = dx * (-m1DirY) + dy * m1DirX;
+        return forwardDist >= -target.radius
+          && forwardDist <= rectLength + target.radius
+          && Math.abs(sideDist) <= (rectWidth / 2) + target.radius;
+      }
+
       const toTarget = normalize(target.x - player.x, target.y - player.y);
       const inRange = distance(player.x, player.y, target.x, target.y) <= slashRange + target.radius;
       const facing = dot(m1DirX, m1DirY, toTarget.x, toTarget.y) > coneThreshold;
@@ -1186,7 +1228,7 @@ class GameServer {
 
     const hitEnemy = enemyTargets.length > 0;
     const isBlackFlash = hitEnemy && Math.random() < blackFlashChance;
-    const m1Damage = baseM1Damage * (isBlackFlash ? 10 : 1);
+    const m1Damage = baseM1Damage * (isBlackFlash ? 8 : 1);
 
     playerTargets.forEach((target) => {
       const knockbackVal = isBlackFlash ? 1200 : (player.comboStep === 3 ? (isYutaSlash ? 210 : 180) : (isYutaSlash ? 120 : 85));
@@ -1200,6 +1242,9 @@ class GameServer {
         knockbackDistanceCap: knockbackCap,
         fromX: player.x,
         fromY: player.y,
+        stunDuration: isBlackFlash ? 1.5 : 0,
+        stunVisualDuration: isBlackFlash ? 1.5 : 0,
+        sourceBlackFlash: isBlackFlash,
       });
     });
 
@@ -1215,6 +1260,9 @@ class GameServer {
         knockbackDistanceCap: knockbackCap,
         fromX: player.x,
         fromY: player.y,
+        stunDuration: isBlackFlash ? 1.5 : 0,
+        stunVisualDuration: isBlackFlash ? 1.5 : 0,
+        sourceBlackFlash: isBlackFlash,
       });
     });
 
@@ -1458,6 +1506,14 @@ class GameServer {
       dirX: aim.x,
       dirY: aim.y,
     };
+    this.emitEventNear(player.x, player.y, {
+      type: "divergentFistStart",
+      x: player.x,
+      y: player.y,
+      playerId: player.id,
+      dirX: aim.x,
+      dirY: aim.y,
+    });
     return true;
   }
 
@@ -3303,6 +3359,8 @@ class GameServer {
           && player.domainExhaustionTimer <= 0
           && (this.now - (player.lastAttackAt || 0)) > 5000,
         invuln: player.invulnTimer > 0,
+        stunned: player.stunTimer > 0,
+        stunVisual: (player.stunVisualTimer || 0) > 0,
         frozen: player.domainFrozen || false,
         rikaActive: this.rikas.has(player.id),
         rikaX: (() => { const r = this.rikas.get(player.id); return r ? Math.round(r.x * 10) / 10 : undefined; })(),
@@ -3341,6 +3399,9 @@ class GameServer {
         attackWindup: enemy.attackWindup,
         frozen: enemy.freezeTimer > 0,
         freezeLeft: Math.round(enemy.freezeTimer * 100) / 100,
+        stunned: (enemy.stunTimer || 0) > 0,
+        stunLeft: Math.round((enemy.stunTimer || 0) * 100) / 100,
+        stunVisual: (enemy.stunVisualTimer || 0) > 0,
       });
     });
 
@@ -3700,6 +3761,14 @@ class GameServer {
       return false;
     }
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    this.emitEventNear(player.x, player.y, {
+      type: "soulImpactStart",
+      x: player.x,
+      y: player.y,
+      playerId: player.id,
+      dirX: aim.x,
+      dirY: aim.y,
+    });
     player.cast = {
       type: "soulImpact",
       timer: kit.soulImpact.startup,
@@ -3711,7 +3780,7 @@ class GameServer {
 
   fireSoulImpact(player, cast) {
     const kit = this.getKit(player);
-    const { damage, range, knockback, debuffDuration, debuffPenalty } = kit.soulImpact;
+    const { damage, range, knockback, debuffDuration, debuffPenalty, stunDuration } = kit.soulImpact;
     const dirX = cast.dirX;
     const dirY = cast.dirY;
 
@@ -3756,6 +3825,8 @@ class GameServer {
         knockback,
         fromX: player.x,
         fromY: player.y,
+        stunDuration: stunDuration || 0,
+        stunVisualDuration: stunDuration || 0,
       });
       if (target.kind === "player") {
         target.almaAbaladaTimer = Math.max(target.almaAbaladaTimer || 0, debuffDuration);
@@ -3790,7 +3861,7 @@ class GameServer {
     if (!hasTarget) {
       this.emitEventToPlayer(player.id, {
         type: "skillNoTarget",
-        skill: "Taido Beatdown",
+        skill: "Sequência Brutal",
       });
       return false;
     }
@@ -3810,9 +3881,10 @@ class GameServer {
 
   fireTaidoBeatdown(player, cast) {
     const kit = this.getKit(player);
-    const { hits, damagePerHit, finalDamage, finalKnockback, range, blackFlashMult, hitDelay } = kit.taidoBeatdown;
+    const { hits, damagePerHit, finalDamage, finalKnockback, range, stunDuration, finalStunDuration, hitDelay } = kit.taidoBeatdown;
     const dirX = cast.dirX;
     const dirY = cast.dirY;
+    const taidoStates = ["taido_1", "taido_2", "taido_3", "taido_4", "taido_1"];
 
     const canHit = (target) => {
       if (!target.alive) return false;
@@ -3825,13 +3897,16 @@ class GameServer {
     this.players.forEach((target) => { if (canHit(target)) hitTargets.push(target); });
     this.enemies.forEach((target) => { if (canHit(target)) hitTargets.push(target); });
 
+    player.taidoBeatdownAnimState = "skill3_prepare";
+
     for (let i = 0; i < hits; i += 1) {
       this.queueDelayedAction(i * hitDelay, () => {
-        const m1States = ["m1_1", "m1_2", "m1_3", "m1_4"];
-        player.animState = m1States[i % 4];
+        const state = taidoStates[i % taidoStates.length];
+        player.taidoBeatdownAnimState = state;
+        player.animState = state;
         player.animLockTimer = hitDelay + 0.05;
         hitTargets.forEach((target) => {
-          if (!target.alive) return;
+          if (!target.alive || !canHit(target)) return;
           this.combat.applyDamage({
             target,
             source: player,
@@ -3840,6 +3915,7 @@ class GameServer {
             knockback: 30,
             fromX: player.x,
             fromY: player.y,
+            stunDuration: stunDuration,
           });
           this.emitEventNear(target.x, target.y, {
             type: "taidoBeatdownHit",
@@ -3853,10 +3929,11 @@ class GameServer {
     }
 
     this.queueDelayedAction(hits * hitDelay, () => {
-      player.animState = "m1_4";
+      player.taidoBeatdownAnimState = "taido_4";
+      player.animState = "taido_4";
       player.animLockTimer = hitDelay + 0.15;
       hitTargets.forEach((target) => {
-        if (!target.alive) return;
+        if (!target.alive || !canHit(target)) return;
         this.combat.applyDamage({
           target,
           source: player,
@@ -3865,16 +3942,18 @@ class GameServer {
           knockback: finalKnockback,
           fromX: player.x,
           fromY: player.y,
+          stunDuration: finalStunDuration || stunDuration,
         });
         this.emitEventNear(target.x, target.y, {
-          type: "taidoBeatdownHit",
+          type: "taidoBeatdownFinal",
           x: target.x,
           y: target.y,
           playerId: player.id,
           hitNum: hits,
-          final: true,
           dirX,
           dirY,
+          shakeIntensity: 10,
+          shakeDuration: 0.16,
         });
       });
     });

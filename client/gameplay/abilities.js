@@ -20,7 +20,7 @@ export const PUNHO_INDOMAVEL_SKILLS = {
   m1: "Golpe Impactante",
   q: "Soco Defasado",
   e: "Pancada Espiritual",
-  r: "Séquência Brutal",
+  r: "Sequência Brutal",
   space: "Joelhada Voadora",
   f: "Manifestação Interior",
 };

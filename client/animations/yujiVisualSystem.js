@@ -1,4 +1,4 @@
-﻿import { SpriteAnimator } from "./spriteAnimator.js";
+import { SpriteAnimator } from "./spriteAnimator.js";
 import { YUJI_ANIMATIONS, YUJI_SPRITE_CONFIG, YUJI_SHEET_PATH } from "./yujiSprites.js";
 import { drawHitReaction, drawDodgeEffect, drawDeathPose } from "./gojoEffects.js";
 
@@ -11,6 +11,9 @@ const DOMAIN_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/domain_sheet
 const DOMAIN_FRAME_W = 110;
 const DOMAIN_FRAME_H = 125;
 const DOMAIN_FRAMES = 12;
+
+const M1_30007_FRAME_COUNT = 7;
+const M1_30007_PATH = "/assets/sprites/punho-indomavel_shinjuku/m1_30007/";
 
 
 
@@ -32,11 +35,19 @@ export class YujiVisualSystem {
     this.domainSheet = new Image();
     this.domainSheet.src = DOMAIN_SHEET_PATH;
 
+    this.m1FxFrames = [];
+    for (let i = 0; i < M1_30007_FRAME_COUNT; i++) {
+      const img = new Image();
+      img.src = `${M1_30007_PATH}30007_${i}.png`;
+      this.m1FxFrames.push(img);
+    }
+
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
     this.time = 0;
     this.qStartTimes = new Map();
 
+    this.m1Fx = [];
     this.flyingKneeEffects = [];
     this.soulImpactMissEffects = [];
     this.taidoBeatdownEffects = [];
@@ -77,6 +88,11 @@ export class YujiVisualSystem {
       if (this.flyingKneeEffects[i].life <= 0) this.flyingKneeEffects.splice(i, 1);
     }
 
+    for (let i = this.m1Fx.length - 1; i >= 0; i -= 1) {
+      this.m1Fx[i].life -= dt;
+      if (this.m1Fx[i].life <= 0) this.m1Fx.splice(i, 1);
+    }
+
     for (let i = this.soulImpactMissEffects.length - 1; i >= 0; i -= 1) {
       this.soulImpactMissEffects[i].life -= dt;
       if (this.soulImpactMissEffects[i].life <= 0) this.soulImpactMissEffects.splice(i, 1);
@@ -104,6 +120,18 @@ export class YujiVisualSystem {
       dirX, dirY,
       hit,
       life: 0.48,
+    });
+  }
+
+  triggerM1Fx(x, y, dirX, dirY, comboStep) {
+    this.m1Fx.push({
+      x,
+      y,
+      dirX,
+      dirY,
+      comboStep,
+      life: comboStep >= 3 ? 0.20 : 0.15,
+      maxLife: comboStep >= 3 ? 0.20 : 0.15,
     });
   }
 
@@ -301,6 +329,54 @@ export class YujiVisualSystem {
       ctx.stroke();
       ctx.restore();
 
+    });
+
+    this.m1Fx.forEach((e) => {
+      const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
+      const screenY = (e.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+      const progress = 1 - e.life / e.maxLife;
+      const rawFadeIn = Math.min(1, progress * 4);
+      const fadeIn = rawFadeIn * rawFadeIn * (3 - 2 * rawFadeIn);
+      const rawFadeOut = Math.max(0, 1 - progress * 1.4);
+      const fadeOut = rawFadeOut * rawFadeOut * (3 - 2 * rawFadeOut);
+      const alpha = fadeIn * fadeOut;
+      if (alpha <= 0.01) return;
+
+      const dirLen = Math.hypot(e.dirX, e.dirY) || 1;
+      const nx = e.dirX / dirLen;
+      const ny = e.dirY / dirLen;
+      const sideX = -ny;
+      const sideY = nx;
+
+      const combo = e.comboStep || 1;
+      const isHeavy = combo === 3 || combo === 4;
+
+      const travel = Math.min(1, progress * 2.8);
+      const startDist = 24;
+      const endDist = isHeavy ? 82 : 72;
+      const spriteDist = (startDist + (endDist - startDist) * travel) * zoom;
+      const sideShift = ((combo % 2 === 0) ? -1 : 1) * (isHeavy ? 3 : 2) * zoom;
+      const slashX = screenX + nx * spriteDist + sideX * sideShift;
+      const slashY = screenY - 45 * zoom + ny * spriteDist + sideY * sideShift;
+
+      const frameIdx = Math.min(M1_30007_FRAME_COUNT - 1, Math.floor(progress * M1_30007_FRAME_COUNT));
+      const sprite = this.m1FxFrames[frameIdx];
+      if (!sprite || !sprite.complete || sprite.naturalWidth <= 0) return;
+
+      ctx.save();
+      let visualAngle = Math.atan2(ny, nx);
+      ctx.translate(slashX, slashY);
+      ctx.rotate(visualAngle + Math.PI / 2);
+
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = alpha;
+      const scale = isHeavy ? 0.30 : 0.24;
+      const stretch = isHeavy ? 1.08 : 1;
+      const targetW = sprite.naturalWidth * zoom * scale * stretch;
+      const targetH = sprite.naturalHeight * zoom * scale;
+      ctx.drawImage(sprite, -targetW * 0.5, -targetH * 0.5, targetW, targetH);
+
+      ctx.restore();
     });
 
     this.soulImpactMissEffects.forEach((e) => {

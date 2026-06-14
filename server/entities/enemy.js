@@ -63,6 +63,9 @@ function createEnemy(id, type, x, y, scale = 1) {
     counterWindow: 0,
     freezeTimer: 0,
     freezeFxTimer: 0,
+    stunTimer: 0,
+    stunFxTimer: 0,
+    stunVisualTimer: 0,
     slowedByDomain: false,
   };
 }
