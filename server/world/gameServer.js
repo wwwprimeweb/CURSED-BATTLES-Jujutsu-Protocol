@@ -3376,6 +3376,8 @@ class GameServer {
         pureLoveBeamLength: (() => { const b = this.pureLoveBeams.get(player.id); return b ? b.beamLength : undefined; })(),
         pureLoveLifetime: (() => { const b = this.pureLoveBeams.get(player.id); return b ? Math.round(b.lifetime * 10) / 10 : undefined; })(),
         pureLoveTotalLifetime: (() => { const b = this.pureLoveBeams.get(player.id); return b ? b.totalLifetime : undefined; })(),
+        aimX: Math.round(player.aimX),
+        aimY: Math.round(player.aimY),
       });
     });
 

@@ -1950,7 +1950,14 @@ export class Renderer {
 
       let facing = this.playerFacing.get(p.id) || 1;
       const pvx = p.vx || 0;
-      if (Math.abs(pvx) > 1) {
+      const isM1 = p.animState && p.animState.startsWith("m1_");
+      if (isM1 && Number.isFinite(p.aimX) && Number.isFinite(p.aimY)) {
+        const aimDx = p.aimX - rx;
+        if (Math.abs(aimDx) > 1) {
+          facing = aimDx < 0 ? -1 : 1;
+          this.playerFacing.set(p.id, facing);
+        }
+      } else if (Math.abs(pvx) > 1) {
         facing = pvx < 0 ? -1 : 1;
         this.playerFacing.set(p.id, facing);
       }
