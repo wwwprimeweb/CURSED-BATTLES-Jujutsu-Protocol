@@ -7,9 +7,13 @@ function register() {
     type: "crawler_nest",
     grade: 1,
     tags: ["melee", "nest", "spawner"],
-    stats: { hp: 400, speed: 75, radius: 32, attackDamage: 50, attackRange: 250, attackCooldown: 3.0, attackStartup: 0.7, xp: 120 },
+    stats: { hp: 400, speed: 75, radius: 101, attackDamage: 50, attackRange: 250, attackCooldown: 3.0, attackStartup: 0.7, xp: 120 },
     behaviors: { barrierDamage: 1.0 },
     onDeath: function (target, server, source) {
+      if (target.dying) {
+        target.hp = 0;
+        return true;
+      }
       target.dying = true;
       target.deathTimer = 1.5;
       target.protectionReduction = 0;
