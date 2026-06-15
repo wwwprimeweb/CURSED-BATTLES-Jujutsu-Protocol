@@ -1,4 +1,4 @@
-﻿import { loadImage } from "./imageLoader.js";
+import { loadImage } from "./imageLoader.js";
 
 const CHAR_COLORS = {
   "o-honrado": [0, 229, 255],
@@ -48,6 +48,8 @@ export class DomainVisualSystem {
     this.shattering = [];
     this.rotationTime = 0;
     this.loaded = false;
+    // Sync anchor for smooth train animation between server snapshots
+    this.trainSyncData = new Map(); // ownerId -> { refTime, refTimer, initialDelay }
     this.loadImages();
   }
 
@@ -307,7 +309,7 @@ export class DomainVisualSystem {
     ctx.drawImage(img, cx - dw / 2 + offsetX, cy - dh / 2 + offsetY, dw, dh);
   }
 
-  renderParallax(ctx, camera, ownerId, char, worldX, worldY, p, vz, zoom, expandProgress, isMine, now) {
+  renderParallax(ctx, camera, ownerId, char, worldX, worldY, p, vz, zoom, expandProgress, isMine, now, domainRaw) {
     ctx.save();
     try {
       ctx.beginPath();
@@ -363,6 +365,11 @@ export class DomainVisualSystem {
           effectiveOffset = { x: 0.3, y: -0.3 };
         }
 
+        if (char === 'punho-indomavel' && key === 'far') {
+          effectiveParallax = 0;
+          effectiveScale = 1.0;
+          effectiveOffset = { x: 0, y: 0.5 };
+        }
         if (char === 'punho-indomavel' && key === 'mid') continue;
 
         const dx = (worldX - camX) * effectiveParallax * zoom;
@@ -458,31 +465,47 @@ export class DomainVisualSystem {
         }
 
         // Train (yuji2.png animado nos trilhos)
+        // Sync to server timer for hitbox accuracy, extrapolate locally for smooth 60fps animation
         const trainEntry = this.expanding.get(ownerId);
         if (trainEntry) {
-          const elapsed = (performance.now() - trainEntry.startTime) / 1000;
-          if (elapsed >= 6) {
-            const adjustedElapsed = elapsed - 6;
-            const progress = adjustedElapsed % 10;
-            if (progress <= 2) {
-              const t = progress / 2;
-              const tNormX = 65 / (380 * 1.2);
-              const tNormY = (-1400 + t * 2800) / (380 * 1.2);
-              const parallaxDepth = 0.25;
-              const dx = (worldX - camX) * parallaxDepth * zoom;
-              const dy = (worldY - camY) * parallaxDepth * zoom;
-              const trainX = p.x + tNormX * vz + dx;
-              const trainY = p.y + tNormY * vz + dy + vz * 0.3;
-
-              const trainImg = this.getLayerImage('punho-indomavel', '2');
-              if (trainImg && trainImg.width) {
-                ctx.save();
-                ctx.translate(trainX, trainY);
-                ctx.shadowColor = 'rgba(255, 107, 157, 0.4)';
-                ctx.shadowBlur = 12;
-                this.drawScaledImage(ctx, trainImg, 0, 0, vz, 0, 0, 1.2);
-                ctx.restore();
+          let progress = null;
+          if (domainRaw && typeof domainRaw.trainTimer === 'number' && typeof domainRaw.trainInitialDelay === 'number') {
+            if (domainRaw.trainInitialDelay <= 0) {
+              // Update sync anchor whenever server provides a new timer value
+              const syncKey = ownerId + '_train';
+              let sync = this.trainSyncData.get(syncKey);
+              if (!sync || Math.abs(sync.lastServerTimer - domainRaw.trainTimer) > 0.001) {
+                sync = { refTime: performance.now(), refTimer: domainRaw.trainTimer, lastServerTimer: domainRaw.trainTimer };
+                this.trainSyncData.set(syncKey, sync);
               }
+              // Extrapolate forward from anchor for smooth 60fps rendering
+              const elapsed = (performance.now() - sync.refTime) / 1000;
+              progress = (sync.refTimer + elapsed) % 10;
+              if (progress > 2) progress = null; // only show during active pass
+            }
+          } else {
+            // Fallback: pure local time (before first snapshot with trainTimer)
+            const elapsed = (performance.now() - trainEntry.startTime) / 1000;
+            if (elapsed >= 6) {
+              const p2 = (elapsed - 6) % 10;
+              if (p2 <= 2) progress = p2;
+            }
+          }
+          if (progress !== null) {
+            const t = progress / 2;
+            const tNormX = 150 / (380 * 1.2);
+            const tNormY = (-1400 + t * 2800) / (380 * 1.2);
+            const trainX = p.x + tNormX * vz;
+            const trainY = p.y + tNormY * vz + vz * 0.3;
+
+            const trainImg = this.getLayerImage('punho-indomavel', '2');
+            if (trainImg && trainImg.width) {
+              ctx.save();
+              ctx.translate(trainX, trainY);
+              ctx.shadowColor = 'rgba(255, 107, 157, 0.4)';
+              ctx.shadowBlur = 12;
+              this.drawScaledImage(ctx, trainImg, 0, 0, vz, 0, 0, 1.2);
+              ctx.restore();
             }
           }
         }

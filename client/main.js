@@ -94,9 +94,11 @@ const audio = new AudioSystem();
 audio.loadSound(AUDIO_PATHS.domainStart, "domainStart");
 audio.preloadMusic(AUDIO_PATHS.menuMusic);
 audio.unlock();
-async function resumeOnInteraction() {
+async function resumeOnInteraction(event) {
   await audio.resume();
-  audio.playMusic();
+  if (!audio._gameActive) {
+    audio.playMusic();
+  }
   document.removeEventListener("click", resumeOnInteraction);
   document.removeEventListener("keydown", resumeOnInteraction);
 }
@@ -309,10 +311,13 @@ function handleEvents(events) {
         renderer.gojoVisual.triggerM1(ev.x, ev.y, dirX, dirY, combo, ev.playerId);
       }
       if (ev.blackFlash) {
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffff00", count: 20, speed: 250, life: 0.35, size: 3.5 });
-        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#000000", count: 12, speed: 180, life: 0.3, size: 2.5 });
-        particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#ffdd00", count: 8, life: 0.3, size: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 25, speed: 350, life: 0.4, size: 4 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffff00", count: 30, speed: 280, life: 0.4, size: 3.5 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff2200", count: 15, speed: 220, life: 0.35, size: 3 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#000000", count: 20, speed: 200, life: 0.35, size: 3, borderColor: "#ff0000", borderWidth: 2 });
+        particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#ffdd00", count: 12, life: 0.35, size: 3.5 });
         renderer.triggerBlackFlash(ev.x, ev.y, dirX, dirY);
+        renderer.triggerScreenShake(6, 0.2);
         audio.play("skillRed");
       }
     } else if (ev.type === "kill" || ev.type === "enemyDeath") {

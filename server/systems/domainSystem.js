@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const { O_HONRADO } = require("../gameplay/oHonradoKit");
 const { CHARACTER_REGISTRY } = require("../gameplay/characterRegistry");
@@ -314,12 +314,12 @@ class DomainSystem {
       const t = progress / 2;
       const baseNorm = 380 * 1.2;
       const scale = domain.radius / baseNorm;
-      const tRelX = 65 * scale;
+      const tRelX = 150 * scale;
       const tRelY = (-1400 + t * 2800) * scale;
       const trainWorldX = domain.x + tRelX;
       const trainWorldY = domain.y + tRelY + domain.radius * 0.3;
-      const trainHitboxX = trainWorldX + 200 * scale;
-      const halfW = domain.radius * 0.16;
+      const trainHitboxX = trainWorldX + 0.5 * domain.radius;
+      const halfW = domain.radius * 0.148;
       const halfH = domain.radius * 1.8;
       const owner = this.server.players.get(domain.ownerId);
 
@@ -336,7 +336,7 @@ class DomainSystem {
           this.server.combat.applyDamage({
             target: player,
             source: owner,
-            amount: 30,
+            amount: 100,
             kind: "domainFreeze",
             fromX: trainHitboxX,
             fromY: trainWorldY,
@@ -363,7 +363,7 @@ class DomainSystem {
           this.server.combat.applyDamage({
             target: enemy,
             source: owner,
-            amount: 30,
+            amount: 100,
             kind: "domainFreeze",
             fromX: trainHitboxX,
             fromY: trainWorldY,
@@ -492,6 +492,8 @@ class DomainSystem {
       conflict: domain.conflict,
       barrierHp: Math.round(domain.barrierHp),
       barrierMaxHp: domain.barrierMaxHp,
+      trainTimer: Number(domain.trainTimer.toFixed(3)),
+      trainInitialDelay: Number(domain.trainInitialDelay.toFixed(3)),
     }));
   }
 }

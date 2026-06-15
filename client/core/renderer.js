@@ -230,7 +230,7 @@ export class Renderer {
 
   triggerBlackFlash(x, y, dirX = 0, dirY = -1) {
     const seed = Math.random() * 10000;
-    const bolts = this._generateBolts(x, y, 8, seed, dirX, dirY);
+    const bolts = this._generateBolts(x, y, 5, seed, dirX, dirY);
     this.blackFlashes.push({ x, y, dirX, dirY, startTime: performance.now(), bolts, seed });
   }
 
@@ -242,15 +242,15 @@ export class Renderer {
     const baseAngle = Math.atan2(dirY, dirX);
     const bolts = [];
     for (let i = 0; i < count; i++) {
-      const angle = baseAngle + (rng() - 0.5) * 2.4;
-      const len = 120 + rng() * 300;
+      const angle = baseAngle + (rng() - 0.5) * 2.0;
+      const len = 200 + rng() * 350;
       const points = [{ x: 0, y: 0 }];
       let cx = 0, cy = 0;
       const segments = 5 + Math.floor(rng() * 5);
       const segLen = len / segments;
       let curAngle = angle;
       for (let s = 0; s < segments; s++) {
-        curAngle += (rng() - 0.5) * 0.8;
+        curAngle += (rng() - 0.5) * 1.2;
         cx += Math.cos(curAngle) * segLen;
         cy += Math.sin(curAngle) * segLen;
         points.push({ x: cx, y: cy });
@@ -258,13 +258,13 @@ export class Renderer {
       // Branches
       const branches = [];
       for (let b = 0; b < 2 + Math.floor(rng() * 3); b++) {
-        const atSeg = Math.floor(rng() * (segments - 1));
+        const atSeg = Math.floor(rng() * (segments - 2)) + 1;
         const bp = points[atSeg];
-        const bAngle = curAngle + (rng() - 0.5) * 1.5;
-        const bLen = 50 + rng() * 120;
+        const bAngle = curAngle + (rng() - 0.5) * 1.8;
+        const bLen = 80 + rng() * 140;
         const bPoints = [{ x: bp.x, y: bp.y }];
         let bcx = bp.x, bcy = bp.y;
-        const bSegs = 3 + Math.floor(rng() * 3);
+        const bSegs = 3 + Math.floor(rng() * 4);
         const bSegLen = bLen / bSegs;
         let ba = bAngle;
         for (let s = 0; s < bSegs; s++) {
@@ -275,7 +275,7 @@ export class Renderer {
         }
         branches.push(bPoints);
       }
-      bolts.push({ points, branches, phase: rng() * 0.3 });
+      bolts.push({ points, branches, phase: rng() * 0.25 });
     }
     return bolts;
   }
@@ -899,48 +899,119 @@ export class Renderer {
       ctx.save();
       ctx.globalAlpha = alpha;
 
-      // Red shockwave ring (0-30% of animation)
-      if (t < 0.3) {
-        const swT = t / 0.3;
-        const radius = 20 + swT * 100;
-        const swAlpha = (1 - swT) * 0.8;
+      // Red shockwave rings (0-35% of animation)
+      if (t < 0.35) {
+        const swT = t / 0.35;
+        const radius = 20 + swT * 140;
+        const swAlpha = (1 - swT) * 0.9;
 
         // Offset shockwave in attack direction
         const dirLen = Math.sqrt(bf.dirX * bf.dirX + bf.dirY * bf.dirY) || 1;
         const nx = bf.dirX / dirLen;
         const ny = bf.dirY / dirLen;
-        const offset = 15 * swT;
+        const offset = 20 * swT;
         const sx = p.x + nx * offset * z;
         const sy = p.y + ny * offset * z;
 
-        // Outer ring with red glow
+        // Outer ring with strong red glow
         ctx.shadowColor = "#ff0000";
-        ctx.shadowBlur = 35 * z;
-        ctx.strokeStyle = `rgba(255,0,0,${swAlpha * 0.7})`;
-        ctx.lineWidth = 4 * z;
+        ctx.shadowBlur = 50 * z;
+        ctx.strokeStyle = `rgba(255,0,0,${swAlpha * 0.8})`;
+        ctx.lineWidth = 6 * z;
         ctx.beginPath();
         ctx.arc(sx, sy, radius * z, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Inner ring (brighter)
-        ctx.shadowBlur = 20 * z;
-        ctx.strokeStyle = `rgba(255,80,20,${swAlpha * 0.5})`;
-        ctx.lineWidth = 2 * z;
+        // Middle ring (orange-red)
+        ctx.shadowBlur = 30 * z;
+        ctx.strokeStyle = `rgba(255,60,20,${swAlpha * 0.6})`;
+        ctx.lineWidth = 3 * z;
         ctx.beginPath();
-        ctx.arc(sx, sy, (radius * 0.7) * z, 0, Math.PI * 2);
+        ctx.arc(sx, sy, (radius * 0.75) * z, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Core flash
-        ctx.shadowColor = "#ff2200";
-        ctx.shadowBlur = 50 * z;
-        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, (25 + swT * 15) * z);
-        coreGrad.addColorStop(0, `rgba(255,255,255,${(1 - swT) * 0.9})`);
-        coreGrad.addColorStop(0.4, `rgba(255,50,0,${(1 - swT) * 0.5})`);
+        // Inner ring (bright yellow-white)
+        ctx.shadowBlur = 20 * z;
+        ctx.strokeStyle = `rgba(255,200,50,${swAlpha * 0.4})`;
+        ctx.lineWidth = 2 * z;
+        ctx.beginPath();
+        ctx.arc(sx, sy, (radius * 0.5) * z, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Light aura around impact point (0-55% of animation)
+      if (t < 0.55) {
+        const auraT = t / 0.55;
+        const auraRadius = (40 + auraT * 120) * z;
+        const auraAlpha = (1 - auraT) * 0.3;
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, auraRadius);
+        grad.addColorStop(0, `rgba(255,200,100,${auraAlpha * 0.5})`);
+        grad.addColorStop(0.3, `rgba(255,50,0,${auraAlpha * 0.25})`);
+        grad.addColorStop(0.6, `rgba(200,0,0,${auraAlpha * 0.1})`);
+        grad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, auraRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Light rays emitting from center
+        ctx.save();
+        ctx.globalAlpha = auraAlpha * 0.2;
+        const rayCount = 12;
+        for (let r = 0; r < rayCount; r++) {
+          const rayAngle = (r / rayCount) * Math.PI * 2 + auraT * 2;
+          const rayLen = (20 + auraT * 60) * z;
+          ctx.strokeStyle = `rgba(255,200,50,0.6)`;
+          ctx.lineWidth = (3 - auraT * 1.5) * z;
+          ctx.shadowColor = "#ff4400";
+          ctx.shadowBlur = 30 * z;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + Math.cos(rayAngle) * rayLen, p.y + Math.sin(rayAngle) * rayLen);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Core bright flash (0-25% of animation)
+      if (t < 0.25) {
+        const coreT = t / 0.25;
+        const coreRadius = (15 + coreT * 30) * z;
+        ctx.shadowColor = "#ff4400";
+        ctx.shadowBlur = 60 * z;
+        const coreGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreRadius);
+        coreGrad.addColorStop(0, `rgba(255,255,255,${(1 - coreT) * 0.95})`);
+        coreGrad.addColorStop(0.3, `rgba(255,200,50,${(1 - coreT) * 0.7})`);
+        coreGrad.addColorStop(0.6, `rgba(255,50,0,${(1 - coreT) * 0.4})`);
         coreGrad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.arc(sx, sy, (25 + swT * 15) * z, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, coreRadius, 0, Math.PI * 2);
         ctx.fill();
+      }
+
+      // Spark particles drawn directly (0-60% of animation)
+      if (t < 0.6) {
+        const sparkT = t / 0.6;
+        const sparkSeed = bf.seed;
+        const sparkRng = () => {
+          let s = (sparkSeed * 9301 + 49297) % 233280 + i * 1000;
+          s = (s * 9301 + 49297) % 233280;
+          return s / 233280;
+        };
+        ctx.shadowBlur = 0;
+        for (let s = 0; s < 8; s++) {
+          const angle = sparkRng() * Math.PI * 2;
+          const dist = sparkRng() * 80 * sparkT * z;
+          const size = (3 - sparkT * 1.5) * z;
+          const sparkAlpha = (1 - sparkT) * 0.7;
+          const colors = ["#ffffff", "#ff4400", "#ffcc00", "#ff0000"];
+          ctx.fillStyle = colors[Math.floor(sparkRng() * colors.length)];
+          ctx.globalAlpha = sparkAlpha * alpha;
+          ctx.beginPath();
+          ctx.arc(p.x + Math.cos(angle) * dist, p.y + Math.sin(angle) * dist, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // Lightning bolts (0-80% of animation)
@@ -962,10 +1033,10 @@ export class Renderer {
           }, 0);
           const drawLen = totalLen * localT;
 
-          // Pass 1: red glow / border
+          // Pass 1: red glow border (mÃ©dia espessura)
           ctx.shadowColor = "#ff0000";
-          ctx.shadowBlur = 22 * z;
-          ctx.strokeStyle = "rgba(255,0,0,0.7)";
+          ctx.shadowBlur = 50 * z;
+          ctx.strokeStyle = "rgba(255,20,0,0.8)";
           ctx.lineWidth = wGlow * z;
           ctx.beginPath();
           ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
@@ -983,9 +1054,9 @@ export class Renderer {
           }
           ctx.stroke();
 
-          // Pass 2: black core
+          // Pass 2: black core (bem grosso)
           ctx.shadowBlur = 0;
-          ctx.strokeStyle = "rgba(0,0,0,0.6)";
+          ctx.strokeStyle = "rgba(0,0,0,0.9)";
           ctx.lineWidth = wBlack * z;
           ctx.beginPath();
           ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
@@ -1004,10 +1075,10 @@ export class Renderer {
           ctx.stroke();
         };
 
-        // Main bolt: glow thickness 4 â†’ 2, black core 1.5 â†’ 1
-        drawBolt(bolt.points, 4 - localT * 2, 1.5 - localT * 0.5);
+        // Main bolt: red border (grossa) 14->7, black core (fino) 8->4
+        drawBolt(bolt.points, 14 - localT * 7, 8 - localT * 4);
 
-        // Branches: thinner
+        // Branches: 2-pass (red border mÃ©dia + black core grosso)
         for (let br = 0; br < bolt.branches.length; br++) {
           const branchT = Math.max(0, Math.min(1, (t - delay * 0.3 - 0.05) * 3.5));
           if (branchT <= 0) continue;
@@ -1020,10 +1091,11 @@ export class Renderer {
             }, 0);
             const drawLen = totalLen * branchT;
 
+            // Branch glow vermelho (grosso, por fora)
             ctx.shadowColor = "#ff0000";
-            ctx.shadowBlur = 14 * z;
-            ctx.strokeStyle = "rgba(255,0,0,0.5)";
-            ctx.lineWidth = 2.5 * z;
+            ctx.shadowBlur = 35 * z;
+            ctx.strokeStyle = "rgba(255,20,0,0.6)";
+            ctx.lineWidth = 8 * z;
             ctx.beginPath();
             ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
             let acc = 0;
@@ -1040,9 +1112,10 @@ export class Renderer {
             }
             ctx.stroke();
 
+            // Branch black core (fino, por dentro)
             ctx.shadowBlur = 0;
-            ctx.strokeStyle = "rgba(0,0,0,0.6)";
-            ctx.lineWidth = 1 * z;
+            ctx.strokeStyle = "rgba(0,0,0,0.9)";
+            ctx.lineWidth = 4.5 * z;
             ctx.beginPath();
             ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
             acc = 0;
@@ -1178,7 +1251,7 @@ export class Renderer {
         char = "o-honrado";
       }
       try {
-        this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, entry.x, entry.y, p, vz, z, expandProgress, isMine, now);
+        this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, entry.x, entry.y, p, vz, z, expandProgress, isMine, now, d);
       } catch (e) {
         console.error("renderParallax call failed:", e);
       }
