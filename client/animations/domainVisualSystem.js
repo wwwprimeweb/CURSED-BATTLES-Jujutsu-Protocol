@@ -370,6 +370,9 @@ export class DomainVisualSystem {
           effectiveScale = 1.0;
           effectiveOffset = { x: 0, y: 0.5 };
         }
+        if (char === 'punho-indomavel' && key === 'close') {
+          effectiveParallax = 0.25;
+        }
         if (char === 'punho-indomavel' && key === 'mid') continue;
 
         const dx = (worldX - camX) * effectiveParallax * zoom;
@@ -449,22 +452,7 @@ export class DomainVisualSystem {
         }
       }
 
-      if (char === 'punho-indomavel') {
-        const overlay = this.getLayerImage('punho-indomavel', '1');
-        if (overlay && overlay.width) {
-          const overlayAlpha = Math.min(0.4, expandProgress * 2.5);
-          if (overlayAlpha > 0.01) {
-            const parallax = 0.06;
-            const dx = (worldX - camX) * parallax * zoom;
-            const dy = (worldY - camY) * parallax * zoom;
-            ctx.save();
-            ctx.globalAlpha = overlayAlpha;
-            this.drawScaledImage(ctx, overlay, p.x + dx, p.y + dy, vz, 0, 0, 1.2);
-            ctx.restore();
-          }
-        }
-
-        // Train (yuji2.png animado nos trilhos)
+      // Train (yuji2.png animado nos trilhos)
         // Sync to server timer for hitbox accuracy, extrapolate locally for smooth 60fps animation
         const trainEntry = this.expanding.get(ownerId);
         if (trainEntry) {
@@ -509,7 +497,6 @@ export class DomainVisualSystem {
             }
           }
         }
-      }
     } catch (e) {
       console.error("Parallax render error:", e);
     } finally {

@@ -242,40 +242,60 @@ export class Renderer {
     const baseAngle = Math.atan2(dirY, dirX);
     const bolts = [];
     for (let i = 0; i < count; i++) {
-      const angle = baseAngle + (rng() - 0.5) * 2.0;
-      const len = 200 + rng() * 350;
+      const angle = baseAngle + (rng() - 0.5) * 2.5; // More initial spread
+      const len = 250 + rng() * 450; // Longer bolts
       const points = [{ x: 0, y: 0 }];
       let cx = 0, cy = 0;
-      const segments = 5 + Math.floor(rng() * 5);
+      const segments = 12 + Math.floor(rng() * 15); // Much more segments for spikiness
       const segLen = len / segments;
       let curAngle = angle;
       for (let s = 0; s < segments; s++) {
-        curAngle += (rng() - 0.5) * 1.2;
-        cx += Math.cos(curAngle) * segLen;
-        cy += Math.sin(curAngle) * segLen;
+        // High angle variation for sharp, jagged spikes
+        curAngle += (rng() - 0.5) * 2.2;
+        cx += Math.cos(curAngle) * segLen * (0.5 + rng()); // Vary segment length slightly
+        cy += Math.sin(curAngle) * segLen * (0.5 + rng());
         points.push({ x: cx, y: cy });
       }
+      // Pre-compute segment lengths for main bolt
+      let totalLen = 0;
+      for (let pi = 1; pi < points.length; pi++) {
+        const prev = points[pi - 1];
+        const segLen = Math.hypot(points[pi].x - prev.x, points[pi].y - prev.y);
+        points[pi].segLen = segLen;
+        totalLen += segLen;
+      }
+      points[0].segLen = 0;
+
       // Branches
       const branches = [];
-      for (let b = 0; b < 2 + Math.floor(rng() * 3); b++) {
+      for (let b = 0; b < 3 + Math.floor(rng() * 4); b++) { // More branches
         const atSeg = Math.floor(rng() * (segments - 2)) + 1;
         const bp = points[atSeg];
-        const bAngle = curAngle + (rng() - 0.5) * 1.8;
-        const bLen = 80 + rng() * 140;
+        const bAngle = curAngle + (rng() - 0.5) * 2.5;
+        const bLen = 100 + rng() * 200;
         const bPoints = [{ x: bp.x, y: bp.y }];
         let bcx = bp.x, bcy = bp.y;
-        const bSegs = 3 + Math.floor(rng() * 4);
+        const bSegs = 5 + Math.floor(rng() * 6);
         const bSegLen = bLen / bSegs;
         let ba = bAngle;
         for (let s = 0; s < bSegs; s++) {
-          ba += (rng() - 0.5) * 0.6;
-          bcx += Math.cos(ba) * bSegLen;
-          bcy += Math.sin(ba) * bSegLen;
+          ba += (rng() - 0.5) * 1.8;
+          bcx += Math.cos(ba) * bSegLen * (0.5 + rng());
+          bcy += Math.sin(ba) * bSegLen * (0.5 + rng());
           bPoints.push({ x: bcx, y: bcy });
         }
-        branches.push(bPoints);
+        // Pre-compute branch segment lengths
+        let branchLen = 0;
+        for (let pi = 1; pi < bPoints.length; pi++) {
+          const prev = bPoints[pi - 1];
+          const segLen = Math.hypot(bPoints[pi].x - prev.x, bPoints[pi].y - prev.y);
+          bPoints[pi].segLen = segLen;
+          branchLen += segLen;
+        }
+        bPoints[0].segLen = 0;
+        branches.push({ points: bPoints, thickness: 0.3 + rng() * 0.7, totalLen: branchLen });
       }
-      bolts.push({ points, branches, phase: rng() * 0.25 });
+      bolts.push({ points, branches, phase: rng() * 0.25, thickness: 0.6 + rng() * 1.4, totalLen });
     }
     return bolts;
   }
@@ -958,18 +978,18 @@ export class Renderer {
         ctx.save();
         ctx.globalAlpha = auraAlpha * 0.2;
         const rayCount = 12;
+        ctx.strokeStyle = `rgba(255,200,50,0.6)`;
+        ctx.lineWidth = (3 - auraT * 1.5) * z;
+        ctx.shadowColor = "#ff4400";
+        ctx.shadowBlur = 30 * z;
+        ctx.beginPath();
         for (let r = 0; r < rayCount; r++) {
           const rayAngle = (r / rayCount) * Math.PI * 2 + auraT * 2;
           const rayLen = (20 + auraT * 60) * z;
-          ctx.strokeStyle = `rgba(255,200,50,0.6)`;
-          ctx.lineWidth = (3 - auraT * 1.5) * z;
-          ctx.shadowColor = "#ff4400";
-          ctx.shadowBlur = 30 * z;
-          ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p.x + Math.cos(rayAngle) * rayLen, p.y + Math.sin(rayAngle) * rayLen);
-          ctx.stroke();
         }
+        ctx.stroke();
         ctx.restore();
       }
 
@@ -1024,115 +1044,71 @@ export class Renderer {
         const localT = Math.max(0, Math.min(1, (t - delay * 0.3) * 3));
         if (localT <= 0) continue;
 
-        const drawBolt = (points, wGlow, wBlack) => {
+        // Main bolt: massive red border and huge black core with variable thickness
+        const baseGlow = (16 - localT * 8) * bolt.thickness;
+        const baseBlack = (9 - localT * 5) * bolt.thickness;
+
+        const drawTapered = (points, wGlow, wBlack, tLimit, totalLen) => {
           if (points.length < 2) return;
-          const totalLen = points.reduce((a, pt, idx) => {
-            if (idx === 0) return 0;
-            const prev = points[idx - 1];
-            return a + Math.sqrt((pt.x - prev.x) ** 2 + (pt.y - prev.y) ** 2);
-          }, 0);
-          const drawLen = totalLen * localT;
+          const drawLen = totalLen * tLimit;
 
-          // Pass 1: red glow border (mÃ©dia espessura)
-          ctx.shadowColor = "#ff0000";
-          ctx.shadowBlur = 50 * z;
-          ctx.strokeStyle = "rgba(255,20,0,0.8)";
-          ctx.lineWidth = wGlow * z;
-          ctx.beginPath();
-          ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
-          let acc = 0;
-          for (let pi = 1; pi < points.length; pi++) {
-            const prev = points[pi - 1];
-            const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
-            if (acc + seg >= drawLen) {
-              const frac = (drawLen - acc) / seg;
-              ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
-              break;
+          // Helper to draw a tapered pass
+          const drawPass = (color, blur, baseWidth) => {
+            ctx.globalAlpha = 1.0; // Force 1.0 opacity so overlapping segments don't create dark dots!
+            ctx.shadowColor = blur > 0 ? "#ff0000" : "transparent";
+            ctx.shadowBlur = blur * z;
+            ctx.strokeStyle = color;
+            ctx.lineCap = "round"; // Round caps blend segments seamlessly
+            
+            let acc = 0;
+            for (let pi = 1; pi < points.length; pi++) {
+              if (acc >= drawLen) break;
+              
+              const prev = points[pi - 1];
+              const seg = points[pi].segLen;
+              
+              let currentX = points[pi].x;
+              let currentY = points[pi].y;
+              let actualSeg = seg;
+              
+              if (acc + seg > drawLen) {
+                const frac = (drawLen - acc) / seg;
+                currentX = prev.x + (points[pi].x - prev.x) * frac;
+                currentY = prev.y + (points[pi].y - prev.y) * frac;
+                actualSeg = seg * frac;
+              }
+              
+              // Taper thickness: thick at base (acc=0), thin at tip (acc=drawLen)
+              const taper = Math.max(0.05, 1.0 - (acc / totalLen));
+              // Multiply by alpha so it shrinks and vanishes instead of becoming transparent
+              ctx.lineWidth = baseWidth * taper * alpha * z;
+              
+              ctx.beginPath();
+              ctx.moveTo(p.x + prev.x, p.y + prev.y);
+              ctx.lineTo(p.x + currentX, p.y + currentY);
+              ctx.stroke();
+              
+              acc += actualSeg;
             }
-            ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
-            acc += seg;
-          }
-          ctx.stroke();
+          };
 
-          // Pass 2: black core (bem grosso)
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = "rgba(0,0,0,0.9)";
-          ctx.lineWidth = wBlack * z;
-          ctx.beginPath();
-          ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
-          acc = 0;
-          for (let pi = 1; pi < points.length; pi++) {
-            const prev = points[pi - 1];
-            const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
-            if (acc + seg >= drawLen) {
-              const frac = (drawLen - acc) / seg;
-              ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
-              break;
-            }
-            ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
-            acc += seg;
-          }
-          ctx.stroke();
+          // Pass 1: Red Glow (Fully opaque to avoid overlap dots)
+          drawPass("rgba(220,10,0,1)", 50, wGlow);
+          // Pass 2: Black Core (Fully opaque)
+          drawPass("rgba(0,0,0,1)", 0, wBlack);
         };
 
-        // Main bolt: red border (grossa) 14->7, black core (fino) 8->4
-        drawBolt(bolt.points, 14 - localT * 7, 8 - localT * 4);
+        drawTapered(bolt.points, baseGlow, baseBlack, localT, bolt.totalLen);
 
-        // Branches: 2-pass (red border mÃ©dia + black core grosso)
+        // Branches
         for (let br = 0; br < bolt.branches.length; br++) {
           const branchT = Math.max(0, Math.min(1, (t - delay * 0.3 - 0.05) * 3.5));
           if (branchT <= 0) continue;
-          const drawBoltBr = (points) => {
-            if (points.length < 2) return;
-            const totalLen = points.reduce((a, pt, idx) => {
-              if (idx === 0) return 0;
-              const prev = points[idx - 1];
-              return a + Math.sqrt((pt.x - prev.x) ** 2 + (pt.y - prev.y) ** 2);
-            }, 0);
-            const drawLen = totalLen * branchT;
-
-            // Branch glow vermelho (grosso, por fora)
-            ctx.shadowColor = "#ff0000";
-            ctx.shadowBlur = 35 * z;
-            ctx.strokeStyle = "rgba(255,20,0,0.6)";
-            ctx.lineWidth = 8 * z;
-            ctx.beginPath();
-            ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
-            let acc = 0;
-            for (let pi = 1; pi < points.length; pi++) {
-              const prev = points[pi - 1];
-              const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
-              if (acc + seg >= drawLen) {
-                const frac = (drawLen - acc) / seg;
-                ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
-                break;
-              }
-              ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
-              acc += seg;
-            }
-            ctx.stroke();
-
-            // Branch black core (fino, por dentro)
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "rgba(0,0,0,0.9)";
-            ctx.lineWidth = 4.5 * z;
-            ctx.beginPath();
-            ctx.moveTo(p.x + points[0].x, p.y + points[0].y);
-            acc = 0;
-            for (let pi = 1; pi < points.length; pi++) {
-              const prev = points[pi - 1];
-              const seg = Math.sqrt((points[pi].x - prev.x) ** 2 + (points[pi].y - prev.y) ** 2);
-              if (acc + seg >= drawLen) {
-                const frac = (drawLen - acc) / seg;
-                ctx.lineTo(p.x + prev.x + (points[pi].x - prev.x) * frac, p.y + prev.y + (points[pi].y - prev.y) * frac);
-                break;
-              }
-              ctx.lineTo(p.x + points[pi].x, p.y + points[pi].y);
-              acc += seg;
-            }
-            ctx.stroke();
-          };
-          drawBoltBr(bolt.branches[br]);
+          const branchData = bolt.branches[br];
+          
+          const bGlow = 10 * branchData.thickness;
+          const bBlack = 5 * branchData.thickness;
+          drawTapered(branchData.points, bGlow, bBlack, branchT, branchData.totalLen);
         }
       }
       }
@@ -2356,7 +2332,7 @@ export class Renderer {
         }
       });
 
-      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillStyle = "rgba(0,0,0,1)";
       ctx.fill("evenodd");
       ctx.restore();
     }

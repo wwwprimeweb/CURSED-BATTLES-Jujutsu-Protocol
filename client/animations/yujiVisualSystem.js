@@ -282,7 +282,7 @@ export class YujiVisualSystem {
     ctx.fillStyle = "#f2f6ff";
     ctx.font = "600 14px Rajdhani";
     ctx.textAlign = "center";
-    ctx.fillText(p.name || "punho-indomavel", pos.x, pos.y - (65 * 2.05 + 10) * zoom);
+    ctx.fillText(p.name || "punho-indomavel", pos.x, pos.y - (65 * 1.9 + 10) * zoom);
   }
 
   drawImpactFrame(ctx, x, y, zoom, frameIndex, alpha = 1, sizeMul = 1, flipX = false) {
