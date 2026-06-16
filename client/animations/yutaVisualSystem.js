@@ -930,8 +930,11 @@ export class YutaVisualSystem {
       // Beam inner streaks
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      for (let i = 0; i < 3; i++) {
-        const streakT = (this.time * 0.3 + i * 0.33) % 1;
+      const streakSpeeds = [0.2, 0.35, 0.5, 0.65, 0.8, 0.95, 1.1, 1.25];
+      const streakColors = ["#ffccff", "#ff99ff", "#ffffff", "#ffccff", "#ff66ff", "#ffffff", "#ff99ff", "#ffccff"];
+      for (let i = 0; i < 8; i++) {
+        const speed = streakSpeeds[i];
+        const streakT = (this.time * speed + i * 0.4) % 1;
         const offset = (Math.sin(streakT * Math.PI * 4 + i) * 0.08 + 0.1) * 0.8 + 0.1;
         const sx = bx + (endX - bx) * offset;
         const sy = by + (endY - by) * offset;
@@ -939,10 +942,10 @@ export class YutaVisualSystem {
         const ex = bx + (endX - bx) * Math.min(1, offset + streakLen);
         const ey = by + (endY - by) * Math.min(1, offset + streakLen);
         ctx.globalAlpha = (1 - streakT) * 0.4 * alpha;
-        ctx.strokeStyle = "#ffccff";
+        ctx.strokeStyle = streakColors[i];
         ctx.shadowColor = "#ff66cc";
         ctx.shadowBlur = 18;
-        ctx.lineWidth = (4 + Math.sin(this.time * 2 + i) * 2) * z;
+        ctx.lineWidth = (2 + Math.sin(this.time * 1.5 + i * 0.8) * 3 + i * 0.5) * z;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(ex, ey);

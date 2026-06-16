@@ -210,21 +210,46 @@ export class SkillVFX {
 
   static drawPinkSphere(ctx, x, y, radius, progress, alpha = 1) {
     ctx.save();
-    ctx.globalAlpha = alpha;
+    ctx.globalCompositeOperation = "lighter";
     const pulse = 1 + Math.sin(progress * Math.PI * 6) * 0.08;
     const currentRadius = radius * pulse;
+    const arcProgress = Math.min(1, progress * 3);
+    const t = performance.now() / 1000;
+
     ctx.shadowColor = "rgba(255,51,153,1)";
-    ctx.shadowBlur = 60;
-    ctx.globalCompositeOperation = "lighter";
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, currentRadius);
-    grad.addColorStop(0, `rgba(255,255,255,${0.95 * alpha})`);
-    grad.addColorStop(0.2, `rgba(255,200,230,${0.7 * alpha})`);
-    grad.addColorStop(0.5, `rgba(255,51,153,${0.4 * alpha})`);
-    grad.addColorStop(1, `rgba(255,102,178,0)`);
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.shadowBlur = 50;
+    ctx.lineCap = "round";
+
+    const arcs = [
+      { r: currentRadius * 1.0, w: 4 + progress * 2, s: -0.5, dir: 1 },
+      { r: currentRadius * 0.82, w: 3 + progress * 2, s: 0.4, dir: -1 },
+      { r: currentRadius * 0.64, w: 3 + progress * 2, s: -0.3, dir: 1.3 },
+      { r: currentRadius * 0.46, w: 2.5 + progress * 1.5, s: 0.5, dir: -0.8 },
+      { r: currentRadius * 0.28, w: 2 + progress * 1.5, s: -0.2, dir: 1.5 },
+    ];
+
+    for (const arc of arcs) {
+      const span = Math.PI * (1.2 + arcProgress * 0.8);
+      const gap = Math.PI * 2 - span;
+      const rotOffset = t * 0.8 * arc.dir + arc.s;
+      const startAngle = rotOffset + gap * 0.5;
+      const endAngle = startAngle + span;
+
+      ctx.globalAlpha = alpha * (0.3 + progress * 0.7);
+      ctx.strokeStyle = `rgba(255,200,230,${0.5 + progress * 0.3})`;
+      ctx.lineWidth = arc.w;
+      ctx.beginPath();
+      ctx.arc(x, y, arc.r, startAngle, endAngle);
+      ctx.stroke();
+
+      ctx.globalAlpha = alpha * (0.15 + progress * 0.4);
+      ctx.strokeStyle = "rgba(255,255,255,0.4)";
+      ctx.lineWidth = arc.w * 0.4;
+      ctx.beginPath();
+      ctx.arc(x, y, arc.r, startAngle + 0.1, endAngle - 0.1);
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
