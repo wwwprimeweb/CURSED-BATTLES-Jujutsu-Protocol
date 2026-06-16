@@ -36,9 +36,14 @@ async function main() {
         const img = await loadImage(path);
         const cellX = colIdx * CELL_W;
         const cellY = rowIdx * CELL_H;
-        const dstX = cellX + (CELL_W - img.width) / 2;
-        const dstY = cellY + (CELL_H - img.height) / 2;
-        ctx.drawImage(img, dstX, dstY);
+        const scaleX = CELL_W / img.width;
+        const scaleY = CELL_H / img.height;
+        const fitScale = Math.min(scaleX, scaleY);
+        const fitW = img.width * fitScale;
+        const fitH = img.height * fitScale;
+        const dstX = cellX + (CELL_W - fitW) / 2;
+        const dstY = cellY + (CELL_H - fitH) / 2;
+        ctx.drawImage(img, dstX, dstY, fitW, fitH);
         console.log(`  Row ${rowIdx}, Col ${colIdx}: 26_${num}.png (${img.width}x${img.height})`);
       } catch (e) {
         console.warn(`  Missing: 26_${num}.png - ${e.message}`);
