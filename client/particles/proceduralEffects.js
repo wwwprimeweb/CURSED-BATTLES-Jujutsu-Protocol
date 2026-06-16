@@ -213,32 +213,45 @@ export class SkillVFX {
     ctx.globalCompositeOperation = "lighter";
     const t = performance.now() / 1000;
     const p = progress;
+    const ss = (e0, e1, x) => { const c = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return c * c * (3 - 2 * c); };
 
     const R = radius * Math.pow(p, 0.7);
 
-    // === ONDAS CIRCULARES (fase 4: 0.55-0.75) ===
-    if (p > 0.55 && p < 0.75) {
-      ctx.shadowBlur = 8;
-      ctx.strokeStyle = "rgba(255,180,220,1)";
-      ctx.lineWidth = 1.5;
-      for (let i = 0; i < 3; i++) {
-        const wavePhase = ((t * 6 + i * 0.33) % 1);
-        const waveR = R * (0.2 + wavePhase * 0.65);
-        const waveAlpha = (1 - wavePhase) * 0.2 * alpha;
-        ctx.globalAlpha = waveAlpha;
+    // === FRAGMENTOS ORBITAIS (fases 1-2) ===
+    const fragAppear = ss(0, 0.08, p);
+    const fragFade = 1 - ss(0.3, 0.42, p);
+    const fragActive = fragAppear * fragFade;
+    if (fragActive > 0.01) {
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 24; i++) {
+        const baseAngle = (i * 137.5 * Math.PI / 180) % (Math.PI * 2);
+        const speed = 0.3 + Math.sin(i * 53.1) * 0.15 + 0.15;
+        const jitter = 0.7 + Math.sin(t * 2.3 + i * 7.1) * 0.3;
+
+        const driftW = 1 - ss(0.08, 0.18, p);
+        const orbitW = 1 - driftW;
+        const driftDist = R * Math.max(0.8, 2.5 - Math.min(p / 0.15, 1) * 1.7);
+        const orbitDist = R * (0.5 + Math.min((p - 0.15) / 0.2, 1) * 0.3);
+        const dist = driftW * driftDist + orbitW * orbitDist;
+        const driftAngle = baseAngle + t * 0.05;
+        const orbitAngle = baseAngle + t * speed;
+        const angle = driftW * driftAngle + orbitW * orbitAngle;
+        const fx = x + Math.cos(angle) * dist;
+        const fy = y + Math.sin(angle) * dist;
+        const fa = fragActive * (0.4 + (p < 0.15 ? p / 0.15 * 0.2 : 0.2)) * alpha * jitter;
+        ctx.globalAlpha = fa;
+        ctx.fillStyle = "rgba(255,200,230,1)";
         ctx.beginPath();
-        ctx.arc(x, y, waveR, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(fx, fy, 1.5 + Math.sin(i * 43.7) * 0.5, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    // === FITAS DE ENERGIA (fases 3-5: 0.35-0.9) ===
-    const ribbonAppear = Math.min(1, (p - 0.35) / 0.1);
-    const ribbonFade = Math.max(0, Math.min(1, (0.9 - p) / 0.1));
-    const ribbonPhase = ribbonAppear * ribbonFade;
-    if (ribbonPhase > 0) {
+    // === FITAS DE ENERGIA (fases 3-5) ===
+    const ribbonActive = ss(0.3, 0.42, p) * (1 - ss(0.85, 0.92, p));
+    if (ribbonActive > 0.01) {
       ctx.lineCap = "round";
-      const ribbonSpeed = p < 0.55 ? 0.3 : p < 0.75 ? 0.7 : 1.2;
+      const ribbonSpeed = 0.3 + ss(0.45, 0.75, p) * 0.9;
       const ribbonRadii = [0.5, 0.68, 0.38];
       const trailOffsets = [0, -0.07, -0.14, -0.22];
       const trailAlphas = [1, 0.4, 0.15, 0.05];
@@ -249,7 +262,8 @@ export class SkillVFX {
         for (let tr = 0; tr < trailOffsets.length; tr++) {
           const startA = baseAngle + trailOffsets[tr] - span / 2;
           const endA = baseAngle + trailOffsets[tr] + span / 2;
-          const trAlpha = trailAlphas[tr] * ribbonPhase * alpha * (0.4 + p * 0.3);
+          const jitter = 0.75 + Math.sin(t * (1.5 + ri * 0.7) + tr * 2.1) * 0.25;
+          const trAlpha = trailAlphas[tr] * ribbonActive * alpha * (0.4 + p * 0.3) * jitter;
           ctx.globalAlpha = trAlpha;
           ctx.strokeStyle = tr === 0 ? "rgba(255,220,240,1)" : "rgba(255,180,220,1)";
           ctx.lineWidth = (3.5 - tr * 0.8) * (0.5 + p * 0.5);
@@ -261,47 +275,35 @@ export class SkillVFX {
       }
     }
 
-    // === FRAGMENTOS ORBITAIS (fases 1-2: 0-0.35) ===
-    if (p < 0.35) {
-      ctx.shadowBlur = 0;
-      for (let i = 0; i < 24; i++) {
-        const baseAngle = (i * 137.5 * Math.PI / 180) % (Math.PI * 2);
-        const speed = 0.3 + Math.sin(i * 53.1) * 0.15 + 0.15;
-        let fx, fy, fa;
-        if (p < 0.15) {
-          const t1 = p / 0.15;
-          const dist = R * (2.5 - t1 * 1.7);
-          const drift = baseAngle + t * 0.05;
-          fx = x + Math.cos(drift) * dist;
-          fy = y + Math.sin(drift) * dist;
-          fa = (1 - t1 * 0.5) * 0.55 * alpha;
-        } else {
-          const t2 = (p - 0.15) / 0.2;
-          const orbitR = R * (0.5 + t2 * 0.3);
-          const orbitA = baseAngle + t * speed;
-          fx = x + Math.cos(orbitA) * orbitR;
-          fy = y + Math.sin(orbitA) * orbitR;
-          fa = (1 - t2 * 0.5) * 0.5 * alpha;
-        }
-        ctx.globalAlpha = fa;
-        ctx.fillStyle = "rgba(255,200,230,1)";
+    // === ONDAS CIRCULARES (fase 4) ===
+    const waveActive = ss(0.5, 0.58, p) * (1 - ss(0.72, 0.78, p));
+    if (waveActive > 0.01) {
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = "rgba(255,180,220,1)";
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 3; i++) {
+        const wavePhase = ((t * 6 + i * 0.33) % 1);
+        const waveR = R * (0.2 + wavePhase * 0.65);
+        const waveAlpha = (1 - wavePhase) * waveActive * 0.25 * alpha;
+        ctx.globalAlpha = waveAlpha;
         ctx.beginPath();
-        ctx.arc(fx, fy, 1.5 + Math.sin(i * 43.7) * 0.5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(x, y, waveR, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
 
-    // === PARTICULAS SUGADAS (fase 5: 0.75-0.9) ===
-    if (p > 0.75 && p < 0.9) {
+    // === PARTICULAS SUGADAS (fase 5) ===
+    const suckActive = ss(0.7, 0.78, p) * (1 - ss(0.85, 0.9, p));
+    if (suckActive > 0.01) {
       ctx.shadowBlur = 0;
-      const suckPhase = (p - 0.75) / 0.15;
       for (let i = 0; i < 30; i++) {
         const angle = (i * 91.3 * Math.PI / 180) % (Math.PI * 2);
-        const speed = Math.sin(i * 37.7) * 0.3 + 0.5;
-        const dist = R * (2 + speed) * (1 - suckPhase * (0.7 + speed * 0.3));
+        const spd = Math.sin(i * 37.7) * 0.3 + 0.5;
+        const dist = R * (2 + spd) * (1 - Math.min((p - 0.7) / 0.2, 1) * (0.7 + spd * 0.3));
         const px = x + Math.cos(angle + t * 0.2) * dist;
         const py = y + Math.sin(angle + t * 0.2) * dist;
-        const pa = (1 - dist / (R * 3)) * 0.5 * alpha;
+        const jitter = 0.7 + Math.sin(t * 3.1 + i * 5.3) * 0.3;
+        const pa = suckActive * (1 - dist / (R * 3)) * 0.5 * alpha * jitter;
         ctx.globalAlpha = pa;
         ctx.fillStyle = "rgba(255,220,240,1)";
         const size = 1 + (1 - dist / (R * 3)) * 1.5;
@@ -312,10 +314,15 @@ export class SkillVFX {
     }
 
     // === NUCLEO / MASSA DENSA (todas as fases) ===
-    const corePct = p < 0.9 ? 0.06 + p * 0.32 : 0.35 + (p - 0.9) * 6.5;
+    const corePct = 0.06 + p * 0.32 + ss(0.9, 0.97, p) * 0.47;
     const coreR = R * Math.min(corePct, 0.85);
-    const corePulse = (p > 0.55 && p < 0.75) ? 1 + Math.sin(t * 6) * 0.25 : 1 + Math.sin(t * 10) * 0.05;
-    const coreShadow = p > 0.75 ? 80 : 30 + p * 30;
+    const pulseWeight = ss(0.55, 0.75, p);
+    const pulseFreq = 10 - pulseWeight * 4;
+    const pulseAmp = 0.05 + pulseWeight * 0.2;
+    const settleWeight = ss(0.9, 0.95, p);
+    const finalAmp = pulseAmp * (1 - settleWeight * 0.8);
+    const corePulse = 1 + Math.sin(t * pulseFreq) * finalAmp;
+    const coreShadow = 30 + p * 55;
 
     const grad = ctx.createRadialGradient(x, y, 0, x, y, coreR * corePulse * 1.5);
     grad.addColorStop(0, `rgba(255,255,255,${0.95 * alpha})`);
@@ -330,8 +337,8 @@ export class SkillVFX {
     ctx.arc(x, y, coreR * corePulse * 1.5, 0, Math.PI * 2);
     ctx.fill();
 
-    if (p > 0.92) {
-      const dense = (p - 0.92) / 0.08;
+    if (p > 0.88) {
+      const dense = ss(0.88, 0.94, p);
       const denseR = R * 0.75 * dense;
       const dGrad = ctx.createRadialGradient(x, y, 0, x, y, denseR);
       dGrad.addColorStop(0, `rgba(255,255,255,${0.5 * dense * alpha})`);
