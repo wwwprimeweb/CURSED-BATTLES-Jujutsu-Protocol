@@ -53,11 +53,11 @@ export const RIKA_INCOMPLETA_CONFIG = {
 export const RIKA_INCOMPLETA_SHEET_PATH = "/assets/sprites/rika-incompleta.png";
 
 export const FULL_RIKA_CONFIG = {
-  sheetWidth: 1260,
+  sheetWidth: 1440,
   sheetHeight: 240,
-  cellWidth: 140,
+  cellWidth: 160,
   cellHeight: 120,
-  pivotX: 70,
+  pivotX: 80,
   pivotY: 100,
   renderScale: 1.8,
   introFrames: 9,

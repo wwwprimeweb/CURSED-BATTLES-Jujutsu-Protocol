@@ -10,7 +10,7 @@ const ROWS = [
   [8, 9, 10],                       // Row 1: idle + attack (3 frames)
 ];
 
-const CELL_W = 140;
+const CELL_W = 160;
 const CELL_H = 120;
 const PIVOT_X = 70;
 const PIVOT_Y = 100;
