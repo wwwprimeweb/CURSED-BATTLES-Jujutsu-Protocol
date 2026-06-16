@@ -430,7 +430,7 @@ function handleEvents(events) {
       audio.play("skillRed");
     } else if (ev.type === "rikaImpulse") {
       renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, 0, 0, "heavy", ev.radius);
-      renderer.yutaVisual.triggerRikaImpulse(ev.x, ev.y, ev.radius, ev.playerId);
+      renderer.yutaVisual.triggerRikaImpulse(ev.x, ev.y, ev.radius, ev.playerId, ev.startX, ev.startY, ev.endX, ev.endY);
       const impCount = ev.playerId && renderer.yutaVisual.fullRikaStates.has(ev.playerId) ? 25 : 35;
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff3399", count: impCount, speed: 400, life: 0.6, size: 6 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 300, life: 0.45, size: 4 });

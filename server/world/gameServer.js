@@ -700,8 +700,6 @@ class GameServer {
       this.fireCursedWave(player, cast);
     } else if (cast.type === "rikaImpulse") {
       this.fireRikaImpulse(player, cast);
-    } else if (cast.type === "rikaDash") {
-      this.fireRikaDash(player, cast);
     } else if (cast.type === "domainCopy") {
       this.fireDomainCopy(player, cast);
     } else if (cast.type === "domainCopyFire") {
@@ -2540,19 +2538,28 @@ class GameServer {
         }
       });
       if (nearestEnemy) {
+        const dx = nearestEnemy.x - rika.x;
+        const dy = nearestEnemy.y - rika.y;
+        const toTarget = normalize(dx, dy);
+        player.cast = {
+          type: "rikaImpulse",
+          timer: kit.rika.startup,
+          dirX: toTarget.x,
+          dirY: toTarget.y,
+          targetId: nearestEnemy.id,
+          targetX: nearestEnemy.x,
+          targetY: nearestEnemy.y,
+        };
+      } else {
+        const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+        const dashDist = kit.rika.dashDistance;
         player.cast = {
           type: "rikaImpulse",
           timer: kit.rika.startup,
           dirX: aim.x,
           dirY: aim.y,
-          targetId: nearestEnemy.id,
-        };
-      } else {
-        player.cast = {
-          type: "rikaDash",
-          timer: kit.rika.startup,
-          dirX: aim.x,
-          dirY: aim.y,
+          targetX: rika.x + aim.x * dashDist,
+          targetY: rika.y + aim.y * dashDist,
         };
       }
     } else {
@@ -2640,6 +2647,23 @@ class GameServer {
     if (!rika) return;
     const damage = kit.rika.impulseDamage * player.modifiers.rikaDamageMul;
 
+    const startX = rika.x;
+    const startY = rika.y;
+
+    if (cast.targetX !== undefined && cast.targetY !== undefined) {
+      const dx = cast.targetX - rika.x;
+      const dy = cast.targetY - rika.y;
+      const dirX = cast.dirX || 1;
+      const dirY = cast.dirY || 0;
+      const dist = Math.hypot(dx, dy);
+      const maxDash = kit.rika.dashDistance;
+      const dashDist = Math.min(dist, maxDash);
+      rika.x += dirX * dashDist;
+      rika.y += dirY * dashDist;
+      rika.x = Math.max(0, Math.min(this.map ? this.map.width || 4000 : 4000, rika.x));
+      rika.y = Math.max(0, Math.min(this.map ? this.map.height || 3000 : 3000, rika.y));
+    }
+
     let targetEnemy = null;
     this.enemies.forEach((enemy) => {
       if (enemy.id === cast.targetId && enemy.alive) {
@@ -2694,32 +2718,13 @@ class GameServer {
 
     this.emitEventNear(rika.x, rika.y, {
       type: "rikaImpulse",
-      x: rika.x,
-      y: rika.y,
-      radius: kit.rika.impulseRadius,
-      playerId: player.id,
-    });
-  }
-
-  fireRikaDash(player, cast) {
-    const kit = this.getKit(player);
-    const rika = this.rikas.get(player.id);
-    if (!rika) return;
-    const startX = rika.x;
-    const startY = rika.y;
-    const dist = kit.rika.dashDistance;
-    rika.x += cast.dirX * dist;
-    rika.y += cast.dirY * dist;
-
-    rika.x = Math.max(0, Math.min(this.map ? this.map.width || 4000 : 4000, rika.x));
-    rika.y = Math.max(0, Math.min(this.map ? this.map.height || 3000 : 3000, rika.y));
-
-    this.emitEventNear(startX, startY, {
-      type: "rikaDash",
       startX,
       startY,
       endX: rika.x,
       endY: rika.y,
+      x: rika.x,
+      y: rika.y,
+      radius: kit.rika.impulseRadius,
       playerId: player.id,
     });
   }

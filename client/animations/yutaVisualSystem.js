@@ -401,7 +401,7 @@ export class YutaVisualSystem {
     });
   }
 
-  triggerRikaImpulse(x, y, radius, playerId) {
+  triggerRikaImpulse(x, y, radius, playerId, startX, startY, endX, endY) {
     const fullRikaBoosted = playerId && this.fullRikaStates.has(playerId);
     this.rikaImpulses.push({
       x, y,
@@ -410,6 +410,10 @@ export class YutaVisualSystem {
       life: 0.6,
       maxLife: 0.6,
       fullRikaBoosted,
+      startX: startX !== undefined ? startX : x,
+      startY: startY !== undefined ? startY : y,
+      endX: endX !== undefined ? endX : x,
+      endY: endY !== undefined ? endY : y,
     });
   }
 
@@ -1013,6 +1017,18 @@ export class YutaVisualSystem {
       const ringRadius = imp.radius * z;
 
       if (imp.fullRikaBoosted) {
+        const trailSX = (imp.startX - cx) * z + w * 0.5;
+        const trailSY = (imp.startY - cy) * z + h * 0.5;
+        const trailEX = (imp.endX - cx) * z + w * 0.5;
+        const trailEY = (imp.endY - cy) * z + h * 0.5;
+
+        ctx.save();
+        ctx.globalAlpha = 1 - progress * 0.3;
+        drawEnergyWaveTrail(ctx, trailSX, trailSY, trailEX, trailEY, progress, this.time, {
+          width: (40 + progress * 80) * z,
+        });
+        ctx.restore();
+
         drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.8);
         drawRikaClawSprite(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.3), this.effects.rikaSpritesheet);
       } else {
