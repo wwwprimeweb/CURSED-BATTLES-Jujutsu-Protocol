@@ -457,7 +457,7 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 30, speed: 300, life: 0.45, size: 3.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 35, speed: 350, life: 0.55, size: 4 });
     } else if (ev.type === "fullRika") {
-      renderer.yutaVisual.triggerFullRika(ev.x, ev.y, ev.duration || 20);
+      renderer.yutaVisual.triggerFullRika(ev.playerId, ev.x, ev.y, ev.duration || 20);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc3388", count: 30, speed: 300, life: 0.6, size: 4 });
       audio.play("skillPurple");
     } else if (ev.type === "rikaAttack") {

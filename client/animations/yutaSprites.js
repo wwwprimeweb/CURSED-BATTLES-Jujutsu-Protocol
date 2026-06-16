@@ -52,6 +52,23 @@ export const RIKA_INCOMPLETA_CONFIG = {
 
 export const RIKA_INCOMPLETA_SHEET_PATH = "/assets/sprites/rika-incompleta.png";
 
+export const FULL_RIKA_CONFIG = {
+  sheetWidth: 1260,
+  sheetHeight: 240,
+  cellWidth: 140,
+  cellHeight: 120,
+  pivotX: 70,
+  pivotY: 100,
+  renderScale: 1.7,
+  introFrames: 9,
+  introDuration: 1.2,
+  idleA: 0,
+  idleB: 1,
+  attackFrameIndex: 2,
+};
+
+export const FULL_RIKA_SHEET_PATH = "/assets/sprites/portador-do-vinculo_full_rika.png";
+
 export function mapServerStateToAnim(serverState) {
   const map = {
     idle: "idle",

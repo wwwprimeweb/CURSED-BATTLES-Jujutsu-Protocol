@@ -3,7 +3,7 @@ import { YutaSkillEffects } from "./proceduralYuta.js";
 import { drawHitReaction } from "./gojoEffects.js";
 import { drawRowOfKatanas, drawRikaAreaExplosion, drawRikaClawScratch, drawRikaShockwave, drawPinkSlashCuts, drawEnergyWaveTrail, drawRikaAppearGlow, drawRikaImpactBurst, drawRikaDashTrail, drawDashSlideTrail } from "./yutaEffects.js";
 import { SkillVFX } from "../particles/proceduralEffects.js";
-import { RIKA_INCOMPLETA_CONFIG } from "./yutaSprites.js";
+import { RIKA_INCOMPLETA_CONFIG, FULL_RIKA_CONFIG } from "./yutaSprites.js";
 
 export class YutaVisualSystem {
   constructor() {
@@ -27,6 +27,7 @@ export class YutaVisualSystem {
     this.dashSlashTrail = [];
     this.needsShake = false;
     this.time = 0;
+    this.fullRikaStates = new Map();
   }
 
   update(dt) {
@@ -153,6 +154,27 @@ export class YutaVisualSystem {
         this.rikaDashes.splice(i, 1);
       }
     }
+
+    // Update Full Rika animation states
+    this.fullRikaStates.forEach((state, id) => {
+      state.timer += dt;
+      const cfg = FULL_RIKA_CONFIG;
+
+      if (!state.introDone) {
+        if (state.timer >= cfg.introDuration) {
+          state.introDone = true;
+          state.timer = 0;
+        }
+      }
+
+      if (state.introDone) {
+        state.idleTimer += dt;
+        if (state.idleTimer > 0.5) {
+          state.idleToggle = !state.idleToggle;
+          state.idleTimer = 0;
+        }
+      }
+    });
 
     // Update rika summon state machine
     for (let i = this.rikaSummons.length - 1; i >= 0; i--) {
@@ -338,8 +360,15 @@ export class YutaVisualSystem {
     }
   }
 
-  triggerFullRika(x, y, duration) {
+  triggerFullRika(playerId, x, y, duration) {
     this.effects.addRikaStart(x, y, duration);
+    this.fullRikaStates.set(playerId, {
+      timer: 0,
+      introDone: false,
+      currentFrame: 0,
+      idleToggle: false,
+      idleTimer: 0,
+    });
   }
 
   triggerDashSlashStart(playerId, x, y, dirX, dirY) {
@@ -470,6 +499,7 @@ export class YutaVisualSystem {
       const isYuta = p.character === "portador-do-vinculo";
       if (!p.rikaActive) {
         this.rikaRenderPos.delete(p.id);
+        this.fullRikaStates.delete(p.id);
       }
 
       // Check for active Q summon
@@ -610,9 +640,28 @@ export class YutaVisualSystem {
           rikaY = pos.y;
           rikaFacing = fallbackSide < 0 ? 1 : -1;
         }
-        const floatPhase = ((worldX + worldY) * 0.01) % (Math.PI * 2);
-        const floatAmp = isAttacking ? 2.4 : 0;
-        this.yutaSprite.renderRika(ctx, rikaX, rikaY, rikaFacing, floatPhase, floatAmp, spriteScale);
+        const fullRikaState = this.fullRikaStates.get(p.id);
+        if (fullRikaState) {
+          const cfg = FULL_RIKA_CONFIG;
+          let frame, row;
+          if (!fullRikaState.introDone) {
+            row = 0;
+            const progress = Math.min(fullRikaState.timer / cfg.introDuration, 1);
+            frame = Math.min(Math.floor(progress * cfg.introFrames), cfg.introFrames - 1);
+          } else {
+            row = 1;
+            if (isAttacking) {
+              frame = cfg.attackFrameIndex;
+            } else {
+              frame = fullRikaState.idleToggle ? cfg.idleA : cfg.idleB;
+            }
+          }
+          this.yutaSprite.renderFullRikaFrame(ctx, rikaX, rikaY, rikaFacing, row, frame, 1, spriteScale);
+        } else {
+          const floatPhase = ((worldX + worldY) * 0.01) % (Math.PI * 2);
+          const floatAmp = isAttacking ? 2.4 : 0;
+          this.yutaSprite.renderRika(ctx, rikaX, rikaY, rikaFacing, floatPhase, floatAmp, spriteScale);
+        }
       }
 
       // Dash afterimage trail (during dashSlash slide)
@@ -649,7 +698,7 @@ export class YutaVisualSystem {
         drawDashSlideTrail(ctx, pos.x, pos.y - trailOffY, dirX, dirY, dashProgress, this.time, zoom);
       }
 
-      // Render Yuta on top of Rika
+      // Render Yuta
       this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
 
     if (!p.alive) return;

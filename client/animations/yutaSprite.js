@@ -1,6 +1,6 @@
 import { SpriteAnimator } from "./spriteAnimator.js";
 import { loadImage } from "./imageLoader.js";
-import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH, RIKA_INCOMPLETA_CONFIG, RIKA_INCOMPLETA_SHEET_PATH } from "./yutaSprites.js";
+import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH, RIKA_INCOMPLETA_CONFIG, RIKA_INCOMPLETA_SHEET_PATH, FULL_RIKA_CONFIG, FULL_RIKA_SHEET_PATH } from "./yutaSprites.js";
 
 const ALT_SHEET_PATH = "/assets/sprites/portador-do-vinculo_m1_alt.png";
 const ALT_ANIMATIONS = {
@@ -39,12 +39,14 @@ export class YutaSpriteRenderer {
     });
     this.rikaSprite = null;
     this.rikaIncompletaSheet = null;
+    this.fullRikaSheet = null;
     this.domainPrepSprite = null;
     this.isLoaded = false;
     this.loadError = null;
     this.walkTime = 0;
     this.loadRikaSprite();
     this.loadRikaIncompletaSheet();
+    this.loadFullRikaSheet();
     this.loadDomainPrepSprite();
   }
 
@@ -104,8 +106,27 @@ export class YutaSpriteRenderer {
     console.error("[YutaSprite] All rika incompleta paths failed");
   }
 
+  async loadFullRikaSheet() {
+    const paths = [
+      "/assets/sprites/portador-do-vinculo_full_rika.png",
+      "/client/assets/sprites/portador-do-vinculo_full_rika.png",
+      "./assets/sprites/portador-do-vinculo_full_rika.png",
+      "../client/assets/sprites/portador-do-vinculo_full_rika.png",
+      "portador-do-vinculo_full_rika.png",
+    ];
+    for (const path of paths) {
+      try {
+        this.fullRikaSheet = await loadImage(path);
+        this.checkLoaded();
+        return;
+      } catch (e) {
+      }
+    }
+    console.error("[YutaSprite] All full rika paths failed");
+  }
+
   checkLoaded() {
-    if (this.rikaSprite || this.rikaIncompletaSheet || this.domainPrepSprite) {
+    if (this.rikaSprite || this.rikaIncompletaSheet || this.fullRikaSheet || this.domainPrepSprite) {
       this.isLoaded = true;
     }
   }
@@ -166,6 +187,39 @@ export class YutaSpriteRenderer {
       ctx.translate(-x, -y);
     }
     ctx.drawImage(this.rikaIncompletaSheet, sx, sy, cfg.cellWidth, cfg.cellHeight, x - drawW / 2, y - drawH / 2, drawW, drawH);
+    ctx.restore();
+  }
+
+  renderFullRikaFrame(ctx, x, y, facing, row, frameIndex, alpha = 1, _scale = 1) {
+    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    if (!this.fullRikaSheet) {
+      ctx.fillStyle = `rgba(200,100,255,${alpha * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 45 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    const cfg = FULL_RIKA_CONFIG;
+    const sx = frameIndex * cfg.cellWidth;
+    const sy = row * cfg.cellHeight;
+    const targetSize = DEFAULT_SIZE * cfg.renderScale * scale;
+    const aspect = cfg.cellWidth / cfg.cellHeight;
+    let drawW, drawH;
+    if (cfg.cellWidth >= cfg.cellHeight) {
+      drawW = targetSize;
+      drawH = drawW / aspect;
+    } else {
+      drawH = targetSize;
+      drawW = drawH * aspect;
+    }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (facing < 0) {
+      ctx.translate(x, y);
+      ctx.scale(-1, 1);
+      ctx.translate(-x, -y);
+    }
+    ctx.drawImage(this.fullRikaSheet, sx, sy, cfg.cellWidth, cfg.cellHeight, x - drawW / 2, y - drawH / 2, drawW, drawH);
     ctx.restore();
   }
 
