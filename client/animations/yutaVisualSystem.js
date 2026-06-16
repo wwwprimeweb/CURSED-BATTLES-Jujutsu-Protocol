@@ -636,7 +636,15 @@ export class YutaVisualSystem {
           rikaY = pos.y;
           rikaFacing = fallbackSide < 0 ? 1 : -1;
         }
-        const fullRikaState = this.fullRikaStates.get(p.id);
+        let fullRikaState = this.fullRikaStates.get(p.id);
+        if (!fullRikaState && p.rikaActive) {
+          this.fullRikaStates.set(p.id, {
+            timer: 0,
+            introDone: true,
+            attackVisualTimer: 0,
+          });
+          fullRikaState = this.fullRikaStates.get(p.id);
+        }
         if (fullRikaState) {
           const cfg = FULL_RIKA_CONFIG;
           let frame, row;
