@@ -371,15 +371,14 @@ export class SkillVFX {
     // === ENERGIA INTERNA DO NUCLEO ===
     const inEnergy = Math.min(1, p * 1.5);
 
-    // Turbulencia: gradiente com centro deslocado
     if (inEnergy > 0.05) {
+      // Turbulencia: gradiente com centro deslocado
       const turbAngle = t * 0.3;
-      const turbOff = coreR * 0.12 * inEnergy;
+      const turbOff = coreR * 0.08 * inEnergy;
       const turbX = x + Math.cos(turbAngle) * turbOff;
       const turbY = y + Math.sin(turbAngle) * turbOff;
-      const tGrad = ctx.createRadialGradient(turbX, turbY, 0, turbX, turbY, coreR * 0.7);
-      tGrad.addColorStop(0, `rgba(255,180,220,${0.12 * inEnergy * alpha})`);
-      tGrad.addColorStop(0.5, `rgba(255,100,180,${0.06 * inEnergy * alpha})`);
+      const tGrad = ctx.createRadialGradient(turbX, turbY, 0, turbX, turbY, coreR * 0.6);
+      tGrad.addColorStop(0, `rgba(255,180,220,${0.03 * inEnergy * alpha})`);
       tGrad.addColorStop(1, `rgba(255,51,153,0)`);
       ctx.globalAlpha = alpha;
       ctx.shadowBlur = 0;
@@ -387,14 +386,11 @@ export class SkillVFX {
       ctx.beginPath();
       ctx.arc(x, y, coreR * corePulse * 1.5, 0, Math.PI * 2);
       ctx.fill();
-    }
 
-    // Plasma channels (veias de energia internas)
-    if (inEnergy > 0.05) {
+      // Plasma channels (veias de energia internas)
       ctx.lineCap = "round";
-      const chCount = 10;
-      for (let i = 0; i < chCount; i++) {
-        const angle = (i / chCount) * Math.PI * 2 + Math.sin(i * 27.3) * 0.3;
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2 + Math.sin(i * 27.3) * 0.3;
         const endDist = coreR * (0.4 + Math.sin(i * 53.1) * 0.2 + 0.2);
         const cpDist = endDist * (0.4 + Math.sin(i * 73.3) * 0.15 + 0.15);
         const cpAngle = angle + Math.sin(i * 43.7) * 0.5;
@@ -403,44 +399,40 @@ export class SkillVFX {
         const cpx = x + Math.cos(cpAngle) * cpDist;
         const cpy = y + Math.sin(cpAngle) * cpDist;
         const freq = 0.8 + Math.sin(i * 17.3) * 0.3 + 0.3;
-        const chAlpha = (Math.sin(t * freq + i * 2.1) * 0.3 + 0.55) * 0.35 * inEnergy * alpha;
+        const chAlpha = (Math.sin(t * freq + i * 2.1) * 0.3 + 0.55) * 0.06 * inEnergy * alpha;
         ctx.globalAlpha = chAlpha;
         ctx.strokeStyle = "rgba(255,255,255,1)";
-        ctx.lineWidth = 1.5 + Math.sin(t * freq + i * 1.3) * 0.5;
-        ctx.shadowBlur = 10;
+        ctx.lineWidth = 1 + Math.sin(t * freq + i * 1.3) * 0.3;
+        ctx.shadowBlur = 3;
         ctx.shadowColor = "#ff66cc";
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.quadraticCurveTo(cpx, cpy, ex, ey);
         ctx.stroke();
 
-        // Thin inner core of each channel
         ctx.globalAlpha = chAlpha * 0.3;
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 0.4;
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.quadraticCurveTo(cpx, cpy, ex, ey);
         ctx.stroke();
       }
-    }
 
-    // Faiscas internas (partículas dentro do núcleo)
-    if (inEnergy > 0.05) {
-      const sparkCount = 18;
+      // Faiscas internas
       ctx.shadowBlur = 0;
-      for (let i = 0; i < sparkCount; i++) {
+      for (let i = 0; i < 8; i++) {
         const seed = i * 63.1;
         const baseAngle = (seed * Math.PI / 180) % (Math.PI * 2);
         const baseDist = coreR * (0.15 + Math.sin(seed * 1.3) * 0.15 + 0.15);
-        const wobX = Math.sin(t * 2.3 + i * 1.7) * coreR * 0.06;
-        const wobY = Math.cos(t * 1.7 + i * 2.3) * coreR * 0.06;
+        const wobX = Math.sin(t * 2.3 + i * 1.7) * coreR * 0.04;
+        const wobY = Math.cos(t * 1.7 + i * 2.3) * coreR * 0.04;
         const sx = x + Math.cos(baseAngle) * baseDist + wobX;
         const sy = y + Math.sin(baseAngle) * baseDist + wobY;
-        const spAlpha = (Math.sin(t * 3.1 + i * 5.7) * 0.3 + 0.5) * 0.5 * inEnergy * alpha;
+        const spAlpha = (Math.sin(t * 3.1 + i * 5.7) * 0.3 + 0.5) * 0.1 * inEnergy * alpha;
         ctx.globalAlpha = spAlpha;
         ctx.fillStyle = "rgba(255,255,255,1)";
-        const size = 1.3 + Math.sin(t * 4.3 + i * 3.1) * 0.4;
+        const size = 1 + Math.sin(t * 4.3 + i * 3.1) * 0.3;
         ctx.beginPath();
         ctx.arc(sx, sy, size, 0, Math.PI * 2);
         ctx.fill();
