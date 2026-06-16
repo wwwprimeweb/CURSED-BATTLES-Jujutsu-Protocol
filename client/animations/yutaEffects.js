@@ -134,27 +134,28 @@ export function drawRikaSwing(ctx, x, y, progress) {
   const alpha = Math.min(1, progress * 4) * Math.max(0, 1 - progress);
   if (alpha <= 0.01) return;
 
-  const radius = 60 * progress;
+  const radius = 80 * progress;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.shadowColor = C.pinkCore;
-  ctx.shadowBlur = 30;
+  ctx.shadowColor = C.whiteGlow;
+  ctx.shadowBlur = 50;
   ctx.globalCompositeOperation = "lighter";
 
   const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-  grad.addColorStop(0, "rgba(255,200,230,0.8)");
-  grad.addColorStop(0.5, "rgba(204,51,136,0.4)");
+  grad.addColorStop(0, "rgba(255,255,255,0.9)");
+  grad.addColorStop(0.2, "rgba(255,200,230,0.6)");
+  grad.addColorStop(0.6, "rgba(204,51,136,0.3)");
   grad.addColorStop(1, "rgba(255,102,178,0)");
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(255,150,200,0.6)";
+  ctx.strokeStyle = `rgba(255,200,230,${alpha * 0.5})`;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.arc(x, y, radius * 0.7, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }

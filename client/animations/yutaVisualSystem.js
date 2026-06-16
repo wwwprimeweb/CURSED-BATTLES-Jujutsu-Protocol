@@ -341,12 +341,13 @@ export class YutaVisualSystem {
     const nx = Number.isFinite(dirX) ? dirX : 1;
     const ny = Number.isFinite(dirY) ? dirY : 0;
     this.effects.addRikaAttack(x, y, nx, ny, {
-      life: isHeavy ? 0.7 : 0.4,
-      size: isHeavy ? 2.5 : 1,
+      life: isHeavy ? 0.7 : 0.45,
+      size: isHeavy ? 2.8 : 1.2,
       intensity: isHeavy ? 1.0 : 1,
     });
 
     if (isHeavy) {
+      this.needsShake = true;
       const impactRadius = Number.isFinite(radius) ? Math.max(70, radius) : 170;
       this.rikaHeavyImpacts.push({
         x,
