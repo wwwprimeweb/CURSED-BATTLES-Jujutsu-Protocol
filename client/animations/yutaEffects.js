@@ -131,8 +131,8 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
 
 export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet) {
   if (progress <= 0.01 || progress >= 0.98) return;
-  const fadeIn = Math.min(1, progress * 6);
-  const fadeOut = Math.max(0, 1 - Math.max(0, progress - 0.5) * 2);
+  const fadeIn = Math.min(1, progress * 8);
+  const fadeOut = Math.max(0, 1 - Math.max(0, progress - 0.45) * 1.82);
   const alpha = fadeIn * fadeOut;
   if (alpha <= 0.01) return;
 
@@ -143,26 +143,21 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
   ctx.globalCompositeOperation = "lighter";
 
   if (spritesheet && spritesheet.complete && spritesheet.naturalWidth > 0) {
-    const TOTAL_FRAMES = 9;
-    const FRAME_COLS = 9;
+    const TOTAL_FRAMES = 18;
+    const FRAME_COLS = 18;
     const frameW = spritesheet.naturalWidth / FRAME_COLS;
     const frameH = spritesheet.naturalHeight;
 
-    let frameIdx;
-    if (progress < 0.5) {
-      frameIdx = Math.min(4, Math.max(0, Math.floor((progress / 0.5) * 4 + 0.5)));
-    } else {
-      frameIdx = 4 + Math.min(4, Math.max(0, Math.floor(((progress - 0.5) / 0.5) * 4 + 0.5)));
-    }
-
+    const p = Math.min(progress / 0.6, 1);
+    const frameIdx = Math.min(17, Math.max(0, Math.floor(p * 18)));
     const col = frameIdx % FRAME_COLS;
     const sx = col * frameW;
     const sy = 0;
 
-    const growScale = Math.min(1, 0.3 + progress * 3.5);
-    const spriteWidth = 130 * 3.5 * growScale;
+    const growScale = Math.min(1, 0.2 + progress * 4);
+    const spriteWidth = 140 * 3.5 * growScale;
     const spriteHeight = spriteWidth * (frameH / frameW);
-    const dist = 50 * Math.min(1, progress * 3);
+    const dist = 45 * Math.min(1, progress * 4);
 
     const px = Math.cos(angle) * dist;
     const py = Math.sin(angle) * dist;
@@ -173,7 +168,7 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
     if (dirX > 0) ctx.scale(1, -1);
     ctx.globalAlpha = alpha;
     ctx.shadowColor = "#ff66b2";
-    ctx.shadowBlur = 45;
+    ctx.shadowBlur = 55;
     ctx.drawImage(spritesheet, sx, sy, frameW, frameH,
       -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
     ctx.restore();

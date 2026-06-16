@@ -9,6 +9,8 @@ export class YutaSkillEffects {
     this.time = 0;
     this.m1Spritesheet = new Image();
     this.m1Spritesheet.src = "/assets/habilit/portador-do-vinculo_m1_7033.png";
+    this.rikaSpritesheet = new Image();
+    this.rikaSpritesheet.src = "/assets/sprites/portador-do-vinculo_7012.png";
   }
 
   update(dt) {
@@ -126,7 +128,7 @@ export class YutaSkillEffects {
         drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle, this.m1Spritesheet);
       } else if (slash.type === "rika") {
         drawRikaSwing(ctx, sx, sy, progress);
-        drawRikaClawSprite(ctx, sx, sy, slash.dirX, slash.dirY, progress, this.m1Spritesheet);
+        drawRikaClawSprite(ctx, sx, sy, slash.dirX, slash.dirY, progress, this.rikaSpritesheet);
       }
     }
   }
