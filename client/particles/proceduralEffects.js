@@ -213,19 +213,21 @@ export class SkillVFX {
     ctx.globalCompositeOperation = "lighter";
     const t = performance.now() / 1000;
 
-    const pulse = 1 + Math.sin(t * 4) * 0.04;
-    const currentRadius = radius * pulse;
-    const waveAmp = 0.02 + Math.pow(progress, 1.5) * 0.12;
+    const baseR = radius * Math.pow(progress, 1.3);
+    const pulse = 1 + Math.sin(t * 3) * 0.02;
+    const currentRadius = baseR * pulse;
+    const amp = Math.pow(1 - progress, 1.3) * 0.15;
 
     const numPoints = 48;
     const pts = [];
 
     for (let i = 0; i < numPoints; i++) {
       const theta = (i / numPoints) * Math.PI * 2;
-      const w1 = Math.sin(theta * 3 - t * 2.0) * waveAmp;
-      const w2 = Math.sin(theta * 5 + t * 1.3) * waveAmp * 0.75;
-      const w3 = Math.sin(theta * 7 - t * 0.7) * waveAmp * 0.5;
-      const r = currentRadius * (1 + w1 + w2 + w3);
+      const d1 = Math.sin(theta * 2.3 + t * 0.17) * 0.35;
+      const d2 = Math.sin(theta * 2.7 + t * 0.31) * 0.28;
+      const d3 = Math.sin(theta * 3.4 + t * 0.14) * 0.22;
+      const d4 = Math.sin(theta * 4.1 + t * 0.26) * 0.15;
+      const r = currentRadius * (1 + (d1 + d2 + d3 + d4) * amp);
       pts.push({
         x: x + Math.cos(theta) * r,
         y: y + Math.sin(theta) * r,
@@ -246,7 +248,7 @@ export class SkillVFX {
     ctx.lineWidth = 3 + progress * 2;
     ctx.stroke();
 
-    // Inner stroke (white thin, phase-offset for dual-layer shimmer)
+    // Inner stroke (white, phase-offset)
     ctx.shadowBlur = 0;
     ctx.strokeStyle = `rgba(255,255,255,${0.2 + progress * 0.25})`;
     ctx.lineWidth = 0.8 + progress * 0.5;
