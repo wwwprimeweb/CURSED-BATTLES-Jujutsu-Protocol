@@ -62,8 +62,8 @@ export const FULL_RIKA_CONFIG = {
   renderScale: 1.7,
   introFrames: 9,
   introDuration: 1.2,
-  idleA: 0,
-  idleB: 1,
+  moveFrame: 0,
+  idleFrame: 1,
   attackFrameIndex: 2,
 };
 

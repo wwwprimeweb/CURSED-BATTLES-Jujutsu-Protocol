@@ -166,14 +166,6 @@ export class YutaVisualSystem {
           state.timer = 0;
         }
       }
-
-      if (state.introDone) {
-        state.idleTimer += dt;
-        if (state.idleTimer > 0.5) {
-          state.idleToggle = !state.idleToggle;
-          state.idleTimer = 0;
-        }
-      }
     });
 
     // Update rika summon state machine
@@ -365,9 +357,6 @@ export class YutaVisualSystem {
     this.fullRikaStates.set(playerId, {
       timer: 0,
       introDone: false,
-      currentFrame: 0,
-      idleToggle: false,
-      idleTimer: 0,
     });
   }
 
@@ -653,7 +642,8 @@ export class YutaVisualSystem {
             if (isAttacking) {
               frame = cfg.attackFrameIndex;
             } else {
-              frame = fullRikaState.idleToggle ? cfg.idleA : cfg.idleB;
+              const moving = Math.abs(p.vx) > 0.5 || Math.abs(p.vy) > 0.5;
+              frame = moving ? cfg.moveFrame : cfg.idleFrame;
             }
           }
           this.yutaSprite.renderFullRikaFrame(ctx, rikaX, rikaY, rikaFacing, row, frame, 1, spriteScale);
