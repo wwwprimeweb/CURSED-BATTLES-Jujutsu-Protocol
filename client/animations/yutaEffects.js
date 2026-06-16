@@ -165,8 +165,11 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
 
     ctx.save();
     ctx.translate(px, py);
-    ctx.rotate(angle);
-    if (dirX > 0) ctx.scale(1, -1);
+    if (dirX < 0) {
+      ctx.scale(-1, -1);
+    } else {
+      ctx.scale(1, -1);
+    }
     ctx.globalAlpha = alpha;
     ctx.shadowColor = "#ff66b2";
     ctx.shadowBlur = 55;
