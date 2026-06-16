@@ -236,6 +236,21 @@ export class SkillVFX {
       });
     }
 
+    // Gradient fill (solid energy sphere matching deformed shape)
+    const gradR = currentRadius * (1 + amp * 1.2);
+    const fillGrad = ctx.createRadialGradient(x, y, 0, x, y, gradR);
+    fillGrad.addColorStop(0, `rgba(255,255,255,${0.6 * alpha})`);
+    fillGrad.addColorStop(0.3, `rgba(255,200,230,${0.35 * alpha})`);
+    fillGrad.addColorStop(0.7, `rgba(255,51,153,${0.15 * alpha})`);
+    fillGrad.addColorStop(1, `rgba(255,102,178,0)`);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = fillGrad;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < numPoints; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+    ctx.fill();
+
     // Outer stroke (pink, glowing)
     ctx.shadowColor = "rgba(255,51,153,1)";
     ctx.shadowBlur = 35;
