@@ -368,6 +368,26 @@ export class SkillVFX {
     const corePulse = 1 + Math.sin(t * pulseFreq) * finalAmp;
     const coreShadow = 30 + p * 55;
 
+    // Particulas internas sutis
+    const partActive = Math.max(0, (p - 0.15) / 0.1);
+    if (partActive > 0) {
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 10; i++) {
+        const seed = i * 73.1;
+        const baseAngle = (seed * Math.PI / 180) % (Math.PI * 2);
+        const baseDist = coreR * (0.2 + Math.sin(seed * 1.7) * 0.3 + 0.3);
+        const dx = Math.sin(t * 0.3 + i * 2.1) * coreR * 0.02;
+        const dy = Math.cos(t * 0.4 + i * 1.3) * coreR * 0.02;
+        const px = x + Math.cos(baseAngle + t * 0.05) * baseDist + dx;
+        const py = y + Math.sin(baseAngle + t * 0.05) * baseDist + dy;
+        ctx.globalAlpha = partActive * 0.015 * alpha;
+        ctx.fillStyle = "rgba(255,180,220,1)";
+        ctx.beginPath();
+        ctx.arc(px, py, 1 + Math.sin(seed) * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     const grad = ctx.createRadialGradient(x, y, 0, x, y, coreR * corePulse * 1.5);
     grad.addColorStop(0, `rgba(255,255,255,${0.95 * alpha})`);
     grad.addColorStop(0.3, `rgba(255,200,230,${0.7 * alpha})`);
