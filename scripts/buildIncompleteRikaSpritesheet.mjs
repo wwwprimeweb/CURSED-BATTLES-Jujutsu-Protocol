@@ -39,14 +39,12 @@ async function main() {
         const cellX = colIdx * CELL_W;
         const cellY = rowIdx * CELL_H;
 
-        // Scale to fit cell while maintaining aspect ratio
-        const scaleX = CELL_W / img.width;
-        const scaleY = CELL_H / img.height;
-        const fitScale = Math.min(scaleX, scaleY);
+        // Scale uniformly by height so all sprites are same visual size
+        const fitScale = CELL_H / img.height;
         const fitW = img.width * fitScale;
-        const fitH = img.height * fitScale;
-        const dstX = cellX + (CELL_W - fitW) / 2;
-        const dstY = cellY + (CELL_H - fitH) / 2;
+        const fitH = CELL_H;
+        const dstX = cellX + Math.max(0, CELL_W - fitW) / 2;
+        const dstY = cellY;
 
         ctx.drawImage(img, dstX, dstY, fitW, fitH);
         console.log(`  Row ${rowIdx}, Col ${colIdx}: 21_${num}.png (${img.width}x${img.height}) placed at (${Math.round(dstX)}, ${Math.round(dstY)})`);

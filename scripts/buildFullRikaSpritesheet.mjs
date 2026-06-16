@@ -36,13 +36,11 @@ async function main() {
         const img = await loadImage(path);
         const cellX = colIdx * CELL_W;
         const cellY = rowIdx * CELL_H;
-        const scaleX = CELL_W / img.width;
-        const scaleY = CELL_H / img.height;
-        const fitScale = Math.min(scaleX, scaleY);
+        const fitScale = CELL_H / img.height;
         const fitW = img.width * fitScale;
-        const fitH = img.height * fitScale;
-        const dstX = cellX + (CELL_W - fitW) / 2;
-        const dstY = cellY + (CELL_H - fitH) / 2;
+        const fitH = CELL_H;
+        const dstX = cellX + Math.max(0, CELL_W - fitW) / 2;
+        const dstY = cellY;
         ctx.drawImage(img, dstX, dstY, fitW, fitH);
         console.log(`  Row ${rowIdx}, Col ${colIdx}: 26_${num}.png (${img.width}x${img.height})`);
       } catch (e) {
