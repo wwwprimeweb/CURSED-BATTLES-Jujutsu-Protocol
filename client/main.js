@@ -465,7 +465,7 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 180, life: 0.3, size: 2.5 });
     } else if (ev.type === "rikaCompanionAttack") {
       const heavy = ev.attackType === "heavy";
-      renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, ev.dirX, ev.dirY, ev.attackType, ev.radius);
+      renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, ev.dirX, ev.dirY, ev.attackType, ev.radius, ev.ownerId);
       particles.spawnBurst({
         x: ev.x,
         y: ev.y,
