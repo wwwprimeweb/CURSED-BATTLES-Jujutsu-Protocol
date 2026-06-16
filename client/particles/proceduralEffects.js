@@ -247,86 +247,73 @@ export class SkillVFX {
       }
     }
 
-    // === STREAMS DE ENERGIA (crescem e se juntam à esfera, fases 3-5) ===
-    const streamActive = ss(0.3, 0.42, p) * (1 - ss(0.85, 0.92, p));
-    if (streamActive > 0.01) {
-      ctx.lineCap = "round";
-      const streamCount = 6;
-      const streamLen = ss(0.35, 0.55, p);
-      const baseAngle = t * 0.15;
-      const qb = (p0, p1, p2, t) => (1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * p1 + t * t * p2;
+    // === PARTICULAS ORBITAIS COM ABSORÇÃO (fases 3-5) ===
+    const orbitActive = ss(0.3, 0.42, p) * (1 - ss(0.88, 0.95, p));
+    if (orbitActive > 0.01) {
+      const pCount = 45;
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < pCount; i++) {
+        const seedA = i * 137.5 * Math.PI / 180;
+        const speed = 0.3 + Math.sin(i * 53.1) * 0.15 + 0.15;
+        const dist = 1.0 + (Math.sin(i * 73.3) * 0.5 + 0.5) * 1.3;
+        const deathPhase = 0.35 + (i / pCount) * 0.55;
+        const absorbStart = deathPhase - 0.12;
+        const absorbEnd = deathPhase;
 
-      for (let i = 0; i < streamCount; i++) {
-        const angle = baseAngle + i * Math.PI * 2 / streamCount;
-        const curveDir = (i % 2 === 0 ? 0.35 : -0.35);
-        const outerDist = R * (0.4 + streamLen * 1.8);
-        const ctrlDist = R * (0.4 + streamLen * 1.0);
-        const innerDist = R * 0.32;
+        let orbitR, pa;
+        if (p < absorbStart) {
+          orbitR = R * dist;
+          pa = 1;
+        } else if (p < absorbEnd) {
+          const tA = (p - absorbStart) / (absorbEnd - absorbStart);
+          orbitR = R * (dist - (dist - 0.3) * tA);
+          pa = 1 - tA * 0.85;
+        } else {
+          const fadeOut = Math.max(0, Math.min(1, (p - absorbEnd) / 0.06));
+          orbitR = R * 0.3;
+          pa = (1 - fadeOut) * 0.15;
+        }
 
-        const p0x = x + Math.cos(angle) * outerDist;
-        const p0y = y + Math.sin(angle) * outerDist;
-        const p1x = x + Math.cos(angle + curveDir) * ctrlDist;
-        const p1y = y + Math.sin(angle + curveDir) * ctrlDist;
-        const p2x = x + Math.cos(angle) * innerDist;
-        const p2y = y + Math.sin(angle) * innerDist;
+        const angle = seedA + t * speed;
+        const jitter = 0.7 + Math.sin(t * 1.5 + i * 3.1) * 0.3;
+        const partAlpha = orbitActive * pa * alpha * jitter;
 
-        const jitter = 0.75 + Math.sin(t * (1.1 + i * 0.5) + i * 2.3) * 0.25;
-        const streamAlpha = streamActive * (0.3 + streamLen * 0.7) * alpha * jitter;
+        const px = x + Math.cos(angle) * orbitR;
+        const py = y + Math.sin(angle) * orbitR;
 
-        // Outer glow layer
-        ctx.globalAlpha = streamAlpha * 0.6;
-        ctx.strokeStyle = "rgba(255,180,220,1)";
-        ctx.lineWidth = (3 + streamLen * 4) * (0.5 + p * 0.5);
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.moveTo(p0x, p0y);
-        ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
-        ctx.stroke();
-
-        // Main core layer
-        ctx.globalAlpha = streamAlpha;
-        ctx.strokeStyle = "rgba(255,220,240,1)";
-        ctx.lineWidth = (2 + streamLen * 2) * (0.5 + p * 0.5);
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.moveTo(p0x, p0y);
-        ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
-        ctx.stroke();
-
-        // White thin inner
-        ctx.globalAlpha = streamAlpha * 0.3;
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.lineWidth = (0.5 + streamLen) * (0.5 + p * 0.5);
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.moveTo(p0x, p0y);
-        ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
-        ctx.stroke();
-
-        // Flow ball traveling along stream
-        if (streamLen > 0.2) {
-          const flowPhase = ((t * 0.6 + i * 0.17) % 1);
-          const bx = qb(p0x, p1x, p2x, flowPhase);
-          const by = qb(p0y, p1y, p2y, flowPhase);
-          const flowAlpha = streamActive * streamLen * (0.5 + Math.sin(t * 2.5 + i * 1.1) * 0.3) * alpha;
-          ctx.shadowBlur = 30;
-          ctx.shadowColor = "#ff66cc";
-          ctx.globalAlpha = flowAlpha;
-          ctx.fillStyle = "rgba(255,255,255,1)";
+        // Trail
+        const trailDt = [0.06, 0.12];
+        for (let tr = 0; tr < trailDt.length; tr++) {
+          const tAngle = angle - speed * trailDt[tr];
+          const tx = x + Math.cos(tAngle) * orbitR;
+          const ty = y + Math.sin(tAngle) * orbitR;
+          ctx.globalAlpha = partAlpha * (0.3 - tr * 0.12);
+          ctx.fillStyle = "rgba(255,200,230,1)";
           ctx.beginPath();
-          ctx.arc(bx, by, 2 + streamLen * 2, 0, Math.PI * 2);
+          ctx.arc(tx, ty, 2 - tr * 0.5, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        // Contact glow on sphere surface
-        if (streamLen > 0.7) {
-          const contact = (streamLen - 0.7) / 0.3;
-          ctx.shadowBlur = 35;
+        // Main particle
+        ctx.globalAlpha = partAlpha;
+        ctx.fillStyle = "rgba(255,255,255,1)";
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = "#ff66cc";
+        const size = 2 + (1 - orbitR / Math.max(R * 0.3, R * dist)) * 2;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Absorption flash
+        if (p >= absorbEnd && p < absorbEnd + 0.04) {
+          const flashP = (p - absorbEnd) / 0.04;
+          ctx.globalAlpha = (1 - flashP) * partAlpha * 0.6;
+          ctx.shadowBlur = 25;
           ctx.shadowColor = "#ff33cc";
-          ctx.globalAlpha = contact * streamActive * alpha * 0.35;
           ctx.fillStyle = "rgba(255,255,255,1)";
+          const flashR = 3 + flashP * 10;
           ctx.beginPath();
-          ctx.arc(p2x, p2y, 2 + contact * 4, 0, Math.PI * 2);
+          ctx.arc(px, py, flashR, 0, Math.PI * 2);
           ctx.fill();
         }
       }
