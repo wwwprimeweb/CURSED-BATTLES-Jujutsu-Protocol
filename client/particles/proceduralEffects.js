@@ -212,124 +212,136 @@ export class SkillVFX {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     const t = performance.now() / 1000;
+    const p = progress;
 
-    const baseR = radius * Math.pow(progress, 1.3);
-    const pulse = 1 + Math.sin(t * 3) * 0.02;
-    const currentRadius = baseR * pulse;
-    const amp = Math.pow(1 - progress, 1.3) * 0.15;
+    const R = radius * Math.pow(p, 0.7);
 
-    const numPoints = 48;
-    const pts = [];
-
-    for (let i = 0; i < numPoints; i++) {
-      const theta = (i / numPoints) * Math.PI * 2;
-      const d1 = Math.sin(theta * 2.3 + t * 0.17) * 0.35;
-      const d2 = Math.sin(theta * 2.7 + t * 0.31) * 0.28;
-      const d3 = Math.sin(theta * 3.4 + t * 0.14) * 0.22;
-      const d4 = Math.sin(theta * 4.1 + t * 0.26) * 0.15;
-      const r = currentRadius * (1 + (d1 + d2 + d3 + d4) * amp);
-      pts.push({
-        x: x + Math.cos(theta) * r,
-        y: y + Math.sin(theta) * r,
-        theta,
-        r,
-      });
-    }
-
-    // Gradient fill (solid energy sphere matching deformed shape)
-    const gradR = currentRadius * (1 + amp * 1.2);
-    const fillGrad = ctx.createRadialGradient(x, y, 0, x, y, gradR);
-    fillGrad.addColorStop(0, `rgba(255,255,255,${0.6 * alpha})`);
-    fillGrad.addColorStop(0.3, `rgba(255,200,230,${0.35 * alpha})`);
-    fillGrad.addColorStop(0.7, `rgba(255,51,153,${0.15 * alpha})`);
-    fillGrad.addColorStop(1, `rgba(255,102,178,0)`);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = fillGrad;
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < numPoints; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Internal energy rings (animated waves inside the sphere)
-    const ringScales = [0.25, 0.45, 0.62, 0.78, 0.9];
-    const ringFreqs = [2.1, 1.3, 0.9, 0.6, 0.4];
-    for (let ri = 0; ri < ringScales.length; ri++) {
-      const scale = ringScales[ri];
-      const ringAlpha = (Math.sin(t * ringFreqs[ri] + ri * 1.7) * 0.3 + 0.5) * alpha * 0.5;
-      ctx.globalAlpha = ringAlpha;
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = `rgba(255,255,255,1)`;
-      ctx.lineWidth = 1.2 - ri * 0.15;
-      ctx.beginPath();
-      const rp0 = pts[0];
-      ctx.moveTo(x + (rp0.x - x) * scale, y + (rp0.y - y) * scale);
-      for (let i = 1; i < numPoints; i++) {
-        const pi = pts[i];
-        ctx.lineTo(x + (pi.x - x) * scale, y + (pi.y - y) * scale);
+    // === ONDAS CIRCULARES (fase 4: 0.55-0.75) ===
+    if (p > 0.55 && p < 0.75) {
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = "rgba(255,180,220,1)";
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 3; i++) {
+        const wavePhase = ((t * 6 + i * 0.33) % 1);
+        const waveR = R * (0.2 + wavePhase * 0.65);
+        const waveAlpha = (1 - wavePhase) * 0.2 * alpha;
+        ctx.globalAlpha = waveAlpha;
+        ctx.beginPath();
+        ctx.arc(x, y, waveR, 0, Math.PI * 2);
+        ctx.stroke();
       }
-      ctx.closePath();
-      ctx.stroke();
     }
 
-    // Outer stroke (pink, glowing)
-    ctx.shadowColor = "rgba(255,51,153,1)";
-    ctx.shadowBlur = 35;
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < numPoints; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(255,180,220,${0.7 + progress * 0.3})`;
-    ctx.lineWidth = 3 + progress * 2;
-    ctx.stroke();
-
-    // Inner stroke (white, phase-offset)
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = `rgba(255,255,255,${0.2 + progress * 0.25})`;
-    ctx.lineWidth = 0.8 + progress * 0.5;
-    ctx.beginPath();
-    const phaseOff = 2;
-    ctx.moveTo(pts[phaseOff].x, pts[phaseOff].y);
-    for (let i = phaseOff + 1; i < numPoints + phaseOff; i++) {
-      ctx.lineTo(pts[i % numPoints].x, pts[i % numPoints].y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    // Core nucleus
-    const coreR = currentRadius * 0.12 * (1 + Math.sin(t * 10) * 0.15);
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, coreR);
-    grad.addColorStop(0, `rgba(255,255,255,${0.9 * alpha})`);
-    grad.addColorStop(0.5, `rgba(255,150,200,${0.5 * alpha})`);
-    grad.addColorStop(1, `rgba(255,51,153,0)`);
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = "#ff66cc";
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, coreR, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Converging motes (early formation phase)
-    const moteActive = Math.max(0, Math.min(1, (1 - progress) * 2.5));
-    if (moteActive > 0) {
-      for (let i = 0; i < 30; i++) {
-        const a = (i * 137.5 * Math.PI / 180) % (Math.PI * 2);
-        const startDist = currentRadius * (1.2 + Math.sin(i * 73.3) * 0.5 + 0.5);
-        const delay = Math.max(0, Math.sin(i * 91.7) * 0.15 + 0.15);
-        const converge = Math.max(0, Math.min(1, (progress - delay) * 3));
-        const dist = startDist * (1 - converge * 0.85);
-        if (dist > 2) {
-          const mx = x + Math.cos(a + t * 0.3) * dist;
-          const my = y + Math.sin(a + t * 0.3) * dist;
-          ctx.globalAlpha = alpha * (1 - converge) * 0.45;
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = "rgba(255,200,230,1)";
+    // === FITAS DE ENERGIA (fases 3-5: 0.35-0.9) ===
+    const ribbonAppear = Math.min(1, (p - 0.35) / 0.1);
+    const ribbonFade = Math.max(0, Math.min(1, (0.9 - p) / 0.1));
+    const ribbonPhase = ribbonAppear * ribbonFade;
+    if (ribbonPhase > 0) {
+      ctx.lineCap = "round";
+      const ribbonSpeed = p < 0.55 ? 0.3 : p < 0.75 ? 0.7 : 1.2;
+      const ribbonRadii = [0.5, 0.68, 0.38];
+      const trailOffsets = [0, -0.07, -0.14, -0.22];
+      const trailAlphas = [1, 0.4, 0.15, 0.05];
+      const span = Math.PI * 1.15;
+      for (let ri = 0; ri < 3; ri++) {
+        const baseAngle = t * ribbonSpeed + ri * Math.PI * 2 / 3;
+        const ribbonR = R * ribbonRadii[ri];
+        for (let tr = 0; tr < trailOffsets.length; tr++) {
+          const startA = baseAngle + trailOffsets[tr] - span / 2;
+          const endA = baseAngle + trailOffsets[tr] + span / 2;
+          const trAlpha = trailAlphas[tr] * ribbonPhase * alpha * (0.4 + p * 0.3);
+          ctx.globalAlpha = trAlpha;
+          ctx.strokeStyle = tr === 0 ? "rgba(255,220,240,1)" : "rgba(255,180,220,1)";
+          ctx.lineWidth = (3.5 - tr * 0.8) * (0.5 + p * 0.5);
+          ctx.shadowBlur = tr === 0 ? 18 : 0;
           ctx.beginPath();
-          ctx.arc(mx, my, 1.5 + Math.sin(i * 53.1) * 0.5, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.arc(x, y, ribbonR, startA, endA);
+          ctx.stroke();
         }
       }
+    }
+
+    // === FRAGMENTOS ORBITAIS (fases 1-2: 0-0.35) ===
+    if (p < 0.35) {
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 24; i++) {
+        const baseAngle = (i * 137.5 * Math.PI / 180) % (Math.PI * 2);
+        const speed = 0.3 + Math.sin(i * 53.1) * 0.15 + 0.15;
+        let fx, fy, fa;
+        if (p < 0.15) {
+          const t1 = p / 0.15;
+          const dist = R * (2.5 - t1 * 1.7);
+          const drift = baseAngle + t * 0.05;
+          fx = x + Math.cos(drift) * dist;
+          fy = y + Math.sin(drift) * dist;
+          fa = (1 - t1 * 0.5) * 0.55 * alpha;
+        } else {
+          const t2 = (p - 0.15) / 0.2;
+          const orbitR = R * (0.5 + t2 * 0.3);
+          const orbitA = baseAngle + t * speed;
+          fx = x + Math.cos(orbitA) * orbitR;
+          fy = y + Math.sin(orbitA) * orbitR;
+          fa = (1 - t2 * 0.5) * 0.5 * alpha;
+        }
+        ctx.globalAlpha = fa;
+        ctx.fillStyle = "rgba(255,200,230,1)";
+        ctx.beginPath();
+        ctx.arc(fx, fy, 1.5 + Math.sin(i * 43.7) * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // === PARTICULAS SUGADAS (fase 5: 0.75-0.9) ===
+    if (p > 0.75 && p < 0.9) {
+      ctx.shadowBlur = 0;
+      const suckPhase = (p - 0.75) / 0.15;
+      for (let i = 0; i < 30; i++) {
+        const angle = (i * 91.3 * Math.PI / 180) % (Math.PI * 2);
+        const speed = Math.sin(i * 37.7) * 0.3 + 0.5;
+        const dist = R * (2 + speed) * (1 - suckPhase * (0.7 + speed * 0.3));
+        const px = x + Math.cos(angle + t * 0.2) * dist;
+        const py = y + Math.sin(angle + t * 0.2) * dist;
+        const pa = (1 - dist / (R * 3)) * 0.5 * alpha;
+        ctx.globalAlpha = pa;
+        ctx.fillStyle = "rgba(255,220,240,1)";
+        const size = 1 + (1 - dist / (R * 3)) * 1.5;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // === NUCLEO / MASSA DENSA (todas as fases) ===
+    const corePct = p < 0.9 ? 0.06 + p * 0.32 : 0.35 + (p - 0.9) * 6.5;
+    const coreR = R * Math.min(corePct, 0.85);
+    const corePulse = (p > 0.55 && p < 0.75) ? 1 + Math.sin(t * 6) * 0.25 : 1 + Math.sin(t * 10) * 0.05;
+    const coreShadow = p > 0.75 ? 80 : 30 + p * 30;
+
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, coreR * corePulse * 1.5);
+    grad.addColorStop(0, `rgba(255,255,255,${0.95 * alpha})`);
+    grad.addColorStop(0.3, `rgba(255,200,230,${0.7 * alpha})`);
+    grad.addColorStop(0.6, `rgba(255,51,153,${0.4 * alpha})`);
+    grad.addColorStop(1, `rgba(255,102,178,0)`);
+    ctx.shadowBlur = coreShadow;
+    ctx.shadowColor = "#ff33cc";
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, coreR * corePulse * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (p > 0.92) {
+      const dense = (p - 0.92) / 0.08;
+      const denseR = R * 0.75 * dense;
+      const dGrad = ctx.createRadialGradient(x, y, 0, x, y, denseR);
+      dGrad.addColorStop(0, `rgba(255,255,255,${0.5 * dense * alpha})`);
+      dGrad.addColorStop(0.5, `rgba(255,150,200,${0.3 * dense * alpha})`);
+      dGrad.addColorStop(1, `rgba(255,51,153,0)`);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = dGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, denseR, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     ctx.restore();

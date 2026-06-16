@@ -895,7 +895,6 @@ export class YutaVisualSystem {
       const sx = (charge.x - camera.x) * z + w * 0.5;
       const sy = (charge.y - camera.y) * z + h * 0.5;
       SkillVFX.drawPinkSphere(ctx, sx, sy, 60 * z, progress, sphereAlpha);
-      SkillVFX.drawPinkSparks(ctx, sx, sy, 60 * z, progress, sphereAlpha);
     });
 
     // Pure Love beam + inner particles
