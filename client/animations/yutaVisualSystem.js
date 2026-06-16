@@ -1023,9 +1023,27 @@ export class YutaVisualSystem {
         const trailEY = (imp.endY - cy) * z + h * 0.5;
 
         ctx.save();
+        const dx = trailEX - trailSX;
+        const dy = trailEY - trailSY;
+        const segments = 8;
+        for (let i = 0; i < segments; i++) {
+          const t = i / segments;
+          const ox = trailSX + dx * t;
+          const oy = trailSY + dy * t;
+          const orbAlpha = (1 - t) * 0.35 * (1 - progress * 0.5);
+          if (orbAlpha < 0.01) continue;
+          ctx.globalAlpha = orbAlpha;
+          ctx.fillStyle = i % 2 === 0 ? "#ff99cc" : "#ff66b2";
+          ctx.shadowColor = "#ff66b2";
+          ctx.shadowBlur = 35 * z;
+          ctx.beginPath();
+          ctx.arc(ox, oy, (12 + t * 6) * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1 - progress * 0.3;
         drawEnergyWaveTrail(ctx, trailSX, trailSY, trailEX, trailEY, progress, this.time, {
-          width: (40 + progress * 80) * z,
+          width: (50 + progress * 90) * z,
         });
         ctx.restore();
 
