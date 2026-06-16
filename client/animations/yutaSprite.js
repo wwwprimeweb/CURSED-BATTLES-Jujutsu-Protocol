@@ -219,7 +219,9 @@ export class YutaSpriteRenderer {
       ctx.scale(-1, 1);
       ctx.translate(-x, -y);
     }
-    ctx.drawImage(this.fullRikaSheet, sx, sy, cfg.cellWidth, cfg.cellHeight, x - drawW / 2, y - drawH / 2, drawW, drawH);
+    const drawX = x - cfg.pivotX * (drawW / cfg.cellWidth);
+    const drawY = y - cfg.pivotY * (drawH / cfg.cellHeight);
+    ctx.drawImage(this.fullRikaSheet, sx, sy, cfg.cellWidth, cfg.cellHeight, drawX, drawY, drawW, drawH);
     ctx.restore();
   }
 
