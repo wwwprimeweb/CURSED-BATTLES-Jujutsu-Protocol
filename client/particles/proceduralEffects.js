@@ -247,30 +247,87 @@ export class SkillVFX {
       }
     }
 
-    // === FITAS DE ENERGIA (fases 3-5) ===
-    const ribbonActive = ss(0.3, 0.42, p) * (1 - ss(0.85, 0.92, p));
-    if (ribbonActive > 0.01) {
+    // === STREAMS DE ENERGIA (crescem e se juntam à esfera, fases 3-5) ===
+    const streamActive = ss(0.3, 0.42, p) * (1 - ss(0.85, 0.92, p));
+    if (streamActive > 0.01) {
       ctx.lineCap = "round";
-      const ribbonSpeed = 0.3 + ss(0.45, 0.75, p) * 0.9;
-      const ribbonRadii = [0.5, 0.68, 0.38];
-      const trailOffsets = [0, -0.07, -0.14, -0.22];
-      const trailAlphas = [1, 0.4, 0.15, 0.05];
-      const span = Math.PI * 1.15;
-      for (let ri = 0; ri < 3; ri++) {
-        const baseAngle = t * ribbonSpeed + ri * Math.PI * 2 / 3;
-        const ribbonR = R * ribbonRadii[ri];
-        for (let tr = 0; tr < trailOffsets.length; tr++) {
-          const startA = baseAngle + trailOffsets[tr] - span / 2;
-          const endA = baseAngle + trailOffsets[tr] + span / 2;
-          const jitter = 0.75 + Math.sin(t * (1.5 + ri * 0.7) + tr * 2.1) * 0.25;
-          const trAlpha = trailAlphas[tr] * ribbonActive * alpha * (0.4 + p * 0.3) * jitter;
-          ctx.globalAlpha = trAlpha;
-          ctx.strokeStyle = tr === 0 ? "rgba(255,220,240,1)" : "rgba(255,180,220,1)";
-          ctx.lineWidth = (3.5 - tr * 0.8) * (0.5 + p * 0.5);
-          ctx.shadowBlur = tr === 0 ? 18 : 0;
+      const streamCount = 6;
+      const streamLen = ss(0.35, 0.55, p);
+      const baseAngle = t * 0.15;
+      const qb = (p0, p1, p2, t) => (1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * p1 + t * t * p2;
+
+      for (let i = 0; i < streamCount; i++) {
+        const angle = baseAngle + i * Math.PI * 2 / streamCount;
+        const curveDir = (i % 2 === 0 ? 0.35 : -0.35);
+        const outerDist = R * (0.4 + streamLen * 1.8);
+        const ctrlDist = R * (0.4 + streamLen * 1.0);
+        const innerDist = R * 0.32;
+
+        const p0x = x + Math.cos(angle) * outerDist;
+        const p0y = y + Math.sin(angle) * outerDist;
+        const p1x = x + Math.cos(angle + curveDir) * ctrlDist;
+        const p1y = y + Math.sin(angle + curveDir) * ctrlDist;
+        const p2x = x + Math.cos(angle) * innerDist;
+        const p2y = y + Math.sin(angle) * innerDist;
+
+        const jitter = 0.75 + Math.sin(t * (1.1 + i * 0.5) + i * 2.3) * 0.25;
+        const streamAlpha = streamActive * (0.3 + streamLen * 0.7) * alpha * jitter;
+
+        // Outer glow layer
+        ctx.globalAlpha = streamAlpha * 0.6;
+        ctx.strokeStyle = "rgba(255,180,220,1)";
+        ctx.lineWidth = (3 + streamLen * 4) * (0.5 + p * 0.5);
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.moveTo(p0x, p0y);
+        ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
+        ctx.stroke();
+
+        // Main core layer
+        ctx.globalAlpha = streamAlpha;
+        ctx.strokeStyle = "rgba(255,220,240,1)";
+        ctx.lineWidth = (2 + streamLen * 2) * (0.5 + p * 0.5);
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(p0x, p0y);
+        ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
+        ctx.stroke();
+
+        // White thin inner
+        ctx.globalAlpha = streamAlpha * 0.3;
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = (0.5 + streamLen) * (0.5 + p * 0.5);
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(p0x, p0y);
+        ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
+        ctx.stroke();
+
+        // Flow ball traveling along stream
+        if (streamLen > 0.2) {
+          const flowPhase = ((t * 0.6 + i * 0.17) % 1);
+          const bx = qb(p0x, p1x, p2x, flowPhase);
+          const by = qb(p0y, p1y, p2y, flowPhase);
+          const flowAlpha = streamActive * streamLen * (0.5 + Math.sin(t * 2.5 + i * 1.1) * 0.3) * alpha;
+          ctx.shadowBlur = 30;
+          ctx.shadowColor = "#ff66cc";
+          ctx.globalAlpha = flowAlpha;
+          ctx.fillStyle = "rgba(255,255,255,1)";
           ctx.beginPath();
-          ctx.arc(x, y, ribbonR, startA, endA);
-          ctx.stroke();
+          ctx.arc(bx, by, 2 + streamLen * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Contact glow on sphere surface
+        if (streamLen > 0.7) {
+          const contact = (streamLen - 0.7) / 0.3;
+          ctx.shadowBlur = 35;
+          ctx.shadowColor = "#ff33cc";
+          ctx.globalAlpha = contact * streamActive * alpha * 0.35;
+          ctx.fillStyle = "rgba(255,255,255,1)";
+          ctx.beginPath();
+          ctx.arc(p2x, p2y, 2 + contact * 4, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
     }
