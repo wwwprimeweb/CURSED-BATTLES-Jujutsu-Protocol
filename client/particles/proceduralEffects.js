@@ -211,45 +211,128 @@ export class SkillVFX {
   static drawPinkSphere(ctx, x, y, radius, progress, alpha = 1) {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    const pulse = 1 + Math.sin(progress * Math.PI * 6) * 0.08;
-    const currentRadius = radius * pulse;
-    const arcProgress = Math.min(1, progress * 3);
     const t = performance.now() / 1000;
 
-    ctx.shadowColor = "rgba(255,51,153,1)";
-    ctx.shadowBlur = 50;
-    ctx.lineCap = "round";
+    const pulse = 1 + Math.sin(t * 4) * 0.04;
+    const currentRadius = radius * pulse;
+    const waveAmp = 0.02 + Math.pow(progress, 1.5) * 0.12;
 
-    const arcs = [
-      { r: currentRadius * 1.0, w: 4 + progress * 2, s: -0.5, dir: 1 },
-      { r: currentRadius * 0.82, w: 3 + progress * 2, s: 0.4, dir: -1 },
-      { r: currentRadius * 0.64, w: 3 + progress * 2, s: -0.3, dir: 1.3 },
-      { r: currentRadius * 0.46, w: 2.5 + progress * 1.5, s: 0.5, dir: -0.8 },
-      { r: currentRadius * 0.28, w: 2 + progress * 1.5, s: -0.2, dir: 1.5 },
-    ];
+    const numPoints = 48;
+    const pts = [];
 
-    for (const arc of arcs) {
-      const span = Math.PI * (1.2 + arcProgress * 0.8);
-      const gap = Math.PI * 2 - span;
-      const rotOffset = t * 0.8 * arc.dir + arc.s;
-      const startAngle = rotOffset + gap * 0.5;
-      const endAngle = startAngle + span;
-
-      ctx.globalAlpha = alpha * (0.3 + progress * 0.7);
-      ctx.strokeStyle = `rgba(255,200,230,${0.5 + progress * 0.3})`;
-      ctx.lineWidth = arc.w;
-      ctx.beginPath();
-      ctx.arc(x, y, arc.r, startAngle, endAngle);
-      ctx.stroke();
-
-      ctx.globalAlpha = alpha * (0.15 + progress * 0.4);
-      ctx.strokeStyle = "rgba(255,255,255,0.4)";
-      ctx.lineWidth = arc.w * 0.4;
-      ctx.beginPath();
-      ctx.arc(x, y, arc.r, startAngle + 0.1, endAngle - 0.1);
-      ctx.stroke();
+    for (let i = 0; i < numPoints; i++) {
+      const theta = (i / numPoints) * Math.PI * 2;
+      const w1 = Math.sin(theta * 3 - t * 2.0) * waveAmp;
+      const w2 = Math.sin(theta * 5 + t * 1.3) * waveAmp * 0.75;
+      const w3 = Math.sin(theta * 7 - t * 0.7) * waveAmp * 0.5;
+      const r = currentRadius * (1 + w1 + w2 + w3);
+      pts.push({
+        x: x + Math.cos(theta) * r,
+        y: y + Math.sin(theta) * r,
+        theta,
+        r,
+      });
     }
 
+    // Outer stroke (pink, glowing)
+    ctx.shadowColor = "rgba(255,51,153,1)";
+    ctx.shadowBlur = 35;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < numPoints; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(255,180,220,${0.7 + progress * 0.3})`;
+    ctx.lineWidth = 3 + progress * 2;
+    ctx.stroke();
+
+    // Inner stroke (white thin, phase-offset for dual-layer shimmer)
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = `rgba(255,255,255,${0.2 + progress * 0.25})`;
+    ctx.lineWidth = 0.8 + progress * 0.5;
+    ctx.beginPath();
+    const phaseOff = 2;
+    ctx.moveTo(pts[phaseOff].x, pts[phaseOff].y);
+    for (let i = phaseOff + 1; i < numPoints + phaseOff; i++) {
+      ctx.lineTo(pts[i % numPoints].x, pts[i % numPoints].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // Core nucleus
+    const coreR = currentRadius * 0.12 * (1 + Math.sin(t * 10) * 0.15);
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, coreR);
+    grad.addColorStop(0, `rgba(255,255,255,${0.9 * alpha})`);
+    grad.addColorStop(0.5, `rgba(255,150,200,${0.5 * alpha})`);
+    grad.addColorStop(1, `rgba(255,51,153,0)`);
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = "#ff66cc";
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, coreR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Converging motes (early formation phase)
+    const moteActive = Math.max(0, Math.min(1, (1 - progress) * 2.5));
+    if (moteActive > 0) {
+      for (let i = 0; i < 30; i++) {
+        const a = (i * 137.5 * Math.PI / 180) % (Math.PI * 2);
+        const startDist = currentRadius * (1.2 + Math.sin(i * 73.3) * 0.5 + 0.5);
+        const delay = Math.max(0, Math.sin(i * 91.7) * 0.15 + 0.15);
+        const converge = Math.max(0, Math.min(1, (progress - delay) * 3));
+        const dist = startDist * (1 - converge * 0.85);
+        if (dist > 2) {
+          const mx = x + Math.cos(a + t * 0.3) * dist;
+          const my = y + Math.sin(a + t * 0.3) * dist;
+          ctx.globalAlpha = alpha * (1 - converge) * 0.45;
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "rgba(255,200,230,1)";
+          ctx.beginPath();
+          ctx.arc(mx, my, 1.5 + Math.sin(i * 53.1) * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    ctx.restore();
+  }
+
+  static drawPinkSparks(ctx, x, y, radius, progress, alpha = 1) {
+    const sparkActive = Math.max(0, Math.min(1, (progress - 0.25) * 2.5));
+    if (sparkActive <= 0) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const t = performance.now() / 1000;
+    const numPoints = 48;
+    const waveAmp = 0.02 + Math.pow(progress, 1.5) * 0.12;
+    const pulse = 1 + Math.sin(t * 4) * 0.04;
+    const cr = radius * pulse;
+
+    const sparkCount = 6 + Math.floor(sparkActive * 12);
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < sparkCount; i++) {
+      const seed = (i * 53.7 + t * 0.7) % 1;
+      const theta = (seed * numPoints / numPoints | 0) / numPoints * Math.PI * 2;
+      const w1 = Math.sin(theta * 3 - t * 2.0) * waveAmp;
+      const w2 = Math.sin(theta * 5 + t * 1.3) * waveAmp * 0.75;
+      const w3 = Math.sin(theta * 7 - t * 0.7) * waveAmp * 0.5;
+      const r = cr * (1 + w1 + w2 + w3);
+      const px = x + Math.cos(theta) * r;
+      const py = y + Math.sin(theta) * r;
+      const sparkLen = 3 + ((i * 17 + t * 5) % 4) * (0.5 + sparkActive * 0.5);
+      const outAngle = theta + Math.sin(i * 27 + t * 2) * 0.6;
+      const sx = px + Math.cos(outAngle) * 2;
+      const sy = py + Math.sin(outAngle) * 2;
+      const ex = sx + Math.cos(outAngle) * sparkLen;
+      const ey = sy + Math.sin(outAngle) * sparkLen;
+      ctx.globalAlpha = alpha * (0.35 + Math.sin(t * 3 + i * 1.7) * 0.25) * (0.4 + sparkActive * 0.6);
+      ctx.strokeStyle = `rgba(255,220,240,${0.6 + sparkActive * 0.4})`;
+      ctx.lineWidth = 1.5 + sparkActive * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
