@@ -361,6 +361,7 @@ export class YutaVisualSystem {
       timer: 0,
       introDone: false,
       attackVisualTimer: 0,
+      attackTriggered: false,
     });
   }
 
@@ -643,8 +644,12 @@ export class YutaVisualSystem {
             frame = Math.min(Math.floor(progress * cfg.introFrames), cfg.introFrames - 1);
           } else {
             row = 1;
-            if (isAttacking && fullRikaState.attackVisualTimer <= 0) {
+            if (isAttacking && !fullRikaState.attackTriggered) {
+              fullRikaState.attackTriggered = true;
               fullRikaState.attackVisualTimer = 0.25;
+            }
+            if (!isAttacking) {
+              fullRikaState.attackTriggered = false;
             }
             if (fullRikaState.attackVisualTimer > 0) {
               frame = cfg.attackFrameIndex;
