@@ -2344,6 +2344,8 @@ class GameServer {
             ownerId,
             attackType: isHeavy ? "heavy" : attackType,
             radius: isHeavy ? range : undefined,
+            dirX: rika.facing,
+            dirY: 0,
           });
         }
       }
