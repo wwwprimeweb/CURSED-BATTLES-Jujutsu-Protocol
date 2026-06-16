@@ -166,6 +166,9 @@ export class YutaVisualSystem {
           state.timer = 0;
         }
       }
+      if (state.attackVisualTimer > 0) {
+        state.attackVisualTimer = Math.max(0, state.attackVisualTimer - dt);
+      }
     });
 
     // Update rika summon state machine
@@ -357,6 +360,7 @@ export class YutaVisualSystem {
     this.fullRikaStates.set(playerId, {
       timer: 0,
       introDone: false,
+      attackVisualTimer: 0,
     });
   }
 
@@ -639,7 +643,10 @@ export class YutaVisualSystem {
             frame = Math.min(Math.floor(progress * cfg.introFrames), cfg.introFrames - 1);
           } else {
             row = 1;
-            if (isAttacking) {
+            if (isAttacking && fullRikaState.attackVisualTimer <= 0) {
+              fullRikaState.attackVisualTimer = 0.25;
+            }
+            if (fullRikaState.attackVisualTimer > 0) {
               frame = cfg.attackFrameIndex;
             } else {
               const moving = Math.abs(p.vx) > 0.5 || Math.abs(p.vy) > 0.5;
