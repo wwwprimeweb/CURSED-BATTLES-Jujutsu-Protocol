@@ -43,11 +43,19 @@ async function main() {
         const fitScale = CELL_H / img.height;
         const fitW = img.width * fitScale;
         const fitH = CELL_H;
-        const dstX = cellX + Math.max(0, CELL_W - fitW) / 2;
-        const dstY = cellY;
 
-        ctx.drawImage(img, dstX, dstY, fitW, fitH);
-        console.log(`  Row ${rowIdx}, Col ${colIdx}: 21_${num}.png (${img.width}x${img.height}) placed at (${Math.round(dstX)}, ${Math.round(dstY)})`);
+        if (fitW <= CELL_W) {
+          // Centralizar normalmente
+          const dstX = cellX + (CELL_W - fitW) / 2;
+          ctx.drawImage(img, 0, 0, img.width, img.height, dstX, cellY, fitW, fitH);
+        } else {
+          // Center-crop: recorta o centro do sprite para caber na célula
+          const srcCropW = CELL_W / fitScale;
+          const srcX = (img.width - srcCropW) / 2;
+          ctx.drawImage(img, srcX, 0, srcCropW, img.height, cellX, cellY, CELL_W, CELL_H);
+        }
+        const logX = fitW <= CELL_W ? cellX + (CELL_W - fitW) / 2 : cellX;
+        console.log(`  Row ${rowIdx}, Col ${colIdx}: 21_${num}.png (${img.width}x${img.height}) -> cell (${logX}, ${cellY})`);
       } catch (e) {
         console.warn(`  Missing: 21_${num}.png - ${e.message}`);
       }

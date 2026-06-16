@@ -39,9 +39,15 @@ async function main() {
         const fitScale = CELL_H / img.height;
         const fitW = img.width * fitScale;
         const fitH = CELL_H;
-        const dstX = cellX + Math.max(0, CELL_W - fitW) / 2;
-        const dstY = cellY;
-        ctx.drawImage(img, dstX, dstY, fitW, fitH);
+
+        if (fitW <= CELL_W) {
+          const dstX = cellX + (CELL_W - fitW) / 2;
+          ctx.drawImage(img, 0, 0, img.width, img.height, dstX, cellY, fitW, fitH);
+        } else {
+          const srcCropW = CELL_W / fitScale;
+          const srcX = (img.width - srcCropW) / 2;
+          ctx.drawImage(img, srcX, 0, srcCropW, img.height, cellX, cellY, CELL_W, CELL_H);
+        }
         console.log(`  Row ${rowIdx}, Col ${colIdx}: 26_${num}.png (${img.width}x${img.height})`);
       } catch (e) {
         console.warn(`  Missing: 26_${num}.png - ${e.message}`);
