@@ -157,10 +157,11 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
     const growScale = Math.min(1, 0.2 + progress * 4);
     const spriteWidth = 120 * 2.5 * growScale;
     const spriteHeight = spriteWidth * (frameH / frameW);
-    const dist = 150;
+    const dist = 50;
+    const vyOffset = -50;
 
     const px = Math.cos(angle) * dist;
-    const py = Math.sin(angle) * dist;
+    const py = Math.sin(angle) * dist + vyOffset;
 
     ctx.save();
     ctx.translate(px, py);
