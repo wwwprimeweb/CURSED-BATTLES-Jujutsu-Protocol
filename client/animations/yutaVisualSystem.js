@@ -357,6 +357,7 @@ export class YutaVisualSystem {
         radius: impactRadius,
         life: 0.72,
         maxLife: 0.72,
+        playerId,
       });
     }
   }
@@ -761,6 +762,15 @@ export class YutaVisualSystem {
       const sx = (impact.x - cx) * z + w * 0.5;
       const sy = (impact.y - cy) * z + h * 0.5;
       const ringRadius = impact.radius * z;
+
+      const summon = impact.playerId ? this.rikaSummons.find(s => s.playerId === impact.playerId) : null;
+      if (summon) {
+        const trailStartX = (summon.x - cx) * z + w * 0.5;
+        const trailStartY = (summon.y - cy) * z + h * 0.5;
+        drawEnergyWaveTrail(ctx, trailStartX, trailStartY, sx, sy, progress, this.time, {
+          width: (70 + progress * 100) * z,
+        });
+      }
 
       drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.3);
       drawRikaAreaExplosion(ctx, sx, sy, Math.max(95 * z, ringRadius * 0.62), progress, this.time);
