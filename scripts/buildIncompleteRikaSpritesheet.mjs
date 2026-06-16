@@ -38,6 +38,7 @@ async function main() {
         const img = await loadImage(path);
         const cellX = colIdx * CELL_W;
         const cellY = rowIdx * CELL_H;
+        ctx.clearRect(cellX, cellY, CELL_W, CELL_H);
 
         // Scale uniformly by height so all sprites are same visual size
         const fitScale = CELL_H / img.height;
