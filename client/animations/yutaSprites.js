@@ -65,6 +65,8 @@ export const FULL_RIKA_CONFIG = {
   moveFrame: 0,
   idleFrame: 1,
   attackFrameIndex: 2,
+  heavyFrameRow: 0,
+  heavyFrameIndex: 6,
 };
 
 export const FULL_RIKA_SHEET_PATH = "/assets/sprites/portador-do-vinculo_full_rika.png";

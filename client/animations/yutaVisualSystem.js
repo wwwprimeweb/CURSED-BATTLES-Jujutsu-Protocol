@@ -332,16 +332,18 @@ export class YutaVisualSystem {
   }
 
   triggerRikaCompanionAttack(x, y, dirX, dirY, attackType = "normal", radius = 0, playerId) {
+    const isHeavy = attackType === "heavy";
     if (playerId && this.fullRikaStates.has(playerId)) {
-      this.fullRikaStates.get(playerId).attackVisualTimer = 0.25;
+      const state = this.fullRikaStates.get(playerId);
+      state.attackVisualTimer = isHeavy ? 0.35 : 0.25;
+      state.isHeavyAttack = isHeavy;
     }
     const nx = Number.isFinite(dirX) ? dirX : 1;
     const ny = Number.isFinite(dirY) ? dirY : 0;
-    const isHeavy = attackType === "heavy";
     this.effects.addRikaAttack(x, y, nx, ny, {
-      life: isHeavy ? 0.56 : 0.4,
-      size: isHeavy ? 2.2 : 1,
-      intensity: isHeavy ? 1.45 : 1,
+      life: isHeavy ? 0.7 : 0.4,
+      size: isHeavy ? 2.5 : 1,
+      intensity: isHeavy ? 1.0 : 1,
     });
 
     if (isHeavy) {
@@ -364,6 +366,7 @@ export class YutaVisualSystem {
       timer: 0,
       introDone: false,
       attackVisualTimer: 0,
+      isHeavyAttack: false,
     });
   }
 
@@ -642,6 +645,7 @@ export class YutaVisualSystem {
             timer: 0,
             introDone: true,
             attackVisualTimer: 0,
+            isHeavyAttack: false,
           });
           fullRikaState = this.fullRikaStates.get(p.id);
         }
@@ -653,10 +657,16 @@ export class YutaVisualSystem {
             const progress = Math.min(fullRikaState.timer / cfg.introDuration, 1);
             frame = Math.min(Math.floor(progress * cfg.introFrames), cfg.introFrames - 1);
           } else {
-            row = 1;
             if (fullRikaState.attackVisualTimer > 0) {
-              frame = cfg.attackFrameIndex;
+              if (fullRikaState.isHeavyAttack) {
+                row = cfg.heavyFrameRow;
+                frame = cfg.heavyFrameIndex;
+              } else {
+                row = 1;
+                frame = cfg.attackFrameIndex;
+              }
             } else {
+              row = 1;
               const moving = Math.abs(p.vx) > 0.5 || Math.abs(p.vy) > 0.5;
               frame = moving ? cfg.moveFrame : cfg.idleFrame;
             }
