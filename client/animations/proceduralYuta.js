@@ -1,4 +1,4 @@
-import { drawM1Combined, drawCursedWave, drawRikaClawScratch, drawRikaSwing, drawPureLoveExplosion } from "./yutaEffects.js";
+import { drawM1Combined, drawCursedWave, drawRikaClawSprite, drawRikaSwing, drawPureLoveExplosion } from "./yutaEffects.js";
 import { SkillVFX } from "../particles/proceduralEffects.js";
 
 export class YutaSkillEffects {
@@ -125,14 +125,8 @@ export class YutaSkillEffects {
       if (slash.type === "m1Combined") {
         drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle, this.m1Spritesheet);
       } else if (slash.type === "rika") {
-        const size = Number.isFinite(slash.size) ? slash.size : 1;
-        const intensity = Number.isFinite(slash.intensity) ? slash.intensity : 1;
         drawRikaSwing(ctx, sx, sy, progress);
-        ctx.save();
-        ctx.translate(sx, sy);
-        ctx.scale(size, size);
-        drawRikaClawScratch(ctx, 0, 0, slash.dirX, slash.dirY, progress, intensity);
-        ctx.restore();
+        drawRikaClawSprite(ctx, sx, sy, slash.dirX, slash.dirY, progress, this.m1Spritesheet);
       }
     }
   }

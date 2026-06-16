@@ -129,6 +129,59 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
   ctx.restore();
 }
 
+export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet) {
+  if (progress <= 0.01 || progress >= 0.98) return;
+  const fadeIn = Math.min(1, progress * 6);
+  const fadeOut = Math.max(0, 1 - Math.max(0, progress - 0.5) * 2);
+  const alpha = fadeIn * fadeOut;
+  if (alpha <= 0.01) return;
+
+  const angle = Math.atan2(dirY, dirX);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalCompositeOperation = "lighter";
+
+  if (spritesheet && spritesheet.complete && spritesheet.naturalWidth > 0) {
+    const TOTAL_FRAMES = 9;
+    const FRAME_COLS = 9;
+    const frameW = spritesheet.naturalWidth / FRAME_COLS;
+    const frameH = spritesheet.naturalHeight;
+
+    let frameIdx;
+    if (progress < 0.5) {
+      frameIdx = Math.min(4, Math.max(0, Math.floor((progress / 0.5) * 4 + 0.5)));
+    } else {
+      frameIdx = 4 + Math.min(4, Math.max(0, Math.floor(((progress - 0.5) / 0.5) * 4 + 0.5)));
+    }
+
+    const col = frameIdx % FRAME_COLS;
+    const sx = col * frameW;
+    const sy = 0;
+
+    const growScale = Math.min(1, 0.3 + progress * 3.5);
+    const spriteWidth = 130 * 3.5 * growScale;
+    const spriteHeight = spriteWidth * (frameH / frameW);
+    const dist = 50 * Math.min(1, progress * 3);
+
+    const px = Math.cos(angle) * dist;
+    const py = Math.sin(angle) * dist;
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(angle);
+    if (dirX > 0) ctx.scale(1, -1);
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = "#ff66b2";
+    ctx.shadowBlur = 45;
+    ctx.drawImage(spritesheet, sx, sy, frameW, frameH,
+      -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
 export function drawRikaSwing(ctx, x, y, progress) {
   if (progress <= 0 || progress >= 1) return;
   const alpha = Math.min(1, progress * 4) * Math.max(0, 1 - progress);
