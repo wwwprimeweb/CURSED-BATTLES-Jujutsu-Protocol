@@ -2524,10 +2524,9 @@ class GameServer {
     if (!this.canUseSkill(player, kit.rika.energy, "q", cooldown)) {
       return false;
     }
-    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
-
     if (this.rikas.has(player.id)) {
       const rika = this.rikas.get(player.id);
+      const aim = normalize(player.aimX - player.x, player.aimY - player.y);
       let nearestEnemy = null;
       let nearestDist = Infinity;
       this.enemies.forEach((enemy) => {
@@ -2555,38 +2554,36 @@ class GameServer {
         };
       }
     } else {
-      let nearestEnemy = null;
-      let nearestDist = Infinity;
-      const detectRange = kit.rika.range;
-      this.enemies.forEach((enemy) => {
-        if (!enemy.alive) return;
-        const d = distance(player.x, player.y, enemy.x, enemy.y);
-        if (d < nearestDist && d <= detectRange + enemy.radius) {
-          nearestDist = d;
-          nearestEnemy = enemy;
-        }
-      });
-      if (!nearestEnemy) return false;
-      const toEnemy = normalize(nearestEnemy.x - player.x, nearestEnemy.y - player.y);
+      // Incomplete Rika: goes toward cursor (up to max range)
+      const dx = player.aimX - player.x;
+      const dy = player.aimY - player.y;
+      const cursorDist = Math.hypot(dx, dy);
+      const maxRange = kit.rika.range;
+      const actualRange = Math.min(cursorDist, maxRange);
+      const nx = cursorDist > 0.001 ? dx / cursorDist : 1;
+      const ny = cursorDist > 0.001 ? dy / cursorDist : 0;
+      const targetX = player.x + nx * actualRange;
+      const targetY = player.y + ny * actualRange;
       player.rikaBuffTime = kit.cursedWave ? kit.cursedWave.comboWindow : 3;
       player.cast = {
         type: "rika",
         timer: kit.rika.startup,
-        dirX: toEnemy.x,
-        dirY: toEnemy.y,
-        targetId: nearestEnemy.id,
-        targetX: nearestEnemy.x,
-        targetY: nearestEnemy.y,
+        dirX: nx,
+        dirY: ny,
+        targetX,
+        targetY,
+        incomplete: true,
       };
       this.emitEventNear(player.x, player.y, {
         type: "rika",
         x: player.x,
         y: player.y,
-        dirX: toEnemy.x,
-        dirY: toEnemy.y,
+        dirX: nx,
+        dirY: ny,
         playerId: player.id,
-        targetX: nearestEnemy.x,
-        targetY: nearestEnemy.y,
+        targetX,
+        targetY,
+        incomplete: true,
       });
     }
     return true;
@@ -2600,6 +2597,7 @@ class GameServer {
     const targetX = cast.targetX;
     const targetY = cast.targetY;
 
+    // Rika: 360° area centered at explosion point
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
       const d = distance(targetX, targetY, enemy.x, enemy.y);
@@ -2615,7 +2613,6 @@ class GameServer {
         });
       }
     });
-
     this.players.forEach((target) => {
       if (target.id === player.id || !target.alive) return;
       if (!this.config.match.friendlyFire) return;

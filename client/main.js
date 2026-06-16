@@ -415,11 +415,17 @@ function handleEvents(events) {
     } else if (ev.type === "rika") {
       const targetX = Number.isFinite(ev.targetX) ? ev.targetX : ev.x + 140;
       const targetY = Number.isFinite(ev.targetY) ? ev.targetY : ev.y;
+      const isIncomplete = ev.incomplete === true;
 
-      renderer.yutaVisual.triggerRikaSummon(ev.playerId, ev.x, ev.y, targetX, targetY);
+      renderer.yutaVisual.triggerRikaSummon(ev.playerId, ev.x, ev.y, targetX, targetY, isIncomplete);
 
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 8, speed: 180, life: 0.3, size: 2 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d4a5e5", count: 6, speed: 120, life: 0.5, size: 1.5 });
+      if (isIncomplete) {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d4a5e5", count: 12, speed: 140, life: 0.4, size: 2.5 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffccff", count: 8, speed: 100, life: 0.6, size: 1.5 });
+      } else {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 8, speed: 180, life: 0.3, size: 2 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d4a5e5", count: 6, speed: 120, life: 0.5, size: 1.5 });
+      }
 
       audio.play("skillRed");
     } else if (ev.type === "rikaImpulse") {

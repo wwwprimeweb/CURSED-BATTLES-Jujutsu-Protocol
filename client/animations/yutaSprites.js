@@ -30,6 +30,28 @@ export const YUTA_SPRITE_CONFIG = {
 
 export const YUTA_SHEET_PATH = "/assets/sprites/portador-do-vinculo_shinjuku_spritesheet.png";
 
+export const RIKA_INCOMPLETA_CONFIG = {
+  sheetWidth: 960,
+  sheetHeight: 240,
+  cellWidth: 160,
+  cellHeight: 120,
+  pivotX: 80,
+  pivotY: 100,
+  renderScale: 1.98,
+  idleFrames: [59, 53, 54, 55, 56, 57],
+  attackFrames: [33, 34, 35, 36, 37],
+  appearFrameIndex: 0,
+  loopStartIndex: 1,
+  loopEndIndex: 5,
+  appearDuration: 0.35,
+  loopDuration: 1.15,
+  attackDuration: 0.4,
+  fadeOutDuration: 0.5,
+  totalDuration: 2.4,
+};
+
+export const RIKA_INCOMPLETA_SHEET_PATH = "/assets/sprites/rika-incompleta.png";
+
 export function mapServerStateToAnim(serverState) {
   const map = {
     idle: "idle",

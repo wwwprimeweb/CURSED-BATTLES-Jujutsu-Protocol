@@ -1,6 +1,6 @@
 import { SpriteAnimator } from "./spriteAnimator.js";
 import { loadImage } from "./imageLoader.js";
-import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH } from "./yutaSprites.js";
+import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH, RIKA_INCOMPLETA_CONFIG, RIKA_INCOMPLETA_SHEET_PATH } from "./yutaSprites.js";
 
 const ALT_SHEET_PATH = "/assets/sprites/portador-do-vinculo_m1_alt.png";
 const ALT_ANIMATIONS = {
@@ -38,11 +38,13 @@ export class YutaSpriteRenderer {
       animations: ALT_ANIMATIONS,
     });
     this.rikaSprite = null;
+    this.rikaIncompletaSheet = null;
     this.domainPrepSprite = null;
     this.isLoaded = false;
     this.loadError = null;
     this.walkTime = 0;
     this.loadRikaSprite();
+    this.loadRikaIncompletaSheet();
     this.loadDomainPrepSprite();
   }
 
@@ -83,8 +85,27 @@ export class YutaSpriteRenderer {
     }
   }
 
+  async loadRikaIncompletaSheet() {
+    const paths = [
+      "/assets/sprites/rika-incompleta.png",
+      "/client/assets/sprites/rika-incompleta.png",
+      "./assets/sprites/rika-incompleta.png",
+      "../client/assets/sprites/rika-incompleta.png",
+      "rika-incompleta.png",
+    ];
+    for (const path of paths) {
+      try {
+        this.rikaIncompletaSheet = await loadImage(path);
+        this.checkLoaded();
+        return;
+      } catch (e) {
+      }
+    }
+    console.error("[YutaSprite] All rika incompleta paths failed");
+  }
+
   checkLoaded() {
-    if (this.rikaSprite || this.domainPrepSprite) {
+    if (this.rikaSprite || this.rikaIncompletaSheet || this.domainPrepSprite) {
       this.isLoaded = true;
     }
   }
@@ -113,6 +134,39 @@ export class YutaSpriteRenderer {
     ctx.beginPath();
     ctx.arc(x, finalY, 45 * scale, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  renderRikaIncompletaFrame(ctx, x, y, facing, row, frameIndex, alpha = 1, _scale = 1) {
+    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    if (!this.rikaIncompletaSheet) {
+      ctx.fillStyle = `rgba(200,100,255,${alpha * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 45 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    const cfg = RIKA_INCOMPLETA_CONFIG;
+    const sx = frameIndex * cfg.cellWidth;
+    const sy = row * cfg.cellHeight;
+    const targetSize = DEFAULT_SIZE * cfg.renderScale * scale;
+    const aspect = cfg.cellWidth / cfg.cellHeight;
+    let drawW, drawH;
+    if (cfg.cellWidth >= cfg.cellHeight) {
+      drawW = targetSize;
+      drawH = drawW / aspect;
+    } else {
+      drawH = targetSize;
+      drawW = drawH * aspect;
+    }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (facing < 0) {
+      ctx.translate(x, y);
+      ctx.scale(-1, 1);
+      ctx.translate(-x, -y);
+    }
+    ctx.drawImage(this.rikaIncompletaSheet, sx, sy, cfg.cellWidth, cfg.cellHeight, x - drawW / 2, y - drawH / 2, drawW, drawH);
+    ctx.restore();
   }
 
   drawSprite(ctx, img, x, y, facing, targetSize) {

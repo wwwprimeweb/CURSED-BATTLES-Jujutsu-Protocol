@@ -3,6 +3,7 @@ import { YutaSkillEffects } from "./proceduralYuta.js";
 import { drawHitReaction } from "./gojoEffects.js";
 import { drawRowOfKatanas, drawRikaAreaExplosion, drawRikaClawScratch, drawRikaShockwave, drawPinkSlashCuts, drawEnergyWaveTrail, drawRikaAppearGlow, drawRikaImpactBurst, drawRikaDashTrail, drawDashSlideTrail } from "./yutaEffects.js";
 import { SkillVFX } from "../particles/proceduralEffects.js";
+import { RIKA_INCOMPLETA_CONFIG } from "./yutaSprites.js";
 
 export class YutaVisualSystem {
   constructor() {
@@ -158,28 +159,90 @@ export class YutaVisualSystem {
       const s = this.rikaSummons[i];
       s.timer += dt;
 
-      if (s.timer > 2.0) {
-        this.rikaSummons.splice(i, 1);
-        continue;
-      }
+      if (s.isIncomplete) {
+        const cfg = RIKA_INCOMPLETA_CONFIG;
+        const appearEnd = cfg.appearDuration;
+        const loopEnd = appearEnd + cfg.loopDuration;
+        const attackEnd = loopEnd + cfg.attackDuration;
+        const fadeOutEnd = attackEnd + cfg.fadeOutDuration;
 
-      // Dash phase: interpolate position from follow position to target
-      if (s.timer >= 1.2 && s.timer < 1.5) {
-        const dp = (s.timer - 1.2) / 0.3;
-        const ease = 1 - Math.pow(1 - dp, 2);
-        s.x = s.dashFromX + (s.targetX - s.dashFromX) * ease;
-        s.y = s.dashFromY + (s.targetY - s.dashFromY) * ease;
-      }
+        if (s.timer > fadeOutEnd) {
+          this.rikaSummons.splice(i, 1);
+          continue;
+        }
 
-      // Attack phase: at target
-      if (s.timer >= 1.5) {
-        s.x = s.targetX;
-        s.y = s.targetY;
-      }
+        // Appear phase (0 - appearEnd): fade in, show frame 0
+        if (s.timer < appearEnd) {
+          s.currentRow = 0;
+          s.currentFrame = 0;
+        }
 
-      // Trigger screen shake at attack start
-      if (s.timer >= 1.5 && s.timer - dt < 1.5) {
-        this.needsShake = true;
+        // Float loop phase (appearEnd - loopEnd): loop frames 1-5
+        if (s.timer >= appearEnd && s.timer < loopEnd) {
+          s.currentRow = 0;
+          const loopElapsed = s.timer - appearEnd;
+          const loopFrames = cfg.loopEndIndex - cfg.loopStartIndex + 1;
+          const frameInterval = cfg.loopDuration / loopFrames;
+          s.currentFrame = cfg.loopStartIndex + Math.floor(loopElapsed / frameInterval) % loopFrames;
+        }
+
+        // Attack phase (loopEnd - attackEnd): play attack frames row 1
+        if (s.timer >= loopEnd && s.timer < attackEnd) {
+          s.currentRow = 1;
+          const atkElapsed = s.timer - loopEnd;
+          const atkFrames = cfg.attackFrames.length;
+          const frameInterval = cfg.attackDuration / atkFrames;
+          const rawFrame = Math.floor(atkElapsed / frameInterval);
+          s.currentFrame = Math.min(rawFrame, atkFrames - 1);
+
+          // Lerp position forward for attack lunge
+          const dp = Math.min(1, atkElapsed / cfg.attackDuration);
+          const ease = dp < 0.5 ? 2 * dp * dp : 1 - Math.pow(-2 * dp + 2, 2) / 2;
+          s.x = s.startX + (s.targetX - s.startX) * ease;
+          s.y = s.startY + (s.targetY - s.startY) * ease;
+        }
+
+        // Fade out phase (attackEnd - fadeOutEnd): shrink + fade + particles
+        if (s.timer >= attackEnd && s.timer < fadeOutEnd) {
+          s.currentRow = 1;
+          s.currentFrame = cfg.attackFrames.length - 1;
+
+          // Spawn dissipate particles once
+          if (!s.dissipatedParticles) {
+            s.dissipatedParticles = true;
+            s.dissipated = true;
+          }
+        }
+
+        // Trigger screen shake at attack start
+        if (s.timer >= loopEnd && s.timer - dt < loopEnd) {
+          this.needsShake = true;
+        }
+      } else {
+        // Original Rika summon state machine
+        if (s.timer > 2.0) {
+          this.rikaSummons.splice(i, 1);
+          continue;
+        }
+
+        // Dash phase: interpolate position from follow position to target
+        if (s.timer >= 1.2 && s.timer < 1.5) {
+          const dp = (s.timer - 1.2) / 0.3;
+          const ease = 1 - Math.pow(1 - dp, 2);
+          s.x = s.dashFromX + (s.targetX - s.dashFromX) * ease;
+          s.y = s.dashFromY + (s.targetY - s.dashFromY) * ease;
+        }
+
+        // Attack phase: at target
+        if (s.timer >= 1.5) {
+          s.x = s.targetX;
+          s.y = s.targetY;
+        }
+
+        // Trigger screen shake at attack start
+        if (s.timer >= 1.5 && s.timer - dt < 1.5) {
+          this.needsShake = true;
+        }
       }
     }
   }
@@ -196,27 +259,59 @@ export class YutaVisualSystem {
     this.dodgeEffects.set(Date.now(), { x, y, facing, life: 0.25 });
   }
 
-  triggerRikaSummon(playerId, x, y, targetX, targetY) {
+  triggerRikaSummon(playerId, x, y, targetX, targetY, isIncomplete = false) {
     const dx = targetX - x;
     const dy = targetY - y;
     const len = Math.sqrt(dx * dx + dy * dy);
     const nx = len > 0.001 ? dx / len : 1;
     const ny = len > 0.001 ? dy / len : 0;
-    this.rikaSummons.push({
-      playerId,
-      startX: x,
-      startY: y,
-      x,
-      y,
-      dirX: nx,
-      dirY: ny,
-      targetX,
-      targetY,
-      dashFromX: x,
-      dashFromY: y,
-      timer: 0,
-      duration: 2.2,
-    });
+    if (isIncomplete) {
+      // Rika incompleta: appears in front of Yuta (respecting cursor distance)
+      const cursorDist = Math.hypot(targetX - x, targetY - y);
+      const followDist = Math.min(cursorDist, 80);
+      const frontX = x + nx * followDist;
+      const frontY = y - 50;
+      this.rikaSummons.push({
+        playerId,
+        isIncomplete: true,
+        startX: x,
+        startY: y,
+        x: frontX,
+        y: frontY,
+        dirX: nx,
+        dirY: ny,
+        targetX,
+        targetY,
+        timer: 0,
+        appearDuration: RIKA_INCOMPLETA_CONFIG.appearDuration,
+        loopDuration: RIKA_INCOMPLETA_CONFIG.loopDuration,
+        attackDuration: RIKA_INCOMPLETA_CONFIG.attackDuration,
+        fadeOutDuration: RIKA_INCOMPLETA_CONFIG.fadeOutDuration,
+        totalDuration: RIKA_INCOMPLETA_CONFIG.totalDuration,
+        frameTimer: 0,
+        currentFrame: 0,
+        currentRow: 0,
+        dissipated: false,
+        dissipatedParticles: false,
+      });
+    } else {
+      this.rikaSummons.push({
+        playerId,
+        isIncomplete: false,
+        startX: x,
+        startY: y,
+        x,
+        y,
+        dirX: nx,
+        dirY: ny,
+        targetX,
+        targetY,
+        dashFromX: x,
+        dashFromY: y,
+        timer: 0,
+        duration: 2.2,
+      });
+    }
   }
 
   triggerRikaCompanionAttack(x, y, dirX, dirY, attackType = "normal", radius = 0) {
@@ -377,30 +472,101 @@ export class YutaVisualSystem {
         this.rikaRenderPos.delete(p.id);
       }
 
-      // Check for active Q summon (Rika appears behind Yuta, then dashes to attack)
-      const hasSummon = this.rikaSummons.some(s => s.playerId === p.id && s.timer < 2.0);
+      // Check for active Q summon
+      const hasSummon = this.rikaSummons.some(s => s.playerId === p.id && s.timer < (s.isIncomplete ? RIKA_INCOMPLETA_CONFIG.totalDuration : 2.2));
       const summon = hasSummon ? this.rikaSummons.find(s => s.playerId === p.id) : null;
 
-      // Render Q summon Rika behind player during appear/follow phases
-      if (isYuta && summon && summon.timer < 1.2) {
-        const behindX = worldX - facing * 90;
-        const behindY = worldY;
-        const lerp = 1 - Math.pow(1 - 0.04, dt * 60);
-        summon.x += (behindX - summon.x) * lerp;
-        summon.y += (behindY - summon.y) * lerp;
-        summon.dashFromX = summon.x;
-        summon.dashFromY = summon.y;
+      // Render Q summon (full Rika or incomplete Rika)
+      if (isYuta && summon) {
+        if (summon.isIncomplete) {
+          const cfg = RIKA_INCOMPLETA_CONFIG;
+          const appearEnd = cfg.appearDuration;
+          const loopEnd = appearEnd + cfg.loopDuration;
+          const attackEnd = loopEnd + cfg.attackDuration;
+          const fadeOutEnd = attackEnd + cfg.fadeOutDuration;
+          const lerp = 1 - Math.pow(1 - 0.04, dt * 60);
 
-        const alpha = summon.timer < 0.2 ? summon.timer / 0.2 : 1;
-        const rikaScreenX = (summon.x - camera.x) * zoom + ctx.canvas.width * 0.5;
-        const rikaScreenY = (summon.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+          // Follow player during appear and loop phases
+          if (summon.timer < loopEnd) {
+            // Track cursor with deadzone margin
+            if (Number.isFinite(p.aimX) && Number.isFinite(p.aimY)) {
+              const aimDx = p.aimX - worldX;
+              const aimDy = p.aimY - worldY;
+              const aimLen = Math.hypot(aimDx, aimDy);
+              if (aimLen > 20) {
+                summon.dirX = aimDx / aimLen;
+                summon.dirY = aimDy / aimLen;
+                const distToTarget = Math.hypot(summon.targetX - worldX, summon.targetY - worldY);
+                summon.targetX = worldX + summon.dirX * distToTarget;
+                summon.targetY = worldY + summon.dirY * distToTarget;
+              }
+            }
 
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.shadowColor = "#ff66b2";
-        ctx.shadowBlur = 25 + (1 - alpha) * 20;
-        this.yutaSprite.renderRika(ctx, rikaScreenX, rikaScreenY, facing, 0, 0, spriteScale);
-        ctx.restore();
+            const distToTarget = Math.hypot(summon.targetX - worldX, summon.targetY - worldY);
+            const followDist = Math.min(distToTarget, 80);
+            const desiredX = worldX + summon.dirX * followDist;
+            const desiredY = worldY + summon.dirY * followDist;
+            summon.x += (desiredX - summon.x) * lerp;
+            summon.y += (desiredY - summon.y) * lerp;
+            summon.startX = summon.x;
+            summon.startY = summon.y;
+          }
+
+          // Calculate alpha and scale
+          let alpha = 1;
+          let scaleMul = 1;
+
+          if (summon.timer < appearEnd) {
+            alpha = summon.timer / appearEnd;
+          } else if (summon.timer >= attackEnd && summon.timer < fadeOutEnd) {
+            const fadeProgress = (summon.timer - attackEnd) / cfg.fadeOutDuration;
+            alpha = 1 - fadeProgress;
+            scaleMul = 1 - fadeProgress * 0.6;
+          } else if (summon.timer >= fadeOutEnd) {
+            alpha = 0;
+          }
+
+          let bobY = 0;
+          if (summon.timer >= appearEnd && summon.timer < loopEnd) {
+            const loopElapsed = summon.timer - appearEnd;
+            bobY = Math.sin(this.time * 4 + loopElapsed * 2) * 4;
+          }
+
+          if (alpha > 0.01) {
+            const rikaScreenX = (summon.x - camera.x) * zoom + ctx.canvas.width * 0.5;
+            const rikaScreenY = (summon.y - camera.y) * zoom + ctx.canvas.height * 0.5 + bobY;
+            const rikaFacing = summon.dirX < 0 ? -1 : 1;
+
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            if (summon.timer < appearEnd) {
+              ctx.shadowColor = "#ff66b2";
+              ctx.shadowBlur = 20 + alpha * 25;
+            }
+            this.yutaSprite.renderRikaIncompletaFrame(ctx, rikaScreenX, rikaScreenY, rikaFacing, summon.currentRow, summon.currentFrame, alpha, spriteScale * scaleMul);
+            ctx.restore();
+          }
+        } else if (summon.timer < 1.2) {
+          // Original full Rika: behind player follow
+          const behindX = worldX - facing * 90;
+          const behindY = worldY;
+          const lerp = 1 - Math.pow(1 - 0.04, dt * 60);
+          summon.x += (behindX - summon.x) * lerp;
+          summon.y += (behindY - summon.y) * lerp;
+          summon.dashFromX = summon.x;
+          summon.dashFromY = summon.y;
+
+          const alpha = summon.timer < 0.2 ? summon.timer / 0.2 : 1;
+          const rikaScreenX = (summon.x - camera.x) * zoom + ctx.canvas.width * 0.5;
+          const rikaScreenY = (summon.y - camera.y) * zoom + ctx.canvas.height * 0.5;
+
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.shadowColor = "#ff66b2";
+          ctx.shadowBlur = 25 + (1 - alpha) * 20;
+          this.yutaSprite.renderRika(ctx, rikaScreenX, rikaScreenY, facing, 0, 0, spriteScale);
+          ctx.restore();
+        }
       }
 
       // Render companion Rika (only when no Q summon is active)
@@ -537,9 +703,62 @@ export class YutaVisualSystem {
     }
 
     for (const s of this.rikaSummons) {
-      if (s.timer <= 0 || s.timer >= 2.0) continue;
+      if (s.timer <= 0) continue;
 
-      // Dash phase: trail + Rika sprite dashing
+      if (s.isIncomplete) {
+        const cfg = RIKA_INCOMPLETA_CONFIG;
+        const appearEnd = cfg.appearDuration;
+        const loopEnd = appearEnd + cfg.loopDuration;
+        const attackEnd = loopEnd + cfg.attackDuration;
+        const fadeOutEnd = attackEnd + cfg.fadeOutDuration;
+
+        if (s.timer >= fadeOutEnd) continue;
+
+        // Attack phase VFX: impact at target position
+        if (s.timer >= loopEnd && s.timer < attackEnd) {
+          const atkProgress = (s.timer - loopEnd) / cfg.attackDuration;
+          const impactX = (s.targetX - cx) * z + w * 0.5;
+          const impactY = (s.targetY - cy) * z + h * 0.5;
+
+          drawRikaImpactBurst(ctx, impactX, impactY, atkProgress, this.time);
+          drawRikaAreaExplosion(ctx, impactX, impactY, 60 * z, atkProgress, this.time);
+          drawRikaClawScratch(ctx, impactX, impactY, s.dirX, s.dirY, atkProgress, 0.9);
+        }
+
+        // Fade out phase: dissipate particles
+        if (s.timer >= attackEnd && s.timer < fadeOutEnd) {
+          const fadeProgress = (s.timer - attackEnd) / cfg.fadeOutDuration;
+          const impactX = (s.targetX - cx) * z + w * 0.5;
+          const impactY = (s.targetY - cy) * z + h * 0.5;
+
+          // Shrinking pink particles fading out
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          for (let j = 0; j < 6; j++) {
+            const seed = (j / 6 + this.time * 0.3) % 1;
+            const angle = seed * Math.PI * 2;
+            const dist = (40 + j * 15) * (1 - fadeProgress) * z;
+            const px = impactX + Math.cos(angle + this.time * 2) * dist;
+            const py = impactY + Math.sin(angle + this.time * 2) * dist;
+            const pSize = (4 + j * 2) * (1 - fadeProgress) * z;
+            const pAlpha = (1 - fadeProgress) * 0.6;
+            ctx.globalAlpha = pAlpha;
+            ctx.fillStyle = ["#ff66b2", "#ff99cc", "#d4a5e5", "#ff80bf"][j % 4];
+            ctx.shadowColor = "#ff66b2";
+            ctx.shadowBlur = 15 * (1 - fadeProgress);
+            ctx.beginPath();
+            ctx.arc(px, py, pSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        continue;
+      }
+
+      if (s.timer >= 2.0) continue;
+
+      // Dash phase: trail + Rika sprite dashing (original)
       if (s.timer >= 1.2 && s.timer < 1.5) {
         const dp = (s.timer - 1.2) / 0.3;
         const sx = (s.dashFromX - cx) * z + w * 0.5;
@@ -561,7 +780,7 @@ export class YutaVisualSystem {
         }
       }
 
-      // Attack phase: impact burst + claw scratches + Rika fade out
+      // Attack phase: impact burst + claw scratches + Rika fade out (original)
       if (s.timer >= 1.5 && s.timer < 2.0) {
         const atkProgress = (s.timer - 1.5) / 0.5;
         const impactX = (s.targetX - cx) * z + w * 0.5;
