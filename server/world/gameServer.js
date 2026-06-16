@@ -2838,7 +2838,7 @@ class GameServer {
       y: player.y,
       ownerId: player.id,
       timer: duration,
-      attackTimer: 0.5,
+      attackTimer: 1.5,
       facing: anchorSide < 0 ? 1 : -1,
       anchorSide,
       state: "follow",
