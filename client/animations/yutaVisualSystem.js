@@ -390,22 +390,26 @@ export class YutaVisualSystem {
     });
   }
 
-  triggerRikaDash(startX, startY, endX, endY) {
+  triggerRikaDash(startX, startY, endX, endY, playerId) {
+    const fullRikaBoosted = playerId && this.fullRikaStates.has(playerId);
     this.rikaDashes.push({
       startX, startY,
       endX, endY,
       startTime: this.time,
       life: 0.25,
+      fullRikaBoosted,
     });
   }
 
-  triggerRikaImpulse(x, y, radius) {
+  triggerRikaImpulse(x, y, radius, playerId) {
+    const fullRikaBoosted = playerId && this.fullRikaStates.has(playerId);
     this.rikaImpulses.push({
       x, y,
       radius: radius || 180,
       startTime: this.time,
       life: 0.6,
       maxLife: 0.6,
+      fullRikaBoosted,
     });
   }
 
@@ -967,10 +971,36 @@ export class YutaVisualSystem {
 
       ctx.save();
       ctx.globalAlpha = 1 - progress;
-      drawEnergyWaveTrail(ctx, sx, sy, ex, ey, progress, this.time, {
-        width: (30 + progress * 60) * z,
-        colorMul: 0.8,
-      });
+
+      if (trail.fullRikaBoosted) {
+        const dx = ex - sx;
+        const dy = ey - sy;
+        const segments = 6;
+        for (let i = 0; i < segments; i++) {
+          const t = i / segments;
+          const ox = sx + dx * t;
+          const oy = sy + dy * t;
+          const orbAlpha = (1 - t) * 0.3 * (1 - progress);
+          if (orbAlpha < 0.01) continue;
+          ctx.globalAlpha = orbAlpha;
+          ctx.fillStyle = i % 2 === 0 ? "#ff99cc" : "#ff66b2";
+          ctx.shadowColor = "#ff66b2";
+          ctx.shadowBlur = 30 * z;
+          ctx.beginPath();
+          ctx.arc(ox, oy, (10 + t * 4) * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1 - progress;
+        drawEnergyWaveTrail(ctx, sx, sy, ex, ey, progress, this.time, {
+          width: (50 + progress * 80) * z,
+        });
+      } else {
+        drawEnergyWaveTrail(ctx, sx, sy, ex, ey, progress, this.time, {
+          width: (30 + progress * 60) * z,
+          colorMul: 0.8,
+        });
+      }
       ctx.restore();
     }
 
@@ -982,11 +1012,16 @@ export class YutaVisualSystem {
       const sy = (imp.y - cy) * z + h * 0.5;
       const ringRadius = imp.radius * z;
 
-      drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.5);
-      drawRikaAreaExplosion(ctx, sx, sy, Math.max(50 * z, ringRadius * 0.5), progress, this.time);
-      drawRikaClawScratch(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.5), 1.3);
-      drawRikaClawScratch(ctx, sx, sy, 1, 0.5, Math.min(1, progress * 1.5), 1.3);
-      drawRikaClawScratch(ctx, sx, sy, -1, 0.5, Math.min(1, progress * 1.5), 1.3);
+      if (imp.fullRikaBoosted) {
+        drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.8);
+        drawRikaClawSprite(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.3), this.effects.rikaSpritesheet);
+      } else {
+        drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.5);
+        drawRikaAreaExplosion(ctx, sx, sy, Math.max(50 * z, ringRadius * 0.5), progress, this.time);
+        drawRikaClawScratch(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.5), 1.3);
+        drawRikaClawScratch(ctx, sx, sy, 1, 0.5, Math.min(1, progress * 1.5), 1.3);
+        drawRikaClawScratch(ctx, sx, sy, -1, 0.5, Math.min(1, progress * 1.5), 1.3);
+      }
     }
 
     // Pink slash cuts (2nd hit VFX)
