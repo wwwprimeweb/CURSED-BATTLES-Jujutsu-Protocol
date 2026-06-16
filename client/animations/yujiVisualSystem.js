@@ -188,7 +188,7 @@ export class YujiVisualSystem {
     const p = entry.raw;
     const worldX = Number.isFinite(renderX) ? renderX : p.x;
     const worldY = Number.isFinite(renderY) ? renderY : p.y;
-    const zoom = camera.zoom || 1;
+    const zoom = camera.zoom;
     const pos = {
       x: (worldX - camera.x) * zoom + ctx.canvas.width * 0.5,
       y: (worldY - camera.y) * zoom + ctx.canvas.height * 0.5,
@@ -312,7 +312,7 @@ export class YujiVisualSystem {
   }
 
   renderEffects(ctx, camera) {
-    const zoom = camera.zoom || 1;
+    const zoom = camera.zoom;
 
     this.flyingKneeEffects.forEach((e) => {
       const screenX = (e.x - camera.x) * zoom + ctx.canvas.width * 0.5;
@@ -342,7 +342,7 @@ export class YujiVisualSystem {
       const alpha = fadeIn * fadeOut;
       if (alpha <= 0.01) return;
 
-      const dirLen = Math.hypot(e.dirX, e.dirY) || 1;
+      const dirLen = Math.sqrt(e.dirX * e.dirX + e.dirY * e.dirY) || 1;
       const nx = e.dirX / dirLen;
       const ny = e.dirY / dirLen;
       const sideX = -ny;
@@ -392,8 +392,9 @@ export class YujiVisualSystem {
       ctx.lineWidth = 1.5 * zoom;
       ctx.lineCap = "round";
       ctx.beginPath();
-      const nx = e.vx / Math.hypot(e.vx, e.vy);
-      const ny = e.vy / Math.hypot(e.vx, e.vy);
+      const mag = Math.sqrt(e.vx * e.vx + e.vy * e.vy) || 1;
+      const nx = e.vx / mag;
+      const ny = e.vy / mag;
       ctx.moveTo(screenX - nx * len * 0.5, screenY - ny * len * 0.5);
       ctx.lineTo(screenX + nx * len * 0.5, screenY + ny * len * 0.5);
       ctx.stroke();

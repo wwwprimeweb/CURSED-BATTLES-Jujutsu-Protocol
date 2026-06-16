@@ -10,7 +10,7 @@ function clamp(v, min, max) {
 }
 
 function worldToScreen(camera, canvas, x, y) {
-  const zoom = camera.zoom || 1;
+  const zoom = camera.zoom;
   return {
     x: (x - camera.x) * zoom + canvas.width * 0.5 + (camera.shakeX || 0),
     y: (y - camera.y) * zoom + canvas.height * 0.5 + (camera.shakeY || 0),
@@ -260,7 +260,9 @@ export class Renderer {
       let totalLen = 0;
       for (let pi = 1; pi < points.length; pi++) {
         const prev = points[pi - 1];
-        const segLen = Math.hypot(points[pi].x - prev.x, points[pi].y - prev.y);
+        const dx = points[pi].x - prev.x;
+        const dy = points[pi].y - prev.y;
+        const segLen = Math.sqrt(dx * dx + dy * dy);
         points[pi].segLen = segLen;
         totalLen += segLen;
       }
@@ -284,11 +286,12 @@ export class Renderer {
           bcy += Math.sin(ba) * bSegLen * (0.5 + rng());
           bPoints.push({ x: bcx, y: bcy });
         }
-        // Pre-compute branch segment lengths
         let branchLen = 0;
         for (let pi = 1; pi < bPoints.length; pi++) {
           const prev = bPoints[pi - 1];
-          const segLen = Math.hypot(bPoints[pi].x - prev.x, bPoints[pi].y - prev.y);
+          const dx = bPoints[pi].x - prev.x;
+          const dy = bPoints[pi].y - prev.y;
+          const segLen = Math.sqrt(dx * dx + dy * dy);
           bPoints[pi].segLen = segLen;
           branchLen += segLen;
         }
@@ -323,7 +326,7 @@ export class Renderer {
   renderPurpleCharges(ctx, camera) {
     const now = performance.now();
     const time = now * 0.001;
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
     this.purpleCharges.forEach((charge) => {
       const progress = Math.min(1, (now - charge.startTime) / (charge.duration * 1000));
       const easeScale = 1 - Math.pow(1 - progress, 2);
@@ -357,7 +360,7 @@ export class Renderer {
 
   renderPurpleExplosions(ctx, camera) {
     const now = performance.now();
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
     for (let i = this.purpleExplosions.length - 1; i >= 0; i--) {
       const exp = this.purpleExplosions[i];
       const t = Math.min(1, (now - exp.startTime) / (exp.duration * 1000));
@@ -459,6 +462,10 @@ export class Renderer {
   updateEffects(dt) {
     this.gojoVisual.update(dt);
     this.yutaVisual.update(dt);
+    if (this.yutaVisual.needsShake) {
+      this.triggerScreenShake(10, 0.18);
+      this.yutaVisual.needsShake = false;
+    }
     this.sukunaVisual.update(dt);
     this.yujiVisual.update(dt);
     this.megumiVisual.update(dt);
@@ -557,7 +564,7 @@ export class Renderer {
       const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
       const t = e.life / e.ttl;
       const s = e.seed;
-      const z = this.camera.zoom || 1;
+      const z = this.camera.zoom;
 
       ctx.save();
 
@@ -611,7 +618,7 @@ export class Renderer {
       const puddle = this.acidPuddles[i];
       const p = worldToScreen(this.camera, this.canvas, puddle.x, puddle.y);
       const t = puddle.life / puddle.ttl;
-      const z = this.camera.zoom || 1;
+      const z = this.camera.zoom;
 
       ctx.save();
 
@@ -695,7 +702,9 @@ export class Renderer {
     this.yujiVisual.soulImpactEffects = [];
     this.yujiVisual.taidoBeatdownEffects = [];
     this.yutaVisual.rikaAttacks = [];
+    this.yutaVisual.rikaSummons = [];
     this.yutaVisual.rikaHeavyImpacts = [];
+    this.yutaVisual.needsShake = false;
     this.yutaVisual.beamParticles = [];
     this.yutaVisual.dashSlashes = [];
     this.yutaVisual.slashCuts = [];
@@ -709,7 +718,7 @@ export class Renderer {
 
   drawMarkers() {
     const ctx = this.ctx;
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
     for (let i = 0; i < this.markers.length; i += 1) {
       const marker = this.markers[i];
       const p = worldToScreen(this.camera, this.canvas, marker.x, marker.y);
@@ -727,13 +736,12 @@ export class Renderer {
 
   drawRedExplosions() {
     const ctx = this.ctx;
-    const now = Date.now();
     for (let i = 0; i < this.redExplosions.length; i += 1) {
       const e = this.redExplosions[i];
       const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
       const t = e.life / e.ttl;
       const s = e.seed;
-      const z = this.camera.zoom || 1;
+      const z = this.camera.zoom;
 
       ctx.save();
 
@@ -821,7 +829,7 @@ export class Renderer {
 
   drawBlueExplosions() {
     const ctx = this.ctx;
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
     for (let i = 0; i < this.blueExplosions.length; i += 1) {
       const e = this.blueExplosions[i];
       const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
@@ -904,7 +912,7 @@ export class Renderer {
 
   drawBlackFlashes() {
     const ctx = this.ctx;
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
     const now = performance.now();
 
     for (let i = 0; i < this.blackFlashes.length; i += 1) {
@@ -1121,7 +1129,7 @@ export class Renderer {
   drawGrid() {
     const ctx = this.ctx;
     const cell = 70;
-    const zoom = this.camera.zoom || 1;
+    const zoom = this.camera.zoom;
     const cellScreen = cell * zoom;
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
@@ -1150,7 +1158,7 @@ export class Renderer {
     const ctx = this.ctx;
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
-    const zoom = this.camera.zoom || 1;
+    const zoom = this.camera.zoom;
 
     this.drawGrid();
 
@@ -1201,7 +1209,7 @@ export class Renderer {
     const now = Date.now();
     let insideDomain = false;
     const activeOwnerIds = new Set();
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
 
     domains.forEach((entry) => {
       const d = entry.raw;
@@ -1290,7 +1298,7 @@ export class Renderer {
   }
 
   drawDomainCracks(ctx, cx, cy, radius, hpPct, isMine) {
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
     const crackCount = Math.floor((1 - hpPct) * 12) + 2;
     const color = isMine ? "rgba(255,255,255,0.4)" : "rgba(255,200,220,0.4)";
     const inner = radius * 0.92;
@@ -1324,7 +1332,7 @@ export class Renderer {
   drawProjectiles(projectiles) {
     const ctx = this.ctx;
     const now = Date.now();
-    const zoom = this.camera.zoom || 1;
+    const zoom = this.camera.zoom;
     projectiles.forEach((entry) => {
       const p = entry.raw;
       const screen = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
@@ -1606,7 +1614,7 @@ export class Renderer {
 
   drawEnemies(enemies) {
     const ctx = this.ctx;
-    const zoom = this.camera.zoom || 1;
+    const zoom = this.camera.zoom;
     const now = Date.now();
 
     // Prune visual HP tracking map
@@ -1974,12 +1982,12 @@ export class Renderer {
         }
         const dx = localPred.x - this.localVisualPos.x;
         const dy = localPred.y - this.localVisualPos.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 140) {
+        const distSq = dx * dx + dy * dy;
+        if (distSq > 19600) {
           this.localVisualPos.x = localPred.x;
           this.localVisualPos.y = localPred.y;
         } else {
-          const follow = dist > 28 ? 0.52 : 0.38;
+          const follow = distSq > 784 ? 0.52 : 0.38;
           const frameFollow = 1 - Math.pow(1 - follow, this._renderDt * 60);
           this.localVisualPos.x += dx * frameFollow;
           this.localVisualPos.y += dy * frameFollow;
@@ -2042,10 +2050,10 @@ export class Renderer {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
         ctx.save();
         ctx.strokeStyle = "rgba(255,255,255,0.85)";
-        ctx.lineWidth = 3 * (this.camera.zoom || 1);
-        ctx.setLineDash([5 * (this.camera.zoom || 1), 5 * (this.camera.zoom || 1)]);
+        ctx.lineWidth = 3 * (this.camera.zoom);
+        ctx.setLineDash([5 * (this.camera.zoom), 5 * (this.camera.zoom)]);
         ctx.beginPath();
-        ctx.arc(sp.x, sp.y, 22 * (this.camera.zoom || 1), 0, Math.PI * 2);
+        ctx.arc(sp.x, sp.y, 22 * (this.camera.zoom), 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.restore();
@@ -2157,7 +2165,7 @@ export class Renderer {
 
   drawDamageNumbers() {
     const ctx = this.ctx;
-    const z = this.camera.zoom || 1;
+    const z = this.camera.zoom;
 
     for (let i = 0; i < this.damageNumbers.length; i += 1) {
       const dn = this.damageNumbers[i];
@@ -2295,7 +2303,9 @@ export class Renderer {
       const vz = currentR * z;
       const spx = (ex - cx) * z + w * 0.5;
       const spy = (ey - cy) * z + h * 0.5;
-      const viewerInside = Math.hypot(px - ex, py - ey) <= targetR;
+      const ddx = px - ex;
+      const ddy = py - ey;
+      const viewerInside = ddx * ddx + ddy * ddy <= targetR * targetR;
 
       if (viewerInside) {
         viewerInsideAny = true;
@@ -2324,7 +2334,9 @@ export class Renderer {
         const vz = currentR * z;
         const spx = (ex - cx) * z + w * 0.5;
         const spy = (ey - cy) * z + h * 0.5;
-        const viewerInside = Math.hypot(px - ex, py - ey) <= targetR;
+        const ddx = px - ex;
+        const ddy = py - ey;
+        const viewerInside = ddx * ddx + ddy * ddy <= targetR * targetR;
 
         if (viewerInside) {
           ctx.arc(spx, spy, vz, 0, Math.PI * 2, true);

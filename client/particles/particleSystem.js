@@ -111,7 +111,8 @@ export class ParticleSystem {
       const p = this.active[i];
       p.life -= dt;
       if (p.life <= 0) {
-        this.active.splice(i, 1);
+        this.active[i] = this.active[this.active.length - 1];
+        this.active.pop();
         this.pool.push(p);
         continue;
       }
@@ -131,7 +132,7 @@ export class ParticleSystem {
   }
 
   render(ctx, camera) {
-    const zoom = camera.zoom || 1;
+    const zoom = camera.zoom;
     for (let i = 0; i < this.active.length; i += 1) {
       const p = this.active[i];
       const t = p.life / p.maxLife;

@@ -550,7 +550,7 @@ export class DomainVisualSystem {
   }
 
   renderShards(ctx, camera, canvas) {
-    const z = camera.zoom || 1;
+    const z = camera.zoom;
     for (const entry of this.shattering) {
       const sx = (entry.x - camera.x) * z + canvas.width * 0.5;
       const sy = (entry.y - camera.y) * z + canvas.height * 0.5;

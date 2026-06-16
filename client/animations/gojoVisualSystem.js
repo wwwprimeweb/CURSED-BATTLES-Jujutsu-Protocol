@@ -105,7 +105,7 @@ export class GojoVisualSystem {
     const p = entry.raw;
     const worldX = Number.isFinite(renderX) ? renderX : p.x;
     const worldY = Number.isFinite(renderY) ? renderY : p.y;
-    const zoom = camera.zoom || 1;
+    const zoom = camera.zoom;
     const pos = {
       x: (worldX - camera.x) * zoom + ctx.canvas.width * 0.5,
       y: (worldY - camera.y) * zoom + ctx.canvas.height * 0.5,

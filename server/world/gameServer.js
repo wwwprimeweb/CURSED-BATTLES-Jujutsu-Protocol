@@ -2555,37 +2555,63 @@ class GameServer {
         };
       }
     } else {
+      let nearestEnemy = null;
+      let nearestDist = Infinity;
+      const detectRange = kit.rika.range;
+      this.enemies.forEach((enemy) => {
+        if (!enemy.alive) return;
+        const d = distance(player.x, player.y, enemy.x, enemy.y);
+        if (d < nearestDist && d <= detectRange + enemy.radius) {
+          nearestDist = d;
+          nearestEnemy = enemy;
+        }
+      });
+      if (!nearestEnemy) return false;
+      const toEnemy = normalize(nearestEnemy.x - player.x, nearestEnemy.y - player.y);
       player.rikaBuffTime = kit.cursedWave ? kit.cursedWave.comboWindow : 3;
       player.cast = {
         type: "rika",
         timer: kit.rika.startup,
-        dirX: aim.x,
-        dirY: aim.y,
+        dirX: toEnemy.x,
+        dirY: toEnemy.y,
+        targetId: nearestEnemy.id,
+        targetX: nearestEnemy.x,
+        targetY: nearestEnemy.y,
       };
+      this.emitEventNear(player.x, player.y, {
+        type: "rika",
+        x: player.x,
+        y: player.y,
+        dirX: toEnemy.x,
+        dirY: toEnemy.y,
+        playerId: player.id,
+        targetX: nearestEnemy.x,
+        targetY: nearestEnemy.y,
+      });
     }
     return true;
   }
 
   fireRika(player, cast) {
     const kit = this.getKit(player);
-    const aim = normalize(cast.dirX, cast.dirY);
     const damage = kit.rika.damage * player.modifiers.rikaDamageMul;
+    const radius = kit.rika.radius;
+    const knockback = kit.rika.knockback * player.modifiers.rikaDamageMul;
+    const targetX = cast.targetX;
+    const targetY = cast.targetY;
 
     this.enemies.forEach((enemy) => {
       if (!enemy.alive) return;
-      const toTarget = normalize(enemy.x - player.x, enemy.y - player.y);
-      const dotForward = aim.x * toTarget.x + aim.y * toTarget.y;
-      if (dotForward < Math.cos(kit.rika.coneAngle * 0.5)) return;
-      const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d <= kit.rika.range + enemy.radius) {
+      const d = distance(targetX, targetY, enemy.x, enemy.y);
+      if (d <= radius + enemy.radius) {
         this.combat.applyDamage({
           target: enemy,
           source: player,
           amount: damage,
           kind: "rika",
-          knockback: kit.rika.knockback,
-          fromX: player.x,
-          fromY: player.y,
+          knockback,
+          fromX: targetX,
+          fromY: targetY,
         });
       }
     });
@@ -2593,31 +2619,20 @@ class GameServer {
     this.players.forEach((target) => {
       if (target.id === player.id || !target.alive) return;
       if (!this.config.match.friendlyFire) return;
-      const toTarget = normalize(target.x - player.x, target.y - player.y);
-      const dotForward = aim.x * toTarget.x + aim.y * toTarget.y;
-      if (dotForward < Math.cos(kit.rika.coneAngle * 0.5)) return;
-      const d = distance(player.x, player.y, target.x, target.y);
-      if (d <= kit.rika.range + target.radius) {
+      const d = distance(targetX, targetY, target.x, target.y);
+      if (d <= radius + target.radius) {
         this.combat.applyDamage({
           target,
           source: player,
           amount: damage,
           kind: "rika",
-          knockback: kit.rika.knockback,
-          fromX: player.x,
-          fromY: player.y,
+          knockback,
+          fromX: targetX,
+          fromY: targetY,
         });
       }
     });
 
-    this.emitEventNear(player.x, player.y, {
-      type: "rika",
-      x: player.x,
-      y: player.y,
-      dirX: aim.x,
-      dirY: aim.y,
-      playerId: player.id,
-    });
   }
 
   fireRikaImpulse(player, cast) {

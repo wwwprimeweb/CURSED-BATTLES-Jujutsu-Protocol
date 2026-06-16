@@ -20,12 +20,14 @@ function playSoundIfNear(ev, sound) {
   const px = state.localPred?.x;
   const py = state.localPred?.y;
   if (px == null) return;
-  const dist = Math.hypot(px - ev.x, py - ev.y);
-  const zoom = renderer.camera.zoom || 1;
+  const dx = px - ev.x;
+  const dy = py - ev.y;
+  const distSq = dx * dx + dy * dy;
+  const zoom = renderer.camera.zoom;
   const halfW = (renderer.canvas.clientWidth * 0.5) / zoom;
   const halfH = (renderer.canvas.clientHeight * 0.5) / zoom;
-  const screenRadius = Math.sqrt(halfW * halfW + halfH * halfH);
-  if (dist <= screenRadius) {
+  const screenRadiusSq = halfW * halfW + halfH * halfH;
+  if (distSq <= screenRadiusSq) {
     audio.play(sound);
   }
 }
@@ -177,7 +179,7 @@ function applyInputPrediction(pred, payload, dt) {
   const keys = payload.keys;
   const moveX = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   const moveY = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
-  const len = Math.hypot(moveX, moveY);
+  const len = Math.sqrt(moveX * moveX + moveY * moveY);
   if (len < 0.001) return;
   const nx = moveX / len;
   const ny = moveY / len;
@@ -411,17 +413,14 @@ function handleEvents(events) {
     } else if (ev.type === "taidoBeatdown") {
       playSoundIfNear(ev, "taidoBeatdownStart");
     } else if (ev.type === "rika") {
-      const dirX = Number.isFinite(ev.dirX) ? ev.dirX : (renderer.playerFacing.get(ev.playerId) || 1);
-      const dirY = Number.isFinite(ev.dirY) ? ev.dirY : 0;
-      const impactRange = 140;
-      const impactX = ev.x + dirX * impactRange;
-      const impactY = ev.y + dirY * impactRange;
+      const targetX = Number.isFinite(ev.targetX) ? ev.targetX : ev.x + 140;
+      const targetY = Number.isFinite(ev.targetY) ? ev.targetY : ev.y;
 
-      renderer.yutaVisual.triggerRika(ev.x, ev.y, dirX, dirY);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 200, life: 0.28, size: 2.4 });
-      particles.spawnBurst({ x: impactX, y: impactY, color: "#ff66b2", count: 24, speed: 300, life: 0.38, size: 3.2 });
-      particles.spawnBurst({ x: impactX, y: impactY, color: "#ffffff", count: 10, speed: 210, life: 0.24, size: 2.2 });
-      particles.spawnLine({ x: impactX, y: impactY, dirX, dirY, color: "#ffd0e8", count: 7, life: 0.22 });
+      renderer.yutaVisual.triggerRikaSummon(ev.playerId, ev.x, ev.y, targetX, targetY);
+
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 8, speed: 180, life: 0.3, size: 2 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d4a5e5", count: 6, speed: 120, life: 0.5, size: 1.5 });
+
       audio.play("skillRed");
     } else if (ev.type === "rikaImpulse") {
       renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, 0, 0, "heavy", ev.radius);
@@ -434,16 +433,23 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.startX, y: ev.startY, color: "#ff99cc", count: 15, speed: 200, life: 0.3, size: 3 });
       particles.spawnBurst({ x: ev.endX, y: ev.endY, color: "#ff66b2", count: 20, speed: 300, life: 0.4, size: 4 });
       audio.play("skillBlue");
+    } else if (ev.type === "dashSlashStart") {
+      renderer.yutaVisual.triggerDashSlashStart(ev.playerId, ev.x, ev.y, ev.dirX, ev.dirY);
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 20, speed: 250, life: 0.3, size: 3.5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 150, life: 0.2, size: 2 });
+      audio.play("skillBlue");
     } else if (ev.type === "dashSlash") {
       renderer.yutaVisual.triggerDashSlash(ev.startX || ev.x, ev.startY || ev.y, ev.x, ev.y, ev.radius);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 25, speed: 350, life: 0.5, size: 4 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 200, life: 0.35, size: 2.5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 40, speed: 400, life: 0.6, size: 5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 250, life: 0.4, size: 3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 15, speed: 300, life: 0.45, size: 3.5 });
+      renderer.yutaVisual.needsShake = true;
       audio.play("skillBlue");
     } else if (ev.type === "dashSlashDelayed") {
       renderer.yutaVisual.triggerSlashCuts(ev.x, ev.y);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 30, speed: 400, life: 0.55, size: 5 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 250, life: 0.4, size: 3 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 25, speed: 300, life: 0.5, size: 3.5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 45, speed: 450, life: 0.6, size: 5.5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 30, speed: 300, life: 0.45, size: 3.5 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 35, speed: 350, life: 0.55, size: 4 });
     } else if (ev.type === "fullRika") {
       renderer.yutaVisual.triggerFullRika(ev.x, ev.y, ev.duration || 20);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc3388", count: 30, speed: 300, life: 0.6, size: 4 });

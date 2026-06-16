@@ -37,7 +37,7 @@ export class YutaSkillEffects {
   addRikaAttack(x, y, dirX = 1, dirY = 0, options = {}) {
     let fx = dirX;
     let fy = dirY;
-    const valid = Number.isFinite(fx) && Number.isFinite(fy) && Math.hypot(fx, fy) > 0.001;
+    const valid = Number.isFinite(fx) && Number.isFinite(fy) && fx * fx + fy * fy > 0.000001;
     if (!valid) {
       const a = Math.random() * Math.PI * 2;
       fx = Math.cos(a);
@@ -96,7 +96,7 @@ export class YutaSkillEffects {
   }
 
   render(ctx, camera) {
-    const z = camera.zoom || 1;
+    const z = camera.zoom;
     const cx = camera.x;
     const cy = camera.y;
     const w = ctx.canvas.width;

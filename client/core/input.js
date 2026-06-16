@@ -155,7 +155,7 @@ export class InputManager {
   }
 
   toPayload(camera, seq) {
-    const zoom = camera.zoom || 1;
+    const zoom = camera.zoom;
     const aimX = camera.x + (this.mouseX - this.canvas.width * 0.5) / zoom;
     const aimY = camera.y + (this.mouseY - this.canvas.height * 0.5) / zoom;
     return {
