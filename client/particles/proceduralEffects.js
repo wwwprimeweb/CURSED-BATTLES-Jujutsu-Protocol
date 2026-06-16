@@ -251,7 +251,6 @@ export class SkillVFX {
     const orbitActive = ss(0.3, 0.42, p) * (1 - ss(0.88, 0.95, p));
     if (orbitActive > 0.01) {
       const pCount = 45;
-      ctx.shadowBlur = 0;
       for (let i = 0; i < pCount; i++) {
         const seedA = i * 137.5 * Math.PI / 180;
         const speed = 0.3 + Math.sin(i * 53.1) * 0.15 + 0.15;
@@ -282,6 +281,7 @@ export class SkillVFX {
         const py = y + Math.sin(angle) * orbitR;
 
         // Trail
+        ctx.shadowBlur = 0;
         const trailDt = [0.06, 0.12];
         for (let tr = 0; tr < trailDt.length; tr++) {
           const tAngle = angle - speed * trailDt[tr];
