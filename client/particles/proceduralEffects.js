@@ -251,6 +251,27 @@ export class SkillVFX {
     ctx.closePath();
     ctx.fill();
 
+    // Internal energy rings (animated waves inside the sphere)
+    const ringScales = [0.25, 0.45, 0.62, 0.78, 0.9];
+    const ringFreqs = [2.1, 1.3, 0.9, 0.6, 0.4];
+    for (let ri = 0; ri < ringScales.length; ri++) {
+      const scale = ringScales[ri];
+      const ringAlpha = (Math.sin(t * ringFreqs[ri] + ri * 1.7) * 0.3 + 0.5) * alpha * 0.5;
+      ctx.globalAlpha = ringAlpha;
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = `rgba(255,255,255,1)`;
+      ctx.lineWidth = 1.2 - ri * 0.15;
+      ctx.beginPath();
+      const rp0 = pts[0];
+      ctx.moveTo(x + (rp0.x - x) * scale, y + (rp0.y - y) * scale);
+      for (let i = 1; i < numPoints; i++) {
+        const pi = pts[i];
+        ctx.lineTo(x + (pi.x - x) * scale, y + (pi.y - y) * scale);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+
     // Outer stroke (pink, glowing)
     ctx.shadowColor = "rgba(255,51,153,1)";
     ctx.shadowBlur = 35;
