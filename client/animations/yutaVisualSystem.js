@@ -91,21 +91,21 @@ export class YutaVisualSystem {
       const endY = this.pureLoveBeam.originY + this.pureLoveBeam.dirY * beamLength;
       const perpX = -this.pureLoveBeam.dirY;
       const perpY = this.pureLoveBeam.dirX;
-      const count = 8 + Math.floor(Math.random() * 7);
+      const count = 3 + Math.floor(Math.random() * 3);
       for (let i = 0; i < count; i++) {
         const t = Math.random();
-        const spread = (Math.random() - 0.5) * this.pureLoveBeam.width * 0.8;
+        const spread = (Math.random() - 0.5) * this.pureLoveBeam.width * 0.6;
         const px = this.pureLoveBeam.originX + (endX - this.pureLoveBeam.originX) * t + perpX * spread;
         const py = this.pureLoveBeam.originY + (endY - this.pureLoveBeam.originY) * t + perpY * spread;
-        const speed = 60 + Math.random() * 90;
+        const speed = 80 + Math.random() * 120;
         this.beamParticles.push({
           x: px,
           y: py,
           vx: this.pureLoveBeam.dirX * speed + (Math.random() - 0.5) * 30,
           vy: this.pureLoveBeam.dirY * speed + (Math.random() - 0.5) * 30,
-          life: 0.5 + Math.random() * 0.5,
-          maxLife: 0.5 + Math.random() * 0.5,
-          size: 1.5 + Math.random() * 2.5,
+          life: 0.4 + Math.random() * 0.4,
+          maxLife: 0.4 + Math.random() * 0.4,
+          size: 2 + Math.random() * 4,
           hue: 320 + Math.random() * 40,
           wobblePhase: (Math.random() - 0.5) * 10,
         });
