@@ -2265,6 +2265,30 @@ class GameServer {
       }
 
       const companion = PORTADOR_DO_VINCULO.rikaCompanion;
+
+      // Pure Love retreat: Rika goes behind Yuta during R ability
+      const isPureLoveCharging = owner.cast && owner.cast.type === "pureLove";
+      const isPureLoveFiring = this.pureLoveBeams.has(ownerId);
+      if (isPureLoveCharging || isPureLoveFiring) {
+        let dirX, dirY;
+        if (isPureLoveFiring) {
+          const beam = this.pureLoveBeams.get(ownerId);
+          dirX = beam.dirX;
+          dirY = beam.dirY;
+        } else {
+          dirX = owner.cast.dirX;
+          dirY = owner.cast.dirY;
+        }
+        const retreatDistance = companion.followDistance * 0.6;
+        const targetX = owner.x - dirX * retreatDistance;
+        const targetY = owner.y - dirY * retreatDistance;
+        const retreatLerp = 0.12;
+        rika.x += (targetX - rika.x) * retreatLerp;
+        rika.y += (targetY - rika.y) * retreatLerp;
+        rika.state = "retreat";
+        return;
+      }
+
       rika.attackTimer = Math.max(0, (Number.isFinite(rika.attackTimer) ? rika.attackTimer : 0) - dt);
 
       // Full Rika timer-based auto-attack (enemies and players in range)

@@ -104,13 +104,6 @@ export class YutaSkillEffects {
     const w = ctx.canvas.width;
     const h = ctx.canvas.height;
 
-    this.rikas.forEach((rika) => {
-      const sx = (rika.x - cx) * z + w * 0.5;
-      const sy = (rika.y - cy) * z + h * 0.5;
-      const alpha = Math.min(1, rika.life / 2);
-      SkillVFX.drawTeleportDistortion(ctx, sx, sy, alpha * 0.5);
-    });
-
     this.pureLoves.forEach((pl) => {
       const sx = (pl.x - cx) * z + w * 0.5;
       const sy = (pl.y - cy) * z + h * 0.5;
