@@ -470,7 +470,15 @@ export class YutaVisualSystem {
   updateBeamsFromPlayerSnapshots(players) {
     this.pureLoveBeam = null;
     players.forEach((entry) => {
-      this.updatePureLoveBeamFromSnapshot(entry.raw);
+      const p = entry.raw;
+      this.updatePureLoveBeamFromSnapshot(p);
+      if (this.pureLoveCharges.has(p.id)) {
+        const charge = this.pureLoveCharges.get(p.id);
+        if (Number.isFinite(p.x) && Number.isFinite(p.y)) {
+          charge.x = p.x + charge.dirX * 150;
+          charge.y = p.y + charge.dirY * 150;
+        }
+      }
     });
   }
 

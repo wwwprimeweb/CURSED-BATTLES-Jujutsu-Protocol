@@ -462,6 +462,12 @@ function handleEvents(events) {
       renderer.yutaVisual.triggerFullRika(ev.playerId, ev.x, ev.y, ev.duration || 20);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc3388", count: 30, speed: 300, life: 0.6, size: 4 });
       audio.play("skillPurple");
+    } else if (ev.type === "rikaAppear") {
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc66ff", count: 20, speed: 200, life: 0.5, size: 3 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 120, life: 0.4, size: 2 });
+    } else if (ev.type === "rikaDisappear") {
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 30, speed: 150, life: 0.8, size: 2 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d4a5e5", count: 15, speed: 100, life: 0.6, size: 1.5 });
     } else if (ev.type === "rikaAttack") {
       renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, ev.dirX, ev.dirY, ev.attackType, undefined, ev.ownerId);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 180, life: 0.3, size: 2.5 });

@@ -401,7 +401,9 @@ class GameServer {
     this.players.forEach((player) => {
       const base = BASE_STATS[player.character] || BASE_STATS["o-honrado"];
       player.maxHp = base.maxHp;
+      player.baseMaxHp = base.maxHp;
       player.maxEnergy = base.maxEnergy;
+      player.baseMaxEnergy = base.maxEnergy;
       player.energyRegen = base.energyRegen;
       player.moveSpeed = base.moveSpeed;
       player.dodgeCooldownBase = base.dodgeCooldown;
@@ -937,6 +939,8 @@ class GameServer {
           this.tryCastPureLove(player);
         } else if (spacePressed) {
           this.tryCastDashSlash(player);
+        } else if (fPressed && domainActive) {
+          this.tryCastDomainCopy(player);
         } else if (fPressed && !domainActive) {
           this.tryCastDomain(player);
         }
@@ -2290,6 +2294,10 @@ class GameServer {
         return;
       }
 
+      if (rika.state === "retreat") {
+        rika.state = "follow";
+      }
+
       rika.attackTimer = Math.max(0, (Number.isFinite(rika.attackTimer) ? rika.attackTimer : 0) - dt);
 
       // Full Rika timer-based auto-attack (enemies and players in range)
@@ -2954,6 +2962,17 @@ class GameServer {
     this.pureLoveBeams.forEach((beam, ownerId) => {
       const owner = this.players.get(ownerId);
       if (!owner || !owner.alive) {
+        if (beam._tempRika) {
+          const rika = this.rikas.get(ownerId);
+          if (rika) {
+            this.emitEventNear(rika.x, rika.y, {
+              type: "rikaDisappear",
+              x: rika.x,
+              y: rika.y,
+            });
+          }
+          this.rikas.delete(ownerId);
+        }
         this.pureLoveBeams.delete(ownerId);
         return;
       }
@@ -2964,6 +2983,17 @@ class GameServer {
 
       beam.lifetime -= dt;
       if (beam.lifetime <= 0) {
+        if (beam._tempRika) {
+          const rika = this.rikas.get(ownerId);
+          if (rika) {
+            this.emitEventNear(rika.x, rika.y, {
+              type: "rikaDisappear",
+              x: rika.x,
+              y: rika.y,
+            });
+          }
+          this.rikas.delete(ownerId);
+        }
         this.pureLoveBeams.delete(ownerId);
         return;
       }
@@ -3650,10 +3680,13 @@ class GameServer {
     const kit = PORTADOR_DO_VINCULO.pureLove;
     const dir = normalize(cast.dirX, cast.dirY);
     const width = kit.radius;
+    const offset = 60;
+
+    const needsRika = cast.needsRika === true;
 
     this.pureLoveBeams.set(player.id, {
-      x: player.x + dir.x * 60,
-      y: player.y + dir.y * 60,
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
       dirX: dir.x,
       dirY: dir.y,
       width: width,
@@ -3663,6 +3696,18 @@ class GameServer {
       ownerId: player.id,
       hitTimes: new Map(),
       _domainCopy: true,
+      _tempRika: needsRika,
+    });
+
+    this.emitEventNear(player.x, player.y, {
+      type: "pureLoveBeam",
+      playerId: player.id,
+      x: player.x + dir.x * offset,
+      y: player.y + dir.y * offset,
+      dirX: dir.x,
+      dirY: dir.y,
+      width: width,
+      lifetime: 4.0,
     });
   }
 
@@ -4033,12 +4078,55 @@ class GameServer {
     }
     const kit = this.getKit(player);
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
-    player.cast = {
-      type: "domainCopy",
-      timer: (kit.domainCopy || kit.domain).startup,
-      dirX: aim.x,
-      dirY: aim.y,
-    };
+    const copiedChar = domain ? domain.copiedCharacter : null;
+
+    if (domain && !copiedChar) {
+      const needsRika = !this.rikas.has(player.id);
+      const startup = kit.pureLove.startup;
+      if (needsRika) {
+        this.rikas.set(player.id, {
+          x: player.x - aim.x * 60,
+          y: player.y - aim.y * 60,
+          ownerId: player.id,
+          timer: Infinity,
+          anchorSide: -1,
+          facing: 1,
+          state: "follow",
+          targetId: null,
+          attackCounter: 0,
+        });
+        this.emitEventNear(player.x, player.y, {
+          type: "rikaAppear",
+          x: player.x - aim.x * 60,
+          y: player.y - aim.y * 60,
+          playerId: player.id,
+        });
+      }
+      player.cast = {
+        type: "domainCopy",
+        timer: startup,
+        dirX: aim.x,
+        dirY: aim.y,
+        needsRika,
+      };
+      const chargeOffset = 150;
+      this.emitEventNear(player.x, player.y, {
+        type: "pureLoveCharge",
+        x: player.x + aim.x * chargeOffset,
+        y: player.y + aim.y * chargeOffset,
+        playerId: player.id,
+        dirX: aim.x,
+        dirY: aim.y,
+        duration: startup,
+      });
+    } else {
+      player.cast = {
+        type: "domainCopy",
+        timer: (kit.domainCopy || kit.domain).startup,
+        dirX: aim.x,
+        dirY: aim.y,
+      };
+    }
     return true;
   }
 

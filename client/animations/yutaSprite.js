@@ -1,6 +1,6 @@
 import { SpriteAnimator } from "./spriteAnimator.js";
 import { loadImage } from "./imageLoader.js";
-import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH, RIKA_INCOMPLETA_CONFIG, RIKA_INCOMPLETA_SHEET_PATH, FULL_RIKA_CONFIG, FULL_RIKA_SHEET_PATH } from "./yutaSprites.js";
+import { YUTA_ANIMATIONS, YUTA_SPRITE_CONFIG, YUTA_SHEET_PATH, RIKA_INCOMPLETA_CONFIG, RIKA_INCOMPLETA_SHEET_PATH, FULL_RIKA_CONFIG, FULL_RIKA_SHEET_PATH, TELEPORT_ANIMATIONS, TELEPORT_SPRITE_CONFIG, TELEPORT_SHEET_PATH } from "./yutaSprites.js";
 
 const ALT_SHEET_PATH = "/assets/sprites/portador-do-vinculo_m1_alt.png";
 const ALT_ANIMATIONS = {
@@ -36,6 +36,16 @@ export class YutaSpriteRenderer {
       offsetX: YUTA_SPRITE_CONFIG.offsetX,
       renderScale: YUTA_SPRITE_CONFIG.renderScale,
       animations: ALT_ANIMATIONS,
+    });
+    this.teleportAnimator = new SpriteAnimator({
+      sheetPath: TELEPORT_SHEET_PATH,
+      cellWidth: TELEPORT_SPRITE_CONFIG.cellWidth,
+      cellHeight: TELEPORT_SPRITE_CONFIG.cellHeight,
+      pivotX: TELEPORT_SPRITE_CONFIG.pivotX,
+      pivotY: TELEPORT_SPRITE_CONFIG.pivotY,
+      offsetX: TELEPORT_SPRITE_CONFIG.offsetX,
+      renderScale: TELEPORT_SPRITE_CONFIG.renderScale,
+      animations: TELEPORT_ANIMATIONS,
     });
     this.rikaSprite = null;
     this.rikaIncompletaSheet = null;
@@ -135,11 +145,18 @@ export class YutaSpriteRenderer {
     this.walkTime += dt;
     this.animator.update(dt);
     this.altAnimator.update(dt);
+    this.teleportAnimator.update(dt);
   }
 
   render(ctx, x, y, state, facing = 1, _scale = 1, playerId = "default") {
     const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
-    const animator = ALT_STATES.includes(state) ? this.altAnimator : this.animator;
+    if (state === "teleport") {
+      const p = this.teleportAnimator.players.get(playerId);
+      if (p && p.done) {
+        this.teleportAnimator.resetPlayer(playerId);
+      }
+    }
+    const animator = state === "teleport" ? this.teleportAnimator : ALT_STATES.includes(state) ? this.altAnimator : this.animator;
     animator.render(ctx, x, y, state, facing, scale, playerId);
   }
 

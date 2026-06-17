@@ -82,6 +82,13 @@ export class SpriteAnimator {
     ctx.restore();
   }
 
+  resetPlayer(playerId) {
+    const p = this.players.get(playerId);
+    if (p) {
+      p.currentState = null;
+    }
+  }
+
   getCurrentFrame(playerId) {
     const p = this.players.get(playerId);
     if (!p) return 0;

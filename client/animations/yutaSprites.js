@@ -71,6 +71,21 @@ export const FULL_RIKA_CONFIG = {
 
 export const FULL_RIKA_SHEET_PATH = "/assets/sprites/portador-do-vinculo_full_rika.png";
 
+export const TELEPORT_ANIMATIONS = {
+  teleport: { row: 0, frames: 4, speed: 16, loop: false },
+};
+
+export const TELEPORT_SPRITE_CONFIG = {
+  cellWidth: 80,
+  cellHeight: 80,
+  pivotX: 40,
+  pivotY: 65,
+  offsetX: 16,
+  renderScale: 1.7,
+};
+
+export const TELEPORT_SHEET_PATH = "/assets/sprites/portador-do-vinculo_teleport.png";
+
 export function mapServerStateToAnim(serverState) {
   const map = {
     idle: "idle",

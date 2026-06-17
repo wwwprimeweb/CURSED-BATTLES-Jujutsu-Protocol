@@ -200,14 +200,6 @@ class DomainSystem {
           if (domain.character === "punho-indomavel") {
             targetPlayer.domainFrozen = false;
             if (domain.shouldHit) {
-              this.server.combat.applyDamage({
-                target: targetPlayer,
-                source: owner,
-                amount: this.getKitByDomain(domain).freezeDps * 2,
-                kind: "domainFreeze",
-                fromX: domain.x,
-                fromY: domain.y,
-              });
               this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
                 type: "punhoIndomavelDominioImpacto",
                 x: targetPlayer.x,
@@ -218,14 +210,16 @@ class DomainSystem {
             targetPlayer.domainFrozen = true;
             targetPlayer.vx *= 0.5;
             targetPlayer.vy *= 0.5;
-            this.server.combat.applyDamage({
-              target: targetPlayer,
-              source: owner,
-              amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
-              kind: "domainFreeze",
-              fromX: domain.x,
-              fromY: domain.y,
-            });
+            if (domain.character === "o-honrado") {
+              this.server.combat.applyDamage({
+                target: targetPlayer,
+                source: owner,
+                amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
+                kind: "domainFreeze",
+                fromX: domain.x,
+                fromY: domain.y,
+              });
+            }
             this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
               type: "freezeTick",
               x: targetPlayer.x,
@@ -270,14 +264,6 @@ class DomainSystem {
 
       if (sourceDomain.character === "punho-indomavel") {
         if (sourceDomain.shouldHit) {
-          this.server.combat.applyDamage({
-            target: enemy,
-            source: owner,
-            amount: kit.freezeDps * 2,
-            kind: "domainFreeze",
-            fromX: sourceDomain.x,
-            fromY: sourceDomain.y,
-          });
           this.server.emitEventNear(enemy.x, enemy.y, {
             type: "punhoIndomavelDominioImpacto",
             x: enemy.x,
@@ -286,14 +272,16 @@ class DomainSystem {
         }
       } else {
         enemy.freezeTimer = Math.max(enemy.freezeTimer, kit.freezePersistSec || 0);
-        this.server.combat.applyDamage({
-          target: enemy,
-          source: owner,
-          amount: (kit.freezeDps || 0) * dt,
-          kind: "domainFreeze",
-          fromX: sourceDomain.x,
-          fromY: sourceDomain.y,
-        });
+        if (sourceDomain.character === "o-honrado") {
+          this.server.combat.applyDamage({
+            target: enemy,
+            source: owner,
+            amount: (kit.freezeDps || 0) * dt,
+            kind: "domainFreeze",
+            fromX: sourceDomain.x,
+            fromY: sourceDomain.y,
+          });
+        }
       }
 
       const barrierDamage = (enemy.grade === "special" ? 6 : enemy.grade <= 1 ? 3 : 1) * dt;
