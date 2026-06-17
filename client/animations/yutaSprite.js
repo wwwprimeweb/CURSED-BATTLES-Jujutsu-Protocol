@@ -13,7 +13,7 @@ const ALT_STATES = ["m1_2", "m1_4"];
 
 const DEFAULT_SIZE = 136;
 const DASH_SIZE = Math.round(DEFAULT_SIZE * (150 / 160));
-const RIKA_SIZE = Math.round(DEFAULT_SIZE * 1.5);
+const RIKA_SIZE = Math.round(DEFAULT_SIZE * 2.5);
 
 export class YutaSpriteRenderer {
   constructor() {

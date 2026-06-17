@@ -2014,6 +2014,12 @@ export class Renderer {
           facing = aimDx < 0 ? -1 : 1;
           this.playerFacing.set(p.id, facing);
         }
+      } else if (p.pureLoveActive && Number.isFinite(p.aimX)) {
+        const aimDx = p.aimX - rx;
+        if (Math.abs(aimDx) > 1) {
+          facing = aimDx < 0 ? -1 : 1;
+          this.playerFacing.set(p.id, facing);
+        }
       } else if (Math.abs(pvx) > 1) {
         facing = pvx < 0 ? -1 : 1;
         this.playerFacing.set(p.id, facing);

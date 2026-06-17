@@ -57,7 +57,7 @@ export const FULL_RIKA_CONFIG = {
   sheetHeight: 240,
   cellWidth: 160,
   cellHeight: 120,
-  pivotX: 80,
+  pivotX: 70,
   pivotY: 100,
   renderScale: 1.8,
   introFrames: 9,

@@ -927,29 +927,118 @@ export class YutaVisualSystem {
       }
       ctx.restore();
 
-      // Beam inner streaks
+      // Beam inner streaks (fixed looping teleportation)
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      const streakSpeeds = [0.2, 0.35, 0.5, 0.65, 0.8, 0.95, 1.1, 1.25];
-      const streakColors = ["#ffccff", "#ff99ff", "#ffffff", "#ffccff", "#ff66ff", "#ffffff", "#ff99ff", "#ffccff"];
-      for (let i = 0; i < 8; i++) {
+      const streakSpeeds = [0.2, 0.35, 0.5, 0.65, 0.8, 0.95, 1.1, 1.25, 1.4, 1.6];
+      const streakColors = ["#ffccff", "#ff99ff", "#ffffff", "#ffccff", "#ff66ff", "#ffffff", "#ff99ff", "#ffccff", "#ffd1dc", "#fff0f5"];
+      for (let i = 0; i < 10; i++) {
         const speed = streakSpeeds[i];
         const streakT = (this.time * speed + i * 0.4) % 1;
         const offset = (Math.sin(streakT * Math.PI * 4 + i) * 0.08 + 0.1) * 0.8 + 0.1;
-        const sx = bx + (endX - bx) * offset;
-        const sy = by + (endY - by) * offset;
-        const streakLen = 0.08;
-        const ex = bx + (endX - bx) * Math.min(1, offset + streakLen);
-        const ey = by + (endY - by) * Math.min(1, offset + streakLen);
-        ctx.globalAlpha = (1 - streakT) * 0.4 * alpha;
+        
+        // Add lateral displacement to streaks so they aren't just in the center
+        const perpX = -this.pureLoveBeam.dirY;
+        const perpY = this.pureLoveBeam.dirX;
+        const spread = Math.sin(streakT * Math.PI * 10 + i) * (this.pureLoveBeam.width * 0.4 * z);
+
+        const sx = bx + (endX - bx) * offset + perpX * spread;
+        const sy = by + (endY - by) * offset + perpY * spread;
+        const streakLen = 0.12;
+        const ex = bx + (endX - bx) * Math.min(1, offset + streakLen) + perpX * spread;
+        const ey = by + (endY - by) * Math.min(1, offset + streakLen) + perpY * spread;
+        
+        // Fade in at the start and fade out at the end so it doesn't snap when looping
+        const streakAlpha = Math.sin(streakT * Math.PI);
+        ctx.globalAlpha = streakAlpha * 0.8 * alpha;
+        
         ctx.strokeStyle = streakColors[i];
         ctx.shadowColor = "#ff66cc";
-        ctx.shadowBlur = 18;
-        ctx.lineWidth = (2 + Math.sin(this.time * 1.5 + i * 0.8) * 3 + i * 0.5) * z;
+        ctx.shadowBlur = 25;
+        ctx.lineWidth = (3 + Math.sin(this.time * 2.5 + i * 0.8) * 4 + i * 0.8) * z;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(ex, ey);
         ctx.stroke();
+      }
+      ctx.restore();
+
+      // Dark jagged ribbons/spikes wrapped around the beam (living energy)
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      const ribbonCount = 3; // Three main strands for more chaotic feel
+      const numSegments = 120;
+      
+      for (let i = 0; i < ribbonCount; i++) {
+        const spiralSpeed = 15 + i * 2;
+        const freq = 0.02 + i * 0.005;
+        // Tighter amplitude to hug the beam closely, smaller spikes
+        const baseAmp = this.pureLoveBeam.width * 0.25 * z * widthScale;
+        const phaseOffset = i * (Math.PI * 2 / 3);
+
+        ctx.fillStyle = i === 0 ? "rgba(20, 0, 30, 0.9)" : "rgba(40, 0, 60, 0.8)";
+        ctx.shadowColor = "rgba(10, 0, 20, 0.8)";
+        ctx.shadowBlur = 5 * z;
+        
+        for (let s = 0; s < numSegments; s++) {
+          const t1 = s / numSegments;
+          const t2 = (s + 1) / numSegments;
+          
+          // Use smooth fade out at beam tip instead of abrupt break
+          const beamTipDist = t1 / (lifeFrac * 2);
+          if (beamTipDist > 1) break; // Don't draw past the growing beam
+          
+          const d1 = t1 * beamLength * z;
+          const d2 = t2 * beamLength * z;
+          
+          // Add chaotic wobble
+          const wobble1 = Math.sin(this.time * 20 + d1 * 0.1) * 0.1;
+          const wobble2 = Math.sin(this.time * 20 + d2 * 0.1) * 0.1;
+          
+          const phase1 = -this.time * spiralSpeed + d1 * freq + phaseOffset;
+          const phase2 = -this.time * spiralSpeed + d2 * freq + phaseOffset;
+          
+          // Only draw when the ribbon is in front of the beam
+          if (Math.sin(phase1) > -0.1 || Math.sin(phase2) > -0.1) {
+            ctx.beginPath();
+            const perpX = -this.pureLoveBeam.dirY;
+            const perpY = this.pureLoveBeam.dirX;
+            
+            const wave1 = Math.sin(phase1) + wobble1;
+            const wave2 = Math.sin(phase2) + wobble2;
+            
+            // Taper near the origin (0) and near the current growing tip
+            const tipTaper1 = Math.max(0, 1 - Math.pow(beamTipDist, 4));
+            const tipTaper2 = Math.max(0, 1 - Math.pow(t2 / (lifeFrac * 2), 4));
+            
+            const currentAmp1 = (t1 < 0.1 ? baseAmp * (t1 / 0.1) : baseAmp) * tipTaper1;
+            const currentAmp2 = (t2 < 0.1 ? baseAmp * (t2 / 0.1) : baseAmp) * tipTaper2;
+            
+            // Front edge
+            const p1x = bx + this.pureLoveBeam.dirX * d1 + perpX * wave1 * currentAmp1;
+            const p1y = by + this.pureLoveBeam.dirY * d1 + perpY * wave1 * currentAmp1;
+            const p2x = bx + this.pureLoveBeam.dirX * d2 + perpX * wave2 * currentAmp2;
+            const p2y = by + this.pureLoveBeam.dirY * d2 + perpY * wave2 * currentAmp2;
+            
+            // Back edge (creates the tapering sharp ribbon shape, thinner now)
+            const thickness1 = (8 + Math.sin(d1 * 0.1) * 8) * z * Math.max(0.1, Math.sin(phase1)) * tipTaper1;
+            const thickness2 = (8 + Math.sin(d2 * 0.1) * 8) * z * Math.max(0.1, Math.sin(phase2)) * tipTaper2;
+            
+            const p3x = p2x - this.pureLoveBeam.dirX * (thickness2 * 0.3) - perpX * thickness2;
+            const p3y = p2y - this.pureLoveBeam.dirY * (thickness2 * 0.3) - perpY * thickness2;
+            const p4x = p1x - this.pureLoveBeam.dirX * (thickness1 * 0.3) - perpX * thickness1;
+            const p4y = p1y - this.pureLoveBeam.dirY * (thickness1 * 0.3) - perpY * thickness1;
+            
+            ctx.moveTo(p1x, p1y);
+            ctx.lineTo(p2x, p2y);
+            ctx.lineTo(p3x, p3y);
+            ctx.lineTo(p4x, p4y);
+            ctx.closePath();
+            
+            ctx.globalAlpha = alpha * Math.min(1, (Math.sin(phase1) + 0.5)) * tipTaper1;
+            ctx.fill();
+          }
+        }
       }
       ctx.restore();
     }

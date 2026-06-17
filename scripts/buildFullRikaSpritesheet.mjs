@@ -25,6 +25,7 @@ async function main() {
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, W, H);
 
   for (let rowIdx = 0; rowIdx < ROWS.length; rowIdx++) {

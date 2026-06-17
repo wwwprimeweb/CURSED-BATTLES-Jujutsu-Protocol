@@ -2286,6 +2286,7 @@ class GameServer {
         rika.x += (targetX - rika.x) * retreatLerp;
         rika.y += (targetY - rika.y) * retreatLerp;
         rika.state = "retreat";
+        rika.facing = dirX < 0 ? -1 : 1;
         return;
       }
 
@@ -2382,7 +2383,12 @@ class GameServer {
       } else if (relX > sideDeadzone) {
         rika.anchorSide = 1;
       }
-      rika.facing = rika.anchorSide < 0 ? 1 : -1;
+      if (this.pureLoveBeams.has(owner.id)) {
+        const beam = this.pureLoveBeams.get(owner.id);
+        rika.facing = beam.dirX < 0 ? -1 : 1;
+      } else {
+        rika.facing = rika.anchorSide < 0 ? 1 : -1;
+      }
 
       if (rika.state === "follow") {
         const offsetX = rika.anchorSide * companion.followDistance;

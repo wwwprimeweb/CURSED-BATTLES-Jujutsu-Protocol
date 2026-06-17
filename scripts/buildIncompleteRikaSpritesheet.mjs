@@ -26,6 +26,8 @@ async function main() {
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
 
+  ctx.imageSmoothingEnabled = false;
+
   // Transparent background
   ctx.clearRect(0, 0, W, H);
 

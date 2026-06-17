@@ -59,10 +59,10 @@ const PORTADOR_DO_VINCULO = {
   pureLove: {
     energy: 90,
     cooldown: 45,
-    damage: 640,
+    damage: 960,
     radius: 260,
     startup: 2.0,
-    knockback: 600,
+    knockback: 1200,
     guardBreak: true,
     beamLength: 1152,
     redirectSpeed: 0.5,

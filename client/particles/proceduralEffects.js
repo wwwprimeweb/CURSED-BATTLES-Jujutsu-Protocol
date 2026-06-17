@@ -192,19 +192,68 @@ export class SkillVFX {
   static drawPinkBeam(ctx, x1, y1, x2, y2, width = 30, alpha = 1) {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = "rgba(255,102,178,0.9)";
-    ctx.shadowColor = "rgba(255,51,153,1)";
-    ctx.shadowBlur = 40;
-    ctx.lineWidth = width;
     ctx.lineCap = "round";
+    ctx.lineJoin = "miter";
+    const t = performance.now() / 1000;
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 1) { ctx.restore(); return; }
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const px = -ny;
+    const py = nx;
+
+    // Draw volatile, jagged energy paths
+    const drawJaggedPath = (wobbleAmp, freq, speed) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      const segments = Math.max(10, Math.floor(dist / 20));
+      for (let i = 1; i < segments; i++) {
+        const p = i / segments;
+        const d = p * dist;
+        // Envelope to taper the volatility at the origin and tip
+        const envelope = Math.sin(p * Math.PI);
+        const w = (Math.sin(d * freq - t * speed) + Math.sin(d * freq * 1.5 + t * speed * 1.2)) * wobbleAmp * envelope;
+        ctx.lineTo(x1 + nx * d + px * w, y1 + ny * d + py * w);
+      }
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    };
+
+    // Outer glow (deep purple) volatile
+    ctx.strokeStyle = "rgba(160, 20, 200, 0.4)";
+    ctx.shadowColor = "rgba(200, 50, 255, 0.8)";
+    ctx.shadowBlur = 40;
+    ctx.lineWidth = width * 1.2;
+    drawJaggedPath(width * 0.1, 0.03, 20);
+    drawJaggedPath(width * 0.08, 0.05, -15);
+
+    // Main body (vibrant purple/pink)
+    ctx.strokeStyle = "rgba(220, 80, 230, 0.85)";
+    ctx.shadowBlur = 30;
+    ctx.lineWidth = width * 0.8;
+    drawJaggedPath(width * 0.06, 0.08, 25);
+    drawJaggedPath(width * 0.04, 0.06, -20);
+
+    // Inner bright pink layer (mostly straight but slight wobble)
+    ctx.strokeStyle = "rgba(255, 150, 255, 0.95)";
+    ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = width * 0.4;
+    drawJaggedPath(width * 0.02, 0.1, 30);
+
+    // Core (pure white, straight)
+    ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+    ctx.shadowColor = "rgba(255, 255, 255, 1)";
+    ctx.shadowBlur = 15;
+    ctx.lineWidth = width * 0.2;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(255,200,230,0.7)";
-    ctx.lineWidth = width * 0.35;
-    ctx.shadowBlur = 20;
-    ctx.stroke();
+
     ctx.restore();
   }
 
