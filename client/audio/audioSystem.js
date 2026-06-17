@@ -544,6 +544,133 @@ export class AudioSystem {
         gn.connect(this.masterGain);
         src.start(0);
         break;
+      case "yutaM1":
+        if (this.ctx) {
+          const now = this.ctx.currentTime;
+          const sr = this.ctx.sampleRate;
+          const dur = 0.035;
+          const len = Math.floor(sr * dur);
+          const buf = this.ctx.createBuffer(1, len, sr);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) {
+            const t = i / sr;
+            const amp = Math.min(1, t / 0.005) * Math.max(0, 1 - t / dur);
+            data[i] = (Math.random() * 2 - 1) * amp * 0.12;
+          }
+          const src = this.ctx.createBufferSource();
+          src.buffer = buf;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = "bandpass";
+          filter.Q.value = 0.8;
+          filter.frequency.setValueAtTime(3000, now);
+          filter.frequency.exponentialRampToValueAtTime(600, now + dur);
+          const g = this.ctx.createGain();
+          g.gain.value = 0.4 * this._sfxVol;
+          src.connect(filter);
+          filter.connect(g);
+          g.connect(this.masterGain);
+          src.start(now);
+          src.stop(now + dur + 0.01);
+        }
+        break;
+      case "yutaRikaSummon":
+        this.syntheticWhoosh(0.2, true);
+        this.tone(120, 0.3, "sine", 0.25);
+        this.tone(200, 0.25, "triangle", 0.18);
+        this.tone(400, 0.2, "sine", 0.14);
+        this.noise(0.12, 0.08, 3);
+        break;
+      case "yutaRikaImpulse":
+        this.tone(55, 0.35, "sawtooth", 0.4);
+        this.tone(90, 0.25, "square", 0.3);
+        this.noise(0.2, 0.15, 2);
+        this.syntheticClick(0.22);
+        break;
+      case "yutaRikaDash":
+        this.syntheticWhoosh(0.18, true);
+        this.tone(350, 0.08, "triangle", 0.2);
+        this.tone(250, 0.06, "sine", 0.16);
+        break;
+      case "yutaDashSlashWindup":
+        this.syntheticWhoosh(0.16, true);
+        this.tone(400, 0.08, "triangle", 0.15);
+        break;
+      case "yutaDashSlash":
+        this.syntheticWhoosh(0.15, true);
+        this.syntheticClick(0.25);
+        this.tone(450, 0.06, "sawtooth", 0.3);
+        this.tone(800, 0.08, "triangle", 0.25);
+        this.noise(0.06, 0.08, 3);
+        break;
+      case "yutaDashSlashDelayed":
+        this.tone(80, 0.25, "sawtooth", 0.35);
+        this.tone(130, 0.18, "square", 0.25);
+        this.noise(0.15, 0.12, 2.2);
+        break;
+      case "yutaFullRika":
+        this.syntheticWhoosh(0.3, true);
+        this.syntheticClick(0.25);
+        this.tone(60, 0.5, "sawtooth", 0.4);
+        this.tone(120, 0.4, "square", 0.3);
+        this.tone(240, 0.3, "triangle", 0.25);
+        this.noise(0.3, 0.2, 1.5);
+        break;
+      case "yutaPureLoveCharge":
+        if (this.ctx) {
+          const now = this.ctx.currentTime;
+          const sr = this.ctx.sampleRate;
+          const dur = 0.35;
+          const len = Math.floor(sr * dur);
+          const buf = this.ctx.createBuffer(1, len, sr);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) {
+            const t = i / sr;
+            const phase = t * 180 + t * t * 1400;
+            const amp = Math.min(1, t / 0.05) * Math.max(0, 1 - t / dur);
+            data[i] = Math.sin(2 * Math.PI * phase) * amp * 0.18;
+          }
+          const src = this.ctx.createBufferSource();
+          src.buffer = buf;
+          const g = this.ctx.createGain();
+          g.gain.value = 0.3 * this._sfxVol;
+          src.connect(g);
+          g.connect(this.masterGain);
+          src.start(0);
+        }
+        break;
+      case "yutaPureLoveBeam":
+        this.syntheticWhoosh(0.2, true);
+        this.tone(40, 0.6, "sawtooth", 0.5);
+        this.tone(90, 0.5, "square", 0.4);
+        this.tone(150, 0.4, "triangle", 0.3);
+        this.tone(350, 0.3, "sine", 0.2);
+        this.noise(0.5, 0.25, 1.2);
+        this.syntheticClick(0.3);
+        break;
+      case "yutaCursedWaveWindup":
+        this.tone(180, 0.15, "sine", 0.15);
+        this.tone(260, 0.12, "triangle", 0.12);
+        this.syntheticWhoosh(0.14, true);
+        break;
+      case "yutaCursedWave":
+        this.syntheticWhoosh(0.25, true);
+        this.syntheticClick(0.2);
+        this.tone(90, 0.2, "sawtooth", 0.35);
+        this.tone(150, 0.18, "square", 0.25);
+        this.tone(220, 0.15, "triangle", 0.2);
+        this.noise(0.18, 0.15, 2.0);
+        break;
+      case "yutaRikaAttack":
+        this.tone(420, 0.06, "triangle", 0.22);
+        this.tone(320, 0.05, "square", 0.18);
+        this.noise(0.035, 0.03, 4);
+        break;
+      case "yutaRikaHeavy":
+        this.syntheticClick(0.22);
+        this.tone(60, 0.25, "sawtooth", 0.35);
+        this.tone(100, 0.2, "square", 0.28);
+        this.noise(0.15, 0.12, 2);
+        break;
       default:
         break;
     }

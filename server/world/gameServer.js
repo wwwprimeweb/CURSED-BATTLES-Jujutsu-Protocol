@@ -4120,9 +4120,17 @@ class GameServer {
         duration: startup,
       });
     } else {
+      let startup;
+      if (copiedChar === "punho-indomavel") {
+        startup = PUNHO_INDOMAVEL.taidoBeatdown.startup;
+      } else if (copiedChar === "o-honrado" || copiedChar === "rei-amaldicoado" || copiedChar === "lutador-de-sorte") {
+        startup = O_HONRADO.purple.charge;
+      } else {
+        startup = kit.pureLove.startup;
+      }
       player.cast = {
         type: "domainCopy",
-        timer: (kit.domainCopy || kit.domain).startup,
+        timer: startup,
         dirX: aim.x,
         dirY: aim.y,
       };

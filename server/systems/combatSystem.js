@@ -41,7 +41,7 @@ class CombatSystem {
       target.lastDamageTaken = this.server.now;
       finalDamage = Math.max(1, finalDamage - target.armor);
       finalDamage *= target.modifiers.damageReductionMul;
-      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact" && target.cast.type !== "taidoBeatdown" && target.cast.type !== "taidoBeatdownAttack") {
+      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact" && target.cast.type !== "taidoBeatdown" && target.cast.type !== "taidoBeatdownAttack" && target.cast.type !== "rika" && target.cast.type !== "rikaImpulse" && target.cast.type !== "fullRika" && target.cast.type !== "dashSlash" && target.cast.type !== "cursedWave" && target.cast.type !== "pureLove") {
         target.cast = null;
       } else if (target.cast && target.cast.type === "soulImpact") {
         console.log(`[DIAG] soulImpact cast protected, damage=${finalDamage}`);

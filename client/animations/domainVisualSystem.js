@@ -350,14 +350,14 @@ export class DomainVisualSystem {
         if (char === 'portador-do-vinculo') {
           if (key === 'far') {
             effectiveScale = 2.0;
-            effectiveOffset = { x: -0.2, y: 0.4 };
+            effectiveOffset = { x: -0.6, y: 0.4 };
             effectiveParallax = 0.221;
           } else if (key === 'mid') {
             effectiveScale = 1.0;
             effectiveOffset = { x: 0, y: 0.5 };
             effectiveParallax = 0;
           } else if (key === 'close') {
-            effectiveParallax = 0.18;
+            effectiveParallax = 0.1;
           }
         }
 

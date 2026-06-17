@@ -206,6 +206,8 @@ class DomainSystem {
                 y: targetPlayer.y,
               });
             }
+          } else if (domain.character === "portador-do-vinculo") {
+            targetPlayer.domainFrozen = false;
           } else {
             targetPlayer.domainFrozen = true;
             targetPlayer.vx *= 0.5;
@@ -447,6 +449,7 @@ class DomainSystem {
     let result = 1;
     this.domains.forEach((domain) => {
       if (domain.ownerId === player.id) return;
+      if (domain.character === "portador-do-vinculo") return;
       const d = distance(player.x, player.y, domain.x, domain.y);
       if (d <= domain.radius) {
         result = 0;

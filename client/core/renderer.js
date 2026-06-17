@@ -2286,12 +2286,12 @@ export class Renderer {
       this.particles.render(this.ctx, this.camera);
       this.drawDamageNumbers();
       this.ctx.save();
-      this.drawDomainPrivacy(interpolation.domains, you, localPred, this.camera.zoom, this.camera.x, this.camera.y, this.canvas.clientWidth, this.canvas.clientHeight);
+      this.drawDomainPrivacy(interpolation.domains, you, localPred, this.canvas.clientWidth, this.canvas.clientHeight);
       this.ctx.restore();
     }
   }
 
-  drawDomainPrivacy(domains, you, localPred, z, cx, cy, w, h) {
+  drawDomainPrivacy(domains, you, localPred, w, h) {
     if (!domains || domains.size === 0) return;
     const ctx = this.ctx;
     const px = localPred ? localPred.x : (you ? you.x : 0);
@@ -2306,9 +2306,8 @@ export class Renderer {
       const targetR = d.radius;
       const currentR = this.domainVisual.getCurrentRadius(d.ownerId, targetR);
       if (currentR < 2) return;
-      const vz = currentR * z;
-      const spx = (ex - cx) * z + w * 0.5;
-      const spy = (ey - cy) * z + h * 0.5;
+      const vz = currentR * this.camera.zoom;
+      const sp = worldToScreen(this.camera, this.canvas, ex, ey);
       const ddx = px - ex;
       const ddy = py - ey;
       const viewerInside = ddx * ddx + ddy * ddy <= targetR * targetR;
@@ -2318,7 +2317,7 @@ export class Renderer {
       } else {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(spx, spy, vz, 0, Math.PI * 2);
+        ctx.arc(sp.x, sp.y, vz, 0, Math.PI * 2);
         ctx.fillStyle = "#000000";
         ctx.fill();
         ctx.restore();
@@ -2337,15 +2336,14 @@ export class Renderer {
         const targetR = d.radius;
         const currentR = this.domainVisual.getCurrentRadius(d.ownerId, targetR);
         if (currentR < 2) return;
-        const vz = currentR * z;
-        const spx = (ex - cx) * z + w * 0.5;
-        const spy = (ey - cy) * z + h * 0.5;
+        const vz = currentR * this.camera.zoom;
+        const sp = worldToScreen(this.camera, this.canvas, ex, ey);
         const ddx = px - ex;
         const ddy = py - ey;
         const viewerInside = ddx * ddx + ddy * ddy <= targetR * targetR;
 
         if (viewerInside) {
-          ctx.arc(spx, spy, vz, 0, Math.PI * 2, true);
+          ctx.arc(sp.x, sp.y, vz, 0, Math.PI * 2, true);
           ctx.closePath();
         }
       });

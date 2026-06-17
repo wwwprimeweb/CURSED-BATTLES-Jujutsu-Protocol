@@ -94,6 +94,7 @@ const input = new InputManager(canvas);
 const hud = new Hud();
 const audio = new AudioSystem();
 audio.loadSound(AUDIO_PATHS.domainStart, "domainStart");
+audio.loadSound(AUDIO_PATHS.yutaVoice, "yutaVoice");
 audio.preloadMusic(AUDIO_PATHS.menuMusic);
 audio.unlock();
 async function resumeOnInteraction(event) {
@@ -297,6 +298,7 @@ function handleEvents(events) {
         const coneAngle = Number.isFinite(ev.coneAngle) ? ev.coneAngle : 1.4;
 
         renderer.yutaVisual.triggerKatanaSlash(ev.x, ev.y, dirX, dirY, combo, slashRange, coneAngle);
+        audio.play("yutaM1");
       } else if (attackerCharacter === "punho-indomavel") {
         if (!ev.blackFlash) {
           renderer.yujiVisual.triggerM1Fx(ev.x, ev.y, dirX, dirY, combo);
@@ -427,41 +429,43 @@ function handleEvents(events) {
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d4a5e5", count: 6, speed: 120, life: 0.5, size: 1.5 });
       }
 
-      audio.play("skillRed");
+      audio.playBuffer("yutaVoice", 1.5);
+      audio.play("yutaRikaSummon");
     } else if (ev.type === "rikaImpulse") {
       renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, 0, 0, "heavy", ev.radius);
       renderer.yutaVisual.triggerRikaImpulse(ev.x, ev.y, ev.radius, ev.playerId, ev.startX, ev.startY, ev.endX, ev.endY);
       const impCount = ev.playerId && renderer.yutaVisual.fullRikaStates.has(ev.playerId) ? 25 : 35;
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff3399", count: impCount, speed: 400, life: 0.6, size: 6 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 300, life: 0.45, size: 4 });
-      audio.play("skillPurple");
+      audio.play("yutaRikaImpulse");
     } else if (ev.type === "rikaDash") {
       renderer.yutaVisual.triggerRikaDash(ev.startX, ev.startY, ev.endX, ev.endY, ev.playerId);
       const dashCount = ev.playerId && renderer.yutaVisual.fullRikaStates.has(ev.playerId) ? 10 : 15;
       particles.spawnBurst({ x: ev.startX, y: ev.startY, color: "#ff99cc", count: dashCount, speed: 200, life: 0.3, size: 3 });
       particles.spawnBurst({ x: ev.endX, y: ev.endY, color: "#ff66b2", count: dashCount + 5, speed: 300, life: 0.4, size: 4 });
-      audio.play("skillBlue");
+      audio.play("yutaRikaDash");
     } else if (ev.type === "dashSlashStart") {
       renderer.yutaVisual.triggerDashSlashStart(ev.playerId, ev.x, ev.y, ev.dirX, ev.dirY);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 20, speed: 250, life: 0.3, size: 3.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 150, life: 0.2, size: 2 });
-      audio.play("skillBlue");
+      audio.play("yutaDashSlashWindup");
     } else if (ev.type === "dashSlash") {
       renderer.yutaVisual.triggerDashSlash(ev.startX || ev.x, ev.startY || ev.y, ev.x, ev.y, ev.radius);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 40, speed: 400, life: 0.6, size: 5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 250, life: 0.4, size: 3 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 15, speed: 300, life: 0.45, size: 3.5 });
       renderer.yutaVisual.needsShake = true;
-      audio.play("skillBlue");
+      audio.play("yutaDashSlash");
     } else if (ev.type === "dashSlashDelayed") {
       renderer.yutaVisual.triggerSlashCuts(ev.x, ev.y);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 45, speed: 450, life: 0.6, size: 5.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 30, speed: 300, life: 0.45, size: 3.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff99cc", count: 35, speed: 350, life: 0.55, size: 4 });
+      audio.play("yutaDashSlashDelayed");
     } else if (ev.type === "fullRika") {
       renderer.yutaVisual.triggerFullRika(ev.playerId, ev.x, ev.y, ev.duration || 20);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc3388", count: 30, speed: 300, life: 0.6, size: 4 });
-      audio.play("skillPurple");
+      audio.play("yutaFullRika");
     } else if (ev.type === "rikaAppear") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#cc66ff", count: 20, speed: 200, life: 0.5, size: 3 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 120, life: 0.4, size: 2 });
@@ -471,6 +475,7 @@ function handleEvents(events) {
     } else if (ev.type === "rikaAttack") {
       renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, ev.dirX, ev.dirY, ev.attackType, undefined, ev.ownerId);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 12, speed: 180, life: 0.3, size: 2.5 });
+      audio.play("yutaRikaAttack");
     } else if (ev.type === "rikaCompanionAttack") {
       const heavy = ev.attackType === "heavy";
       renderer.yutaVisual.triggerRikaCompanionAttack(ev.x, ev.y, ev.dirX, ev.dirY, ev.attackType, ev.radius, ev.ownerId);
@@ -492,15 +497,17 @@ function handleEvents(events) {
           ttl: 0.52,
         });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 16, speed: 220, life: 0.32, size: 3.2 });
+        audio.play("yutaRikaHeavy");
       }
     } else if (ev.type === "pureLoveCharge") {
       renderer.yutaVisual.triggerPureLoveCharge(ev.playerId, ev.x, ev.y, ev.dirX, ev.dirY, ev.duration);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 8, speed: 120, life: 0.4, size: 2 });
+      audio.play("yutaPureLoveCharge");
     } else if (ev.type === "pureLoveBeam") {
       renderer.yutaVisual.triggerPureLoveBeam(ev.x, ev.y, ev.dirX, ev.dirY, ev.width, ev.lifetime);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 300, life: 0.5, size: 3.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 15, speed: 200, life: 0.4, size: 2.5 });
-      audio.play("skillPurple");
+      audio.play("yutaPureLoveBeam");
     } else if (ev.type === "cursedWave") {
       const waveRange = Number.isFinite(ev.range) ? ev.range : 300;
       const waveWidth = Number.isFinite(ev.width) ? ev.width : 120;
@@ -516,7 +523,7 @@ function handleEvents(events) {
       particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#ff99cc", count: 10, life: 0.3 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 8, speed: 150, life: 0.2, size: 2.5 });
 
-      audio.play("skillPurple");
+      audio.play("yutaCursedWave");
     } else if (ev.type === "domainStart") {
       renderer.onDomainStart(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d6ebff", count: 28, speed: 320, life: 0.45, size: 3.1 });
