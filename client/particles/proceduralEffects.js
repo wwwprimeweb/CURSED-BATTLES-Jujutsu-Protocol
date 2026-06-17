@@ -401,29 +401,28 @@ export class SkillVFX {
     ctx.arc(x, y, coreR * corePulse * 1.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Borda externa irregular (partículas + micro-spikes)
+    // Borda externa com spikes de energia
     const edgeActive = Math.min(1, p * 1.2);
     if (edgeActive > 0.01) {
-      const surfCount = 30;
-      const spikeCount = 15;
       const baseR = coreR * corePulse * 1.5;
       ctx.shadowBlur = 0;
 
-      // Micro-spikes saindo da borda
-      for (let i = 0; i < spikeCount; i++) {
-        const theta = (i / spikeCount) * Math.PI * 2 + Math.sin(i * 37.1) * 0.2;
+      // Spikes de energia (24, 3 tamanhos)
+      for (let i = 0; i < 24; i++) {
+        const theta = (i / 24) * Math.PI * 2 + Math.sin(i * 29.3) * 0.35;
         const displace = Math.sin(theta * 3 + t * 1.2) * 0.02 + Math.sin(theta * 5 + t * 0.7) * 0.015;
         const r = baseR * (1 + displace);
         const px = x + Math.cos(theta) * r;
         const py = y + Math.sin(theta) * r;
-        const spikeLen = 2 + Math.sin(i * 53.1 + t * 1.5) * 1.5;
-        const jitter = Math.sin(i * 27.3 + t * 0.8) * 0.25;
-        const outAngle = theta + jitter;
+        const baseLen = i < 8 ? 14 : i < 16 ? 8 : 4;
+        const pulse = Math.sin(t * (1.1 + i * 0.13) + i * 2.7) * 0.4 + 0.6;
+        const spikeLen = baseLen * pulse;
+        const outAngle = theta + Math.sin(i * 37.1 + t * 0.6) * 0.25;
         const ex = px + Math.cos(outAngle) * spikeLen;
         const ey = py + Math.sin(outAngle) * spikeLen;
-        ctx.globalAlpha = edgeActive * 0.015 * alpha;
+        ctx.globalAlpha = edgeActive * 0.04 * alpha * pulse;
         ctx.strokeStyle = "rgba(255,200,230,1)";
-        ctx.lineWidth = 0.8;
+        ctx.lineWidth = 1.2 + (baseLen / 14) * 0.8;
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(ex, ey);
@@ -431,18 +430,18 @@ export class SkillVFX {
       }
 
       // Partículas na superfície
-      for (let i = 0; i < surfCount; i++) {
-        const theta = (i / surfCount) * Math.PI * 2 + t * 0.04;
+      for (let i = 0; i < 20; i++) {
+        const theta = (i / 20) * Math.PI * 2 + Math.sin(i * 47.1) * 0.2 + t * 0.03;
         const displace = Math.sin(theta * 3 + t) * 0.02 + Math.sin(theta * 5 + t * 0.7) * 0.015;
         const r = baseR * (1 + displace);
         const px = x + Math.cos(theta) * r;
         const py = y + Math.sin(theta) * r;
-        const freq = 1.2 + Math.sin(i * 23.1) * 0.5;
-        const pa = (Math.sin(t * freq + i * 3.7) * 0.3 + 0.6) * edgeActive * 0.03 * alpha;
+        const freq = 1.5 + Math.sin(i * 23.1) * 0.5;
+        const pa = (Math.sin(t * freq + i * 3.7) * 0.3 + 0.6) * edgeActive * 0.02 * alpha;
         ctx.globalAlpha = pa;
         ctx.fillStyle = "rgba(255,200,230,1)";
         ctx.beginPath();
-        ctx.arc(px, py, 1.2 + Math.sin(i * 43.1) * 0.4, 0, Math.PI * 2);
+        ctx.arc(px, py, 1 + Math.sin(i * 43.1) * 0.3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
