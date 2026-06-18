@@ -189,7 +189,7 @@ export class SkillVFX {
     ctx.restore();
   }
 
-  static drawPinkBeam(ctx, x1, y1, x2, y2, width = 30, alpha = 1) {
+  static drawPinkBeam(ctx, x1, y1, x2, y2, width = 30, alpha = 1, zoom = 1) {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.lineCap = "round";
@@ -225,14 +225,14 @@ export class SkillVFX {
     // Outer glow (deep purple) volatile
     ctx.strokeStyle = "rgba(160, 20, 200, 0.4)";
     ctx.shadowColor = "rgba(200, 50, 255, 0.8)";
-    ctx.shadowBlur = 40;
+    ctx.shadowBlur = 40 * zoom;
     ctx.lineWidth = width * 1.2;
     drawJaggedPath(width * 0.1, 0.03, 20);
     drawJaggedPath(width * 0.08, 0.05, -15);
 
     // Main body (vibrant purple/pink)
     ctx.strokeStyle = "rgba(220, 80, 230, 0.85)";
-    ctx.shadowBlur = 30;
+    ctx.shadowBlur = 30 * zoom;
     ctx.lineWidth = width * 0.8;
     drawJaggedPath(width * 0.06, 0.08, 25);
     drawJaggedPath(width * 0.04, 0.06, -20);
@@ -240,14 +240,14 @@ export class SkillVFX {
     // Inner bright pink layer (mostly straight but slight wobble)
     ctx.strokeStyle = "rgba(255, 150, 255, 0.95)";
     ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 20 * zoom;
     ctx.lineWidth = width * 0.4;
     drawJaggedPath(width * 0.02, 0.1, 30);
 
     // Core (pure white, straight)
     ctx.strokeStyle = "rgba(255, 255, 255, 1)";
     ctx.shadowColor = "rgba(255, 255, 255, 1)";
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 15 * zoom;
     ctx.lineWidth = width * 0.2;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -257,7 +257,7 @@ export class SkillVFX {
     ctx.restore();
   }
 
-  static drawPinkSphere(ctx, x, y, radius, progress, alpha = 1) {
+  static drawPinkSphere(ctx, x, y, radius, progress, alpha = 1, zoom = 1) {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     const t = performance.now() / 1000;
@@ -291,7 +291,7 @@ export class SkillVFX {
         ctx.globalAlpha = fa;
         ctx.fillStyle = "rgba(255,200,230,1)";
         ctx.beginPath();
-        ctx.arc(fx, fy, 1.5 + Math.sin(i * 43.7) * 0.5, 0, Math.PI * 2);
+        ctx.arc(fx, fy, (1.5 + Math.sin(i * 43.7) * 0.5) * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -339,16 +339,16 @@ export class SkillVFX {
           ctx.globalAlpha = partAlpha * (0.3 - tr * 0.12);
           ctx.fillStyle = "rgba(255,200,230,1)";
           ctx.beginPath();
-          ctx.arc(tx, ty, 2 - tr * 0.5, 0, Math.PI * 2);
+          ctx.arc(tx, ty, (2 - tr * 0.5) * zoom, 0, Math.PI * 2);
           ctx.fill();
         }
 
         // Main particle
         ctx.globalAlpha = partAlpha;
         ctx.fillStyle = "rgba(255,255,255,1)";
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 14 * zoom;
         ctx.shadowColor = "#ff66cc";
-        const size = 2 + (1 - orbitR / Math.max(R * 0.3, R * dist)) * 2;
+        const size = (2 + (1 - orbitR / Math.max(R * 0.3, R * dist)) * 2) * zoom;
         ctx.beginPath();
         ctx.arc(px, py, size, 0, Math.PI * 2);
         ctx.fill();
@@ -357,10 +357,10 @@ export class SkillVFX {
         if (p >= absorbEnd && p < absorbEnd + 0.04) {
           const flashP = (p - absorbEnd) / 0.04;
           ctx.globalAlpha = (1 - flashP) * partAlpha * 0.6;
-          ctx.shadowBlur = 25;
+          ctx.shadowBlur = 25 * zoom;
           ctx.shadowColor = "#ff33cc";
           ctx.fillStyle = "rgba(255,255,255,1)";
-          const flashR = 3 + flashP * 10;
+          const flashR = (3 + flashP * 10) * zoom;
           ctx.beginPath();
           ctx.arc(px, py, flashR, 0, Math.PI * 2);
           ctx.fill();
@@ -371,9 +371,9 @@ export class SkillVFX {
     // === ONDAS CIRCULARES (fase 4) ===
     const waveActive = ss(0.5, 0.58, p) * (1 - ss(0.72, 0.78, p));
     if (waveActive > 0.01) {
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 8 * zoom;
       ctx.strokeStyle = "rgba(255,180,220,1)";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.5 * zoom;
       for (let i = 0; i < 3; i++) {
         const wavePhase = ((t * 6 + i * 0.33) % 1);
         const waveR = R * (0.2 + wavePhase * 0.65);
@@ -399,7 +399,7 @@ export class SkillVFX {
         const pa = suckActive * (1 - dist / (R * 3)) * 0.5 * alpha * jitter;
         ctx.globalAlpha = pa;
         ctx.fillStyle = "rgba(255,220,240,1)";
-        const size = 1 + (1 - dist / (R * 3)) * 1.5;
+        const size = (1 + (1 - dist / (R * 3)) * 1.5) * zoom;
         ctx.beginPath();
         ctx.arc(px, py, size, 0, Math.PI * 2);
         ctx.fill();
@@ -415,7 +415,7 @@ export class SkillVFX {
     const settleWeight = ss(0.9, 0.95, p);
     const finalAmp = pulseAmp * (1 - settleWeight * 0.8);
     const corePulse = 1 + Math.sin(t * pulseFreq) * finalAmp;
-    const coreShadow = 30 + p * 55;
+    const coreShadow = (30 + p * 55) * zoom;
 
     // Particulas internas sutis
     const partActive = Math.max(0, (p - 0.15) / 0.1);
@@ -432,7 +432,7 @@ export class SkillVFX {
         ctx.globalAlpha = partActive * 0.015 * alpha;
         ctx.fillStyle = "rgba(255,180,220,1)";
         ctx.beginPath();
-        ctx.arc(px, py, 1 + Math.sin(seed) * 0.5, 0, Math.PI * 2);
+        ctx.arc(px, py, (1 + Math.sin(seed) * 0.5) * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -465,13 +465,13 @@ export class SkillVFX {
         const py = y + Math.sin(theta) * r;
         const baseLen = i < 8 ? 14 : i < 16 ? 8 : 4;
         const pulse = Math.sin(t * (1.1 + i * 0.13) + i * 2.7) * 0.4 + 0.6;
-        const spikeLen = baseLen * pulse;
+        const spikeLen = baseLen * pulse * zoom;
         const outAngle = theta + Math.sin(i * 37.1 + t * 0.6) * 0.25;
         const ex = px + Math.cos(outAngle) * spikeLen;
         const ey = py + Math.sin(outAngle) * spikeLen;
         ctx.globalAlpha = edgeActive * 0.04 * alpha * pulse;
         ctx.strokeStyle = "rgba(255,200,230,1)";
-        ctx.lineWidth = 1.2 + (baseLen / 14) * 0.8;
+        ctx.lineWidth = (1.2 + (baseLen / 14) * 0.8) * zoom;
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(ex, ey);
@@ -490,7 +490,7 @@ export class SkillVFX {
         ctx.globalAlpha = pa;
         ctx.fillStyle = "rgba(255,200,230,1)";
         ctx.beginPath();
-        ctx.arc(px, py, 1 + Math.sin(i * 43.1) * 0.3, 0, Math.PI * 2);
+        ctx.arc(px, py, (1 + Math.sin(i * 43.1) * 0.3) * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
     }

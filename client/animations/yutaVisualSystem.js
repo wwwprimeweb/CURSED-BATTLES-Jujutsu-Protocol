@@ -504,11 +504,11 @@ export class YutaVisualSystem {
       ctx.save();
       ctx.translate(pos.x, pos.y);
       ctx.scale(zoom, zoom);
-      drawHitReaction(ctx, 0, 0, facing, flashIntensity);
+      drawHitReaction(ctx, 0, 0, facing, flashIntensity, zoom);
       ctx.restore();
     }
 
-     if (animState === "death" && p.deathTime) {
+      if (animState === "death" && p.deathTime) {
        this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
        return;
      }
@@ -588,7 +588,7 @@ export class YutaVisualSystem {
             ctx.globalAlpha = alpha;
             if (summon.timer < appearEnd) {
               ctx.shadowColor = "#ff66b2";
-              ctx.shadowBlur = 20 + alpha * 25;
+              ctx.shadowBlur = (20 + alpha * 25) * zoom;
             }
             this.yutaSprite.renderRikaIncompletaFrame(ctx, rikaScreenX, rikaScreenY, rikaFacing, summon.currentRow, summon.currentFrame, alpha, spriteScale * scaleMul);
             ctx.restore();
@@ -610,7 +610,7 @@ export class YutaVisualSystem {
           ctx.save();
           ctx.globalAlpha = alpha;
           ctx.shadowColor = "#ff66b2";
-          ctx.shadowBlur = 25 + (1 - alpha) * 20;
+          ctx.shadowBlur = (25 + (1 - alpha) * 20) * zoom;
           this.yutaSprite.renderRika(ctx, rikaScreenX, rikaScreenY, facing, 0, 0, spriteScale);
           ctx.restore();
         }
@@ -737,7 +737,7 @@ export class YutaVisualSystem {
     if (!p.alive) return;
 
      ctx.fillStyle = "#ffe0f0";
-     ctx.font = "600 14px Rajdhani";
+     ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
      ctx.textAlign = "center";
      ctx.fillText(p.name || "portador-do-vinculo", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
 
@@ -751,18 +751,18 @@ export class YutaVisualSystem {
       ctx.globalAlpha = flash.intensity * (flash.life / 0.15);
       ctx.fillStyle = "rgba(255,80,80,0.3)";
       ctx.beginPath();
-      ctx.arc(flash.x - camera.x + ctx.canvas.width * 0.5, flash.y - camera.y + ctx.canvas.height * 0.5, 30, 0, Math.PI * 2);
+      ctx.arc((flash.x - camera.x) * camera.zoom + ctx.canvas.width * 0.5, (flash.y - camera.y) * camera.zoom + ctx.canvas.height * 0.5, 30 * camera.zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     });
 
     this.domainKatanas.forEach((dk) => {
       const pos = {
-        x: dk.x - camera.x + ctx.canvas.width * 0.5,
-        y: dk.y - camera.y + ctx.canvas.height * 0.5,
+        x: (dk.x - camera.x) * camera.zoom + ctx.canvas.width * 0.5,
+        y: (dk.y - camera.y) * camera.zoom + ctx.canvas.height * 0.5,
       };
       const progress = 1 - dk.life / 0.8;
-      drawRowOfKatanas(ctx, pos.x, pos.y, progress, this.time);
+      drawRowOfKatanas(ctx, pos.x, pos.y, progress, this.time, camera.zoom);
     });
 
     const z = camera.zoom;
@@ -785,12 +785,12 @@ export class YutaVisualSystem {
         const trailStartY = (summon.y - cy) * z + h * 0.5;
         drawEnergyWaveTrail(ctx, trailStartX, trailStartY, sx, sy, progress, this.time, {
           width: (70 + progress * 100) * z,
-        });
+        }, z);
       }
 
-      drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.3);
-      drawRikaAreaExplosion(ctx, sx, sy, Math.max(95 * z, ringRadius * 0.62), progress, this.time);
-      drawRikaClawScratch(ctx, sx, sy, impact.dirX, impact.dirY, Math.min(0.98, progress * 1.12), 1.15);
+      drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.3, z);
+      drawRikaAreaExplosion(ctx, sx, sy, Math.max(95 * z, ringRadius * 0.62), progress, this.time, z);
+      drawRikaClawScratch(ctx, sx, sy, impact.dirX, impact.dirY, Math.min(0.98, progress * 1.12), 1.15, z);
     }
 
     for (const s of this.rikaSummons) {
@@ -811,9 +811,9 @@ export class YutaVisualSystem {
           const impactX = (s.targetX - cx) * z + w * 0.5;
           const impactY = (s.targetY - cy) * z + h * 0.5;
 
-          drawRikaImpactBurst(ctx, impactX, impactY, atkProgress, this.time);
-          drawRikaAreaExplosion(ctx, impactX, impactY, 60 * z, atkProgress, this.time);
-          drawRikaClawScratch(ctx, impactX, impactY, s.dirX, s.dirY, atkProgress, 0.9);
+          drawRikaImpactBurst(ctx, impactX, impactY, atkProgress, this.time, z);
+          drawRikaAreaExplosion(ctx, impactX, impactY, 60 * z, atkProgress, this.time, z);
+          drawRikaClawScratch(ctx, impactX, impactY, s.dirX, s.dirY, atkProgress, 0.9, z);
         }
 
         // Fade out phase: dissipate particles
@@ -836,7 +836,7 @@ export class YutaVisualSystem {
             ctx.globalAlpha = pAlpha;
             ctx.fillStyle = ["#ff66b2", "#ff99cc", "#d4a5e5", "#ff80bf"][j % 4];
             ctx.shadowColor = "#ff66b2";
-            ctx.shadowBlur = 15 * (1 - fadeProgress);
+            ctx.shadowBlur = 15 * (1 - fadeProgress) * z;
             ctx.beginPath();
             ctx.arc(px, py, pSize, 0, Math.PI * 2);
             ctx.fill();
@@ -857,7 +857,7 @@ export class YutaVisualSystem {
         const ex = (s.x - cx) * z + w * 0.5;
         const ey = (s.y - cy) * z + h * 0.5;
 
-        drawRikaDashTrail(ctx, sx, sy, ex, ey, dp, this.time);
+        drawRikaDashTrail(ctx, sx, sy, ex, ey, dp, this.time, z);
 
         const rikaX = (s.x - cx) * z + w * 0.5;
         const rikaY = (s.y - cy) * z + h * 0.5;
@@ -865,21 +865,21 @@ export class YutaVisualSystem {
           ctx.save();
           ctx.globalAlpha = 1 - dp * 0.4;
           ctx.shadowColor = "#ff66b2";
-          ctx.shadowBlur = 30;
-          this.yutaSprite.renderRika(ctx, rikaX, rikaY, -1, 0, 0);
+          ctx.shadowBlur = 30 * z;
+          this.yutaSprite.renderRika(ctx, rikaX, rikaY, -1, 0, 0, z);
           ctx.restore();
         }
       }
 
-      // Attack phase: impact burst + claw scratches + Rika fade out (original)
-      if (s.timer >= 1.5 && s.timer < 2.0) {
+        // Attack phase: impact burst + claw scratches + Rika fade out (original)
+        if (s.timer >= 1.5 && s.timer < 2.0) {
         const atkProgress = (s.timer - 1.5) / 0.5;
         const impactX = (s.targetX - cx) * z + w * 0.5;
         const impactY = (s.targetY - cy) * z + h * 0.5;
 
-        drawRikaImpactBurst(ctx, impactX, impactY, atkProgress, this.time);
-        drawRikaAreaExplosion(ctx, impactX, impactY, 60 * z, atkProgress, this.time);
-        drawRikaClawScratch(ctx, impactX, impactY, s.dirX, s.dirY, atkProgress, 0.9);
+        drawRikaImpactBurst(ctx, impactX, impactY, atkProgress, this.time, z);
+        drawRikaAreaExplosion(ctx, impactX, impactY, 60 * z, atkProgress, this.time, z);
+        drawRikaClawScratch(ctx, impactX, impactY, s.dirX, s.dirY, atkProgress, 0.9, z);
 
         const fadeOut = Math.max(0, 1 - atkProgress * 1.3);
         if (this.yutaSprite.rikaSprite && fadeOut > 0.01) {
@@ -888,8 +888,8 @@ export class YutaVisualSystem {
           ctx.save();
           ctx.globalAlpha = fadeOut;
           ctx.shadowColor = "#ff66b2";
-          ctx.shadowBlur = 15 * fadeOut;
-          this.yutaSprite.renderRika(ctx, swayX, swayY, -1, 0, 0);
+          ctx.shadowBlur = 15 * fadeOut * z;
+          this.yutaSprite.renderRika(ctx, swayX, swayY, -1, 0, 0, z);
           ctx.restore();
         }
       }
@@ -902,7 +902,7 @@ export class YutaVisualSystem {
       const sphereAlpha = progress >= 1 ? 1 : Math.min(1, progress * 4);
       const sx = (charge.x - camera.x) * z + w * 0.5;
       const sy = (charge.y - camera.y) * z + h * 0.5;
-      SkillVFX.drawPinkSphere(ctx, sx, sy, 60 * z, progress, sphereAlpha);
+      SkillVFX.drawPinkSphere(ctx, sx, sy, 60 * z, progress, sphereAlpha, z);
     });
 
     // Pure Love beam + inner particles
@@ -916,7 +916,7 @@ export class YutaVisualSystem {
       const fadeStart = 0.2;
       const alpha = lifeFrac > fadeStart ? 1 : Math.max(0, lifeFrac / fadeStart);
       const widthScale = lifeFrac > fadeStart ? 1 : Math.max(0.1, lifeFrac / fadeStart);
-      SkillVFX.drawPinkBeam(ctx, bx, by, endX, endY, this.pureLoveBeam.width * z * widthScale, alpha);
+      SkillVFX.drawPinkBeam(ctx, bx, by, endX, endY, this.pureLoveBeam.width * z * widthScale, alpha, z);
 
       // Beam inner energy particles
       ctx.save();
@@ -928,7 +928,7 @@ export class YutaVisualSystem {
         ctx.globalAlpha = t * t * alpha;
         ctx.fillStyle = `hsl(${p.hue}, 100%, ${60 + t * 30}%)`;
         ctx.shadowColor = `hsl(${p.hue}, 100%, 70%)`;
-        ctx.shadowBlur = p.size * 6;
+        ctx.shadowBlur = p.size * 6 * z;
         ctx.beginPath();
         ctx.arc(px, py, p.size * z * t, 0, Math.PI * 2);
         ctx.fill();
@@ -962,7 +962,7 @@ export class YutaVisualSystem {
         
         ctx.strokeStyle = streakColors[i];
         ctx.shadowColor = "#ff66cc";
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 25 * z;
         ctx.lineWidth = (3 + Math.sin(this.time * 2.5 + i * 0.8) * 4 + i * 0.8) * z;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
@@ -1061,7 +1061,7 @@ export class YutaVisualSystem {
 
       drawEnergyWaveTrail(ctx, sx, sy, ex, ey, progress, this.time, {
         width: (40 + progress * 80) * z,
-      });
+      }, z);
     }
 
     // Rika dash trail (energy wave)
@@ -1098,12 +1098,12 @@ export class YutaVisualSystem {
         ctx.globalAlpha = 1 - progress;
         drawEnergyWaveTrail(ctx, sx, sy, ex, ey, progress, this.time, {
           width: (50 + progress * 80) * z,
-        });
+        }, z);
       } else {
         drawEnergyWaveTrail(ctx, sx, sy, ex, ey, progress, this.time, {
           width: (30 + progress * 60) * z,
           colorMul: 0.8,
-        });
+        }, z);
       }
       ctx.restore();
     }
@@ -1144,17 +1144,17 @@ export class YutaVisualSystem {
         ctx.globalAlpha = 1 - progress * 0.3;
         drawEnergyWaveTrail(ctx, trailSX, trailSY, trailEX, trailEY, progress, this.time, {
           width: (50 + progress * 90) * z,
-        });
+        }, z);
         ctx.restore();
 
-        drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.8);
-        drawRikaClawSprite(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.3), this.effects.rikaSpritesheet);
+        drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.8, z);
+        drawRikaClawSprite(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.3), this.effects.rikaSpritesheet, z);
       } else {
-        drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.5);
-        drawRikaAreaExplosion(ctx, sx, sy, Math.max(50 * z, ringRadius * 0.5), progress, this.time);
-        drawRikaClawScratch(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.5), 1.3);
-        drawRikaClawScratch(ctx, sx, sy, 1, 0.5, Math.min(1, progress * 1.5), 1.3);
-        drawRikaClawScratch(ctx, sx, sy, -1, 0.5, Math.min(1, progress * 1.5), 1.3);
+        drawRikaShockwave(ctx, sx, sy, ringRadius, progress, 1.5, z);
+        drawRikaAreaExplosion(ctx, sx, sy, Math.max(50 * z, ringRadius * 0.5), progress, this.time, z);
+        drawRikaClawScratch(ctx, sx, sy, 0, -1, Math.min(1, progress * 1.5), 1.3, z);
+        drawRikaClawScratch(ctx, sx, sy, 1, 0.5, Math.min(1, progress * 1.5), 1.3, z);
+        drawRikaClawScratch(ctx, sx, sy, -1, 0.5, Math.min(1, progress * 1.5), 1.3, z);
       }
     }
 

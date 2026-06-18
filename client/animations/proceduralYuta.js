@@ -108,7 +108,7 @@ export class YutaSkillEffects {
       const sx = (pl.x - cx) * z + w * 0.5;
       const sy = (pl.y - cy) * z + h * 0.5;
       const progress = 1 - pl.life / 0.8;
-      SkillVFX.drawPurpleExplosion(ctx, sx, sy, pl.radius * progress * 1.2);
+      SkillVFX.drawPurpleExplosion(ctx, sx, sy, pl.radius * progress * 1.2 * z);
     });
 
     for (const slash of this.katanaSlashes) {
@@ -118,10 +118,10 @@ export class YutaSkillEffects {
       const maxLife = Number.isFinite(slash.maxLife) ? slash.maxLife : 0.3;
       const progress = 1 - slash.life / maxLife;
       if (slash.type === "m1Combined") {
-        drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle, this.m1Spritesheet);
+        drawM1Combined(ctx, sx, sy, slash.dirX, slash.dirY, progress, slash.combo || 1, slash.range, slash.coneAngle, this.m1Spritesheet, z);
       } else if (slash.type === "rika") {
-        drawRikaSwing(ctx, sx, sy, progress);
-        drawRikaClawSprite(ctx, sx, sy, slash.dirX, slash.dirY, progress, this.rikaSpritesheet);
+        drawRikaSwing(ctx, sx, sy, progress, z);
+        drawRikaClawSprite(ctx, sx, sy, slash.dirX, slash.dirY, progress, this.rikaSpritesheet, z);
       }
     }
   }

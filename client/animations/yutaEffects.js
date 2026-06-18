@@ -5,7 +5,7 @@ const C = {
   whiteGlow: "#ffe8ff",
 };
 
-export function drawRikaAreaExplosion(ctx, x, y, radius, progress, time) {
+export function drawRikaAreaExplosion(ctx, x, y, radius, progress, time, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const alpha = Math.min(1, progress * 6) * Math.max(0, 1 - progress * 0.9);
   if (alpha <= 0.01) return;
@@ -15,7 +15,7 @@ export function drawRikaAreaExplosion(ctx, x, y, radius, progress, time) {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.shadowColor = C.whiteGlow;
-  ctx.shadowBlur = 50;
+  ctx.shadowBlur = 50 * zoom;
   ctx.globalCompositeOperation = "lighter";
 
   const grad = ctx.createRadialGradient(x, y, 0, x, y, currentRadius);
@@ -29,13 +29,13 @@ export function drawRikaAreaExplosion(ctx, x, y, radius, progress, time) {
   ctx.fill();
 
   ctx.strokeStyle = `rgba(255,200,230,${alpha * 0.5})`;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
   ctx.arc(x, y, currentRadius * 0.7, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.4})`;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.arc(x, y, currentRadius * 0.3, 0, Math.PI * 2);
   ctx.stroke();
@@ -43,7 +43,7 @@ export function drawRikaAreaExplosion(ctx, x, y, radius, progress, time) {
   ctx.restore();
 }
 
-export function drawRikaShockwave(ctx, x, y, radius, progress, intensity = 1) {
+export function drawRikaShockwave(ctx, x, y, radius, progress, intensity = 1, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const alpha = Math.min(1, progress * 4.6) * Math.max(0, 1 - progress * 0.95) * intensity;
   if (alpha <= 0.01) return;
@@ -54,17 +54,17 @@ export function drawRikaShockwave(ctx, x, y, radius, progress, intensity = 1) {
   ctx.globalCompositeOperation = "lighter";
   ctx.globalAlpha = alpha;
   ctx.shadowColor = C.whiteGlow;
-  ctx.shadowBlur = 30 + 30 * alpha;
+  ctx.shadowBlur = (30 + 30 * alpha) * zoom;
 
   ctx.strokeStyle = "rgba(255,230,245,0.95)";
-  ctx.lineWidth = Math.max(2, radius * 0.035);
+  ctx.lineWidth = Math.max(2 * zoom, radius * 0.035);
   ctx.beginPath();
   ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.globalAlpha = alpha * 0.65;
   ctx.strokeStyle = "rgba(255,120,200,0.8)";
-  ctx.lineWidth = Math.max(1.5, radius * 0.022);
+  ctx.lineWidth = Math.max(1.5 * zoom, radius * 0.022);
   ctx.beginPath();
   ctx.arc(x, y, ringRadius * 1.12, 0, Math.PI * 2);
   ctx.stroke();
@@ -72,7 +72,7 @@ export function drawRikaShockwave(ctx, x, y, radius, progress, intensity = 1) {
   ctx.restore();
 }
 
-export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range, coneAngle, m1Spritesheet) {
+export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range, coneAngle, m1Spritesheet, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.98) return;
   const fastPhase = Math.min(1, progress * 8);
   const fadePhase = Math.max(0, 1 - Math.max(0, progress - 0.4) * 1.67);
@@ -107,10 +107,10 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
 
     const moveIn = Math.min(1, progress * 5);
     const growScale = Math.min(1, 0.3 + progress * 3.5);
-    const spriteWidth = (110 + comboStep * 15) * 3.25 * growScale;
+    const spriteWidth = (110 + comboStep * 15) * 3.25 * growScale * zoom;
     const spriteHeight = spriteWidth * (frameH / frameW);
     const spriteAlpha = alpha * (1 - Math.max(0, progress - 0.8) * 5);
-    const dist = range * 0.4 * moveIn;
+    const dist = range * 0.4 * moveIn * zoom;
 
     const px = Math.cos(angle) * dist;
     const py = Math.sin(angle) * dist;
@@ -121,7 +121,7 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
     if (dirX > 0) ctx.scale(1, -1);
     ctx.globalAlpha = spriteAlpha;
     ctx.shadowColor = "#ff66cc";
-    ctx.shadowBlur = 35;
+    ctx.shadowBlur = 35 * zoom;
     ctx.drawImage(m1Spritesheet, sx, sy, frameW, frameH, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
     ctx.restore();
   }
@@ -129,7 +129,7 @@ export function drawM1Combined(ctx, x, y, dirX, dirY, progress, comboStep, range
   ctx.restore();
 }
 
-export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet) {
+export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.98) return;
   const fadeIn = Math.min(1, progress * 8);
   const fadeOut = Math.max(0, 1 - Math.max(0, progress - 0.45) * 1.82);
@@ -155,10 +155,10 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
     const sy = 0;
 
     const growScale = Math.min(1, 0.2 + progress * 4);
-    const spriteWidth = 120 * 2.5 * growScale;
+    const spriteWidth = 120 * 2.5 * growScale * zoom;
     const spriteHeight = spriteWidth * (frameH / frameW);
-    const dist = 50;
-    const vyOffset = -50;
+    const dist = 50 * zoom;
+    const vyOffset = -50 * zoom;
 
     const px = Math.cos(angle) * dist;
     const py = Math.sin(angle) * dist + vyOffset;
@@ -172,7 +172,7 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
     }
     ctx.globalAlpha = alpha;
     ctx.shadowColor = "#ff66b2";
-    ctx.shadowBlur = 55;
+    ctx.shadowBlur = 55 * zoom;
     ctx.drawImage(spritesheet, sx, sy, frameW, frameH,
       -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
     ctx.restore();
@@ -181,17 +181,17 @@ export function drawRikaClawSprite(ctx, x, y, dirX, dirY, progress, spritesheet)
   ctx.restore();
 }
 
-export function drawRikaSwing(ctx, x, y, progress) {
+export function drawRikaSwing(ctx, x, y, progress, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const alpha = Math.min(1, progress * 4) * Math.max(0, 1 - progress);
   if (alpha <= 0.01) return;
 
-  const radius = 80 * progress;
+  const radius = 80 * progress * zoom;
 
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.shadowColor = C.whiteGlow;
-  ctx.shadowBlur = 50;
+  ctx.shadowBlur = 50 * zoom;
   ctx.globalCompositeOperation = "lighter";
 
   const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
@@ -205,7 +205,7 @@ export function drawRikaSwing(ctx, x, y, progress) {
   ctx.fill();
 
   ctx.strokeStyle = `rgba(255,200,230,${alpha * 0.5})`;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
   ctx.arc(x, y, radius * 0.7, 0, Math.PI * 2);
   ctx.stroke();
@@ -218,7 +218,7 @@ function normalizeDir(x, y) {
   return { x: x / len, y: y / len };
 }
 
-export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity = 1) {
+export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity = 1, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const a = Math.min(1, progress * 4.8) * Math.max(0, 1 - progress * 1.08) * intensity;
   if (a <= 0.01) return;
@@ -226,9 +226,9 @@ export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity =
   const dir = normalizeDir(dirX, dirY);
   const angle = Math.atan2(dir.y, dir.x);
   const extend = 0.2 + Math.min(1, progress * 2.6);
-  const baseLen = 72 * extend;
-  const width = 7 - progress * 3.6;
-  const centerShift = -8 + progress * 11;
+  const baseLen = 72 * extend * zoom;
+  const width = (7 - progress * 3.6) * zoom;
+  const centerShift = (-8 + progress * 11) * zoom;
 
   ctx.save();
   ctx.translate(x, y);
@@ -246,9 +246,9 @@ export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity =
     ctx.globalAlpha = laneAlpha;
     ctx.strokeStyle = i === 1 ? "#ffe6f4" : "#ff8bc6";
     ctx.shadowColor = "#ff4da6";
-    ctx.shadowBlur = 20 + progress * 12;
+    ctx.shadowBlur = (20 + progress * 12) * zoom;
     ctx.lineCap = "round";
-    ctx.lineWidth = Math.max(1.8, width - i * 0.9);
+    ctx.lineWidth = Math.max(1.8 * zoom, width - i * 0.9 * zoom);
 
     ctx.beginPath();
     ctx.moveTo(centerShift, lane);
@@ -264,8 +264,8 @@ export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity =
 
     ctx.globalAlpha = laneAlpha * 0.48;
     ctx.strokeStyle = "#ffffff";
-    ctx.shadowBlur = 10;
-    ctx.lineWidth = Math.max(1, width * 0.35);
+    ctx.shadowBlur = 10 * zoom;
+    ctx.lineWidth = Math.max(1 * zoom, width * 0.35);
     ctx.beginPath();
     ctx.moveTo(centerShift + 2, lane - 1.2);
     ctx.bezierCurveTo(
@@ -281,13 +281,13 @@ export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity =
   }
 
   ctx.globalAlpha = a * 0.35;
-  const sparkRadius = 36 + progress * 24;
+  const sparkRadius = (36 + progress * 24) * zoom;
   for (let i = 0; i < 6; i += 1) {
     const ang = -0.55 + i * 0.22 + Math.sin(progress * 9 + i) * 0.05;
     const dist = sparkRadius * (0.45 + (i % 3) * 0.22);
     const px = Math.cos(ang) * dist;
     const py = Math.sin(ang) * dist;
-    const r = 1.2 + (i % 3) * 0.45;
+    const r = (1.2 + (i % 3) * 0.45) * zoom;
     ctx.fillStyle = i % 2 === 0 ? "#ffd6ea" : "#ff8bc6";
     ctx.beginPath();
     ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -297,7 +297,7 @@ export function drawRikaClawScratch(ctx, x, y, dirX, dirY, progress, intensity =
   ctx.restore();
 }
 
-export function drawPureLoveExplosion(ctx, x, y, radius, progress) {
+export function drawPureLoveExplosion(ctx, x, y, radius, progress, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const alpha = Math.min(1, progress * 3) * Math.max(0, 1 - progress * 0.8);
   if (alpha <= 0.01) return;
@@ -307,7 +307,7 @@ export function drawPureLoveExplosion(ctx, x, y, radius, progress) {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.shadowColor = "#ffffff";
-  ctx.shadowBlur = 80;
+  ctx.shadowBlur = 80 * zoom;
   ctx.globalCompositeOperation = "lighter";
 
   const grad = ctx.createRadialGradient(x, y, 0, x, y, currentRadius);
@@ -321,14 +321,14 @@ export function drawPureLoveExplosion(ctx, x, y, radius, progress) {
   ctx.fill();
 
   ctx.strokeStyle = "rgba(255,255,255,0.5)";
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 4 * zoom;
   ctx.beginPath();
   ctx.arc(x, y, currentRadius * 0.6, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }
 
-export function drawCursedWave(ctx, x, y, dirX, dirY, progress, range = 300, width = 120) {
+export function drawCursedWave(ctx, x, y, dirX, dirY, progress, range = 300, width = 120, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.98) return;
   const alpha = Math.min(1, progress * 5) * Math.max(0, 1 - Math.max(0, progress - 0.45) * 1.82);
   if (alpha <= 0.01) return;
@@ -351,7 +351,7 @@ export function drawCursedWave(ctx, x, y, dirX, dirY, progress, range = 300, wid
 
   ctx.globalAlpha = alpha * 0.3 * expBoost;
   ctx.shadowColor = "#ff3388";
-  ctx.shadowBlur = 6;
+  ctx.shadowBlur = 6 * zoom;
   ctx.strokeStyle = "rgba(255,51,136,0.5)";
   ctx.lineWidth = thin;
   ctx.lineCap = "round";
@@ -361,7 +361,7 @@ export function drawCursedWave(ctx, x, y, dirX, dirY, progress, range = 300, wid
 
   ctx.globalAlpha = alpha * 0.7 * expBoost;
   ctx.shadowColor = "#ff66cc";
-  ctx.shadowBlur = 4;
+  ctx.shadowBlur = 4 * zoom;
   ctx.strokeStyle = "rgba(255,102,204,0.8)";
   ctx.lineWidth = thin;
   ctx.beginPath();
@@ -370,7 +370,7 @@ export function drawCursedWave(ctx, x, y, dirX, dirY, progress, range = 300, wid
 
   ctx.globalAlpha = alpha * 0.95 * expBoost;
   ctx.shadowColor = "#ffffff";
-  ctx.shadowBlur = 2;
+  ctx.shadowBlur = 2 * zoom;
   ctx.strokeStyle = "rgba(255,255,255,0.9)";
   ctx.lineWidth = thin;
   ctx.beginPath();
@@ -394,23 +394,23 @@ export function drawCursedWave(ctx, x, y, dirX, dirY, progress, range = 300, wid
   ctx.restore();
 }
 
-export function drawDashSlashTrail(ctx, x, y, dirX, dirY, progress) {
+export function drawDashSlashTrail(ctx, x, y, dirX, dirY, progress, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const alpha = Math.min(1, progress * 3) * Math.max(0, 1 - progress);
   if (alpha <= 0.01) return;
 
-  const trailLen = 140;
+  const trailLen = 140 * zoom;
   const angle = Math.atan2(dirY, dirX);
 
   ctx.save();
   ctx.globalAlpha = alpha * 0.45;
   ctx.shadowColor = C.pinkGlow;
-  ctx.shadowBlur = 40;
+  ctx.shadowBlur = 40 * zoom;
   ctx.globalCompositeOperation = "lighter";
 
   // Main trail
   ctx.strokeStyle = "#ff99cc";
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 6 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - Math.cos(angle) * trailLen, y - Math.sin(angle) * trailLen);
   ctx.lineTo(x, y);
@@ -420,7 +420,7 @@ export function drawDashSlashTrail(ctx, x, y, dirX, dirY, progress) {
   for (let i = -1; i <= 1; i += 2) {
     const arcAngle = angle + i * 0.25;
     ctx.strokeStyle = "#ff88bb";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 * zoom;
     ctx.globalAlpha = alpha * 0.25;
     ctx.beginPath();
     ctx.moveTo(x - Math.cos(arcAngle) * trailLen * 0.8, y - Math.sin(arcAngle) * trailLen * 0.8);
@@ -430,8 +430,8 @@ export function drawDashSlashTrail(ctx, x, y, dirX, dirY, progress) {
 
   // Bright core
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2;
-  ctx.shadowBlur = 20;
+  ctx.lineWidth = 2 * zoom;
+  ctx.shadowBlur = 20 * zoom;
   ctx.globalAlpha = alpha * 0.6;
   ctx.beginPath();
   ctx.moveTo(x - Math.cos(angle) * trailLen * 0.7, y - Math.sin(angle) * trailLen * 0.7);
@@ -440,12 +440,12 @@ export function drawDashSlashTrail(ctx, x, y, dirX, dirY, progress) {
 
   // Spark dots along the trail
   ctx.fillStyle = "#ffd0e8";
-  ctx.shadowBlur = 15;
+  ctx.shadowBlur = 15 * zoom;
   for (let i = 0; i < 6; i++) {
     const t = 0.15 + i * 0.12;
     const dotX = x - Math.cos(angle) * trailLen * t;
     const dotY = y - Math.sin(angle) * trailLen * t;
-    const dotSize = 1.5 + Math.sin(progress * 20 + i) * 0.8;
+    const dotSize = (1.5 + Math.sin(progress * 20 + i) * 0.8) * zoom;
     ctx.globalAlpha = alpha * (0.5 + (1 - t) * 0.5);
     ctx.beginPath();
     ctx.arc(dotX, dotY, dotSize, 0, Math.PI * 2);
@@ -455,7 +455,7 @@ export function drawDashSlashTrail(ctx, x, y, dirX, dirY, progress) {
   ctx.restore();
 }
 
-export function drawRowOfKatanas(ctx, x, y, progress, time) {
+export function drawRowOfKatanas(ctx, x, y, progress, time, zoom = 1) {
   if (progress <= 0) return;
   const alpha = Math.min(1, progress * 2) * (1 - Math.max(0, progress - 0.5) * 2);
   if (alpha <= 0.01) return;
@@ -465,7 +465,7 @@ export function drawRowOfKatanas(ctx, x, y, progress, time) {
   const count = 7;
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * Math.PI * 2 + time * 0.3;
-    const r = 60 + Math.sin(time * 0.5 + i) * 10;
+    const r = (60 + Math.sin(time * 0.5 + i) * 10) * zoom;
     const kx = x + Math.cos(angle) * r;
     const ky = y + Math.sin(angle) * r;
     const rot = angle + Math.PI * 0.5 + Math.sin(time * 0.7 + i) * 0.3;
@@ -474,11 +474,11 @@ export function drawRowOfKatanas(ctx, x, y, progress, time) {
     ctx.translate(kx, ky);
     ctx.rotate(rot);
     ctx.shadowColor = C.pinkGlow;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 15 * zoom;
     ctx.fillStyle = "#ffb3d9";
-    ctx.fillRect(-2, -15, 4, 30);
+    ctx.fillRect(-2 * zoom, -15 * zoom, 4 * zoom, 30 * zoom);
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(-1, -10, 2, 20);
+    ctx.fillRect(-1 * zoom, -10 * zoom, 2 * zoom, 20 * zoom);
     ctx.restore();
   }
   ctx.restore();
@@ -508,7 +508,7 @@ function generateJaggedPoints(startX, startY, endX, endY, segments, amplitude, s
   return points;
 }
 
-function drawSwirlingParticles(ctx, pathStartX, pathStartY, pathEndX, pathEndY, progress, alpha, time) {
+function drawSwirlingParticles(ctx, pathStartX, pathStartY, pathEndX, pathEndY, progress, alpha, time, zoom = 1) {
   const dx = pathEndX - pathStartX;
   const dy = pathEndY - pathStartY;
   const len = Math.sqrt(dx * dx + dy * dy);
@@ -518,7 +518,7 @@ function drawSwirlingParticles(ctx, pathStartX, pathStartY, pathEndX, pathEndY, 
   for (let i = 0; i < particleCount; i++) {
     const phase = (i / particleCount) * Math.PI * 2;
     const speed = 2.5 + (i % 5) * 0.7;
-    const orbitRadius = 18 + (i % 4) * 8;
+    const orbitRadius = (18 + (i % 4) * 8) * zoom;
     const t = ((time * speed + phase) % (Math.PI * 2)) / (Math.PI * 2);
     const pathT = Math.min(1, Math.max(0, t));
 
@@ -533,14 +533,14 @@ function drawSwirlingParticles(ctx, pathStartX, pathStartY, pathEndX, pathEndY, 
     const px = baseX + Math.cos(swirlAngle) * offsetR * perpX + Math.sin(swirlAngle) * offsetR * (dx / len);
     const py = baseY + Math.cos(swirlAngle) * offsetR * perpY + Math.sin(swirlAngle) * offsetR * (dy / len);
 
-    const size = 1 + (i % 3) * 1.2 + Math.sin(time * 4 + i * 0.5) * 0.5;
+    const size = (1 + (i % 3) * 1.2 + Math.sin(time * 4 + i * 0.5) * 0.5) * zoom;
     const particleAlpha = alpha * (0.4 + Math.sin(time * 3 + i) * 0.3);
 
     ctx.save();
     ctx.globalAlpha = particleAlpha;
     ctx.fillStyle = colors[i % colors.length];
     ctx.shadowColor = colors[i % colors.length];
-    ctx.shadowBlur = size * 4;
+    ctx.shadowBlur = size * 4 * zoom;
     ctx.beginPath();
     ctx.arc(Math.round(px), Math.round(py), Math.round(size), 0, Math.PI * 2);
     ctx.fill();
@@ -548,7 +548,7 @@ function drawSwirlingParticles(ctx, pathStartX, pathStartY, pathEndX, pathEndY, 
   }
 }
 
-export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, time, options = {}) {
+export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, time, options = {}, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.98) return;
 
   const waveWidth = options.width || 45;
@@ -574,7 +574,7 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Outer layer - lavender glow
   ctx.globalAlpha = alpha * 0.25;
   ctx.shadowColor = "#d4a5e5";
-  ctx.shadowBlur = 50;
+  ctx.shadowBlur = 50 * zoom;
   ctx.fillStyle = "rgba(212,165,229,0.15)";
   ctx.beginPath();
   ctx.moveTo(outerJagged[0].x, outerJagged[0].y);
@@ -591,7 +591,7 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Mid layer - bright pink
   ctx.globalAlpha = alpha * 0.55;
   ctx.shadowColor = "#ff66b2";
-  ctx.shadowBlur = 35;
+  ctx.shadowBlur = 35 * zoom;
   ctx.fillStyle = "rgba(255,102,178,0.3)";
   ctx.beginPath();
   ctx.moveTo(midJagged[0].x, midJagged[0].y);
@@ -608,7 +608,7 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Inner layer - hot pink
   ctx.globalAlpha = alpha * 0.75;
   ctx.shadowColor = "#ff1a80";
-  ctx.shadowBlur = 25;
+  ctx.shadowBlur = 25 * zoom;
   ctx.fillStyle = "rgba(255,26,128,0.45)";
   ctx.beginPath();
   ctx.moveTo(innerJagged[0].x, innerJagged[0].y);
@@ -625,7 +625,7 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Core - dark magenta
   ctx.globalAlpha = alpha * 0.9;
   ctx.shadowColor = "#8b0055";
-  ctx.shadowBlur = 20;
+  ctx.shadowBlur = 20 * zoom;
   const coreWidth = waveWidth * 0.12;
   ctx.strokeStyle = "#8b0055";
   ctx.lineWidth = Math.round(coreWidth * 2);
@@ -638,7 +638,7 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Core bright line
   ctx.globalAlpha = alpha * 0.85;
   ctx.shadowColor = "#ff3399";
-  ctx.shadowBlur = 15;
+  ctx.shadowBlur = 15 * zoom;
   ctx.strokeStyle = "#ff3399";
   ctx.lineWidth = Math.round(coreWidth);
   ctx.beginPath();
@@ -649,14 +649,14 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Jagged edge highlights - fiery tips
   ctx.globalAlpha = alpha * 0.6;
   ctx.shadowColor = "#ffb3d9";
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = 12 * zoom;
   ctx.strokeStyle = "#ffb3d9";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2 * zoom;
   ctx.lineCap = "round";
   for (let i = 0; i < outerJagged.length; i += 2) {
     const pt = outerJagged[i];
     const nextPt = outerJagged[Math.min(i + 1, outerJagged.length - 1)];
-    const tipLen = 8 + Math.sin(time * 6 + i) * 4;
+    const tipLen = (8 + Math.sin(time * 6 + i) * 4) * zoom;
     const segAngle = Math.atan2(nextPt.y - pt.y, nextPt.x - pt.x);
     const tipX = pt.x + Math.cos(segAngle + Math.PI * 0.5) * tipLen;
     const tipY = pt.y + Math.sin(segAngle + Math.PI * 0.5) * tipLen;
@@ -669,12 +669,12 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   // Secondary jagged sparks
   ctx.globalAlpha = alpha * 0.4;
   ctx.shadowColor = "#ff80bf";
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 8 * zoom;
   ctx.strokeStyle = "#ff80bf";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1.5 * zoom;
   for (let i = 1; i < midJagged.length; i += 3) {
     const pt = midJagged[i];
-    const sparkLen = 5 + Math.sin(time * 8 + i * 1.3) * 3;
+    const sparkLen = (5 + Math.sin(time * 8 + i * 1.3) * 3) * zoom;
     const perpAngle = angle + Math.PI * 0.5 * (i % 2 === 0 ? 1 : -1);
     const sparkX = pt.x + Math.cos(perpAngle) * sparkLen;
     const sparkY = pt.y + Math.sin(perpAngle) * sparkLen;
@@ -687,7 +687,7 @@ export function drawEnergyWaveTrail(ctx, startX, startY, endX, endY, progress, t
   ctx.restore();
 
   // Swirling particles (rendered with normal composite for better visibility)
-  drawSwirlingParticles(ctx, startX, startY, currentEndX, currentEndY, progress, alpha, time);
+  drawSwirlingParticles(ctx, startX, startY, currentEndX, currentEndY, progress, alpha, time, zoom);
 }
 
 export function drawDashSlideTrail(ctx, x, y, dirX, dirY, progress, time, zoom) {
@@ -768,18 +768,18 @@ export function drawDashSlideTrail(ctx, x, y, dirX, dirY, progress, time, zoom) 
   ctx.restore();
 }
 
-export function drawRikaAppearGlow(ctx, x, y, progress, time) {
+export function drawRikaAppearGlow(ctx, x, y, progress, time, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const a = Math.min(1, progress * 4) * Math.max(0, 1 - progress * 0.9);
   if (a <= 0.01) return;
 
   const pulse = a * (0.7 + Math.sin(time * 12 + x) * 0.3);
-  const radius = 35 + pulse * 25;
+  const radius = (35 + pulse * 25) * zoom;
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   ctx.shadowColor = "#ff66b2";
-  ctx.shadowBlur = 50 + pulse * 40;
+  ctx.shadowBlur = (50 + pulse * 40) * zoom;
 
   const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
   grad.addColorStop(0, `rgba(255,255,255,${pulse * 0.6})`);
@@ -797,9 +797,9 @@ export function drawRikaAppearGlow(ctx, x, y, progress, time) {
     const r = radius * (0.3 + ringPhase * 0.6);
     const ringAlpha = (1 - ringPhase) * pulse * 0.3;
     ctx.globalAlpha = ringAlpha;
-    ctx.shadowBlur = 20 + pulse * 20;
+    ctx.shadowBlur = (20 + pulse * 20) * zoom;
     ctx.strokeStyle = i === 0 ? "#ff99cc" : i === 1 ? "#cc3388" : "#ff66b2";
-    ctx.lineWidth = 2.5 - i * 0.5;
+    ctx.lineWidth = (2.5 - i * 0.5) * zoom;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.stroke();
@@ -808,19 +808,19 @@ export function drawRikaAppearGlow(ctx, x, y, progress, time) {
   ctx.restore();
 }
 
-export function drawRikaImpactBurst(ctx, x, y, progress, time) {
+export function drawRikaImpactBurst(ctx, x, y, progress, time, zoom = 1) {
   if (progress <= 0 || progress >= 1) return;
   const a = Math.min(1, progress * 5) * Math.max(0, 1 - progress * 0.85);
   if (a <= 0.01) return;
 
-  const radius = 45 + progress * 85;
+  const radius = (45 + progress * 85) * zoom;
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   ctx.globalAlpha = a;
 
   ctx.shadowColor = "#ffffff";
-  ctx.shadowBlur = 60;
+  ctx.shadowBlur = 60 * zoom;
   const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.4);
   coreGrad.addColorStop(0, "rgba(255,255,255,0.9)");
   coreGrad.addColorStop(0.5, "rgba(255,200,230,0.5)");
@@ -836,10 +836,10 @@ export function drawRikaImpactBurst(ctx, x, y, progress, time) {
     const ringR = radius * ringSizes[i];
     const ringA = a * (1 - i * 0.25);
     ctx.shadowColor = ringColors[i];
-    ctx.shadowBlur = 30 - i * 8;
+    ctx.shadowBlur = (30 - i * 8) * zoom;
     ctx.globalAlpha = ringA;
     ctx.strokeStyle = ringColors[i];
-    ctx.lineWidth = (4 - i * 1.2);
+    ctx.lineWidth = (4 - i * 1.2) * zoom;
     ctx.beginPath();
     ctx.arc(x, y, ringR, 0, Math.PI * 2);
     ctx.stroke();
@@ -850,13 +850,13 @@ export function drawRikaImpactBurst(ctx, x, y, progress, time) {
   for (let i = 0; i < spikeCount; i++) {
     const angle = (i / spikeCount) * Math.PI * 2 + time * 2 + i * 0.3;
     const spikeLen = radius * (0.5 + Math.sin(time * 8 + i * 1.5) * 0.2);
-    const spikeWidth = 3 + Math.sin(time * 6 + i * 0.7) * 1.5;
+    const spikeWidth = (3 + Math.sin(time * 6 + i * 0.7) * 1.5) * zoom;
     const sx = x + Math.cos(angle) * radius * 0.15;
     const sy = y + Math.sin(angle) * radius * 0.15;
     const ex = x + Math.cos(angle) * spikeLen;
     const ey = y + Math.sin(angle) * spikeLen;
 
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 20 * zoom;
     ctx.strokeStyle = i % 2 === 0 ? "#ffffff" : "#ff99cc";
     ctx.lineWidth = spikeWidth;
     ctx.beginPath();
@@ -866,13 +866,13 @@ export function drawRikaImpactBurst(ctx, x, y, progress, time) {
   }
 
   ctx.globalAlpha = a * 0.4;
-  ctx.shadowBlur = 15;
+  ctx.shadowBlur = 15 * zoom;
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 + time * 3 + i;
     const dist = radius * (0.35 + Math.sin(time * 5 + i * 0.8) * 0.15);
     const px = x + Math.cos(angle) * dist;
     const py = y + Math.sin(angle) * dist;
-    const sz = 2 + Math.sin(time * 4 + i * 1.1) * 1;
+    const sz = (2 + Math.sin(time * 4 + i * 1.1) * 1) * zoom;
     ctx.fillStyle = i % 3 === 0 ? "#ffffff" : i % 3 === 1 ? "#ffb3d9" : "#d4a5e5";
     ctx.beginPath();
     ctx.arc(px, py, sz, 0, Math.PI * 2);
@@ -882,7 +882,7 @@ export function drawRikaImpactBurst(ctx, x, y, progress, time) {
   ctx.restore();
 }
 
-export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, time) {
+export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, time, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.99) return;
   const a = Math.min(1, progress * 5) * Math.max(0, 1 - progress * 0.9);
   if (a <= 0.01) return;
@@ -897,7 +897,7 @@ export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, tim
   ctx.globalCompositeOperation = "lighter";
 
   const seed = Math.round(time * 1000);
-  const trailWidth = 25 + (1 - progress) * 20;
+  const trailWidth = (25 + (1 - progress) * 20) * zoom;
   const outerJagged = generateJaggedPoints(startX, startY, endX, endY, 12, trailWidth * 0.55, seed);
   const midJagged = generateJaggedPoints(startX, startY, endX, endY, 10, trailWidth * 0.35, seed + 1);
   const innerJagged = generateJaggedPoints(startX, startY, endX, endY, 8, trailWidth * 0.18, seed + 2);
@@ -918,15 +918,15 @@ export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, tim
     ctx.fill();
   };
 
-  drawJaggedFill(outerJagged, a * 0.3, "rgba(212,165,229,0.15)", 50);
-  drawJaggedFill(midJagged, a * 0.6, "rgba(255,102,178,0.3)", 35);
-  drawJaggedFill(innerJagged, a * 0.8, "rgba(255,26,128,0.45)", 25);
+  drawJaggedFill(outerJagged, a * 0.3, "rgba(212,165,229,0.15)", 50 * zoom);
+  drawJaggedFill(midJagged, a * 0.6, "rgba(255,102,178,0.3)", 35 * zoom);
+  drawJaggedFill(innerJagged, a * 0.8, "rgba(255,26,128,0.45)", 25 * zoom);
 
   ctx.globalAlpha = a * 0.9;
   ctx.shadowColor = "#ff3399";
-  ctx.shadowBlur = 15;
+  ctx.shadowBlur = 15 * zoom;
   ctx.strokeStyle = "#ff3399";
-  ctx.lineWidth = Math.max(3, trailWidth * 0.12);
+  ctx.lineWidth = Math.max(3 * zoom, trailWidth * 0.12);
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(Math.round(startX), Math.round(startY));
@@ -935,9 +935,9 @@ export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, tim
 
   ctx.globalAlpha = a * 0.85;
   ctx.shadowColor = "#ffffff";
-  ctx.shadowBlur = 20;
+  ctx.shadowBlur = 20 * zoom;
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = Math.max(2, trailWidth * 0.06);
+  ctx.lineWidth = Math.max(2 * zoom, trailWidth * 0.06);
   ctx.beginPath();
   ctx.moveTo(Math.round(startX), Math.round(startY));
   ctx.lineTo(Math.round(endX), Math.round(endY));
@@ -945,14 +945,14 @@ export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, tim
 
   ctx.globalAlpha = a * 0.5;
   ctx.shadowColor = "#ffb3d9";
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = 12 * zoom;
   ctx.strokeStyle = "#ffb3d9";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2 * zoom;
   ctx.lineCap = "round";
   for (let i = 0; i < outerJagged.length; i += 2) {
     const pt = outerJagged[i];
     const nextPt = outerJagged[Math.min(i + 1, outerJagged.length - 1)];
-    const tipLen = 6 + Math.sin(time * 7 + i) * 3;
+    const tipLen = (6 + Math.sin(time * 7 + i) * 3) * zoom;
     const segAngle = Math.atan2(nextPt.y - pt.y, nextPt.x - pt.x);
     const tipX = pt.x + Math.cos(segAngle + Math.PI * 0.5) * tipLen;
     const tipY = pt.y + Math.sin(segAngle + Math.PI * 0.5) * tipLen;
@@ -963,7 +963,7 @@ export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, tim
   }
 
   const partCount = 14;
-  ctx.shadowBlur = 10;
+  ctx.shadowBlur = 10 * zoom;
   for (let i = 0; i < partCount; i++) {
     const t = (i / partCount) * progress;
     const px = startX + dx * t;
@@ -973,7 +973,7 @@ export function drawRikaDashTrail(ctx, startX, startY, endX, endY, progress, tim
     const distFromCenter = (Math.sin(time * 10 + i * 1.3) * 0.5 + 0.5) * trailWidth * 0.3;
     const offX = px + perpX * distFromCenter;
     const offY = py + perpY * distFromCenter;
-    const sz = 2 + Math.sin(time * 9 + i * 2.1) * 1;
+    const sz = (2 + Math.sin(time * 9 + i * 2.1) * 1) * zoom;
     ctx.globalAlpha = a * (0.3 + Math.sin(time * 6 + i) * 0.2);
     ctx.fillStyle = i % 3 === 0 ? "#ffffff" : i % 3 === 1 ? "#ffb3d9" : "#d4a5e5";
     ctx.beginPath();

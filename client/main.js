@@ -868,6 +868,16 @@ input.onUpgradeKey = (index) => {
   hud.pickUpgradeByIndex(index);
 };
 
+
+
+canvas.addEventListener("wheel", (event) => {
+  if (!state.joined) return;
+  event.preventDefault();
+  const factor = event.deltaY > 0 ? 0.9 : 1.1;
+  const newZoom = Math.max(0.4, Math.min(2.0, renderer.camera.zoom * factor));
+  renderer.startZoom(newZoom, 60);
+}, { passive: false });
+
 playBtn.addEventListener("click", () => {
   start();
 });

@@ -422,7 +422,7 @@ export class DomainVisualSystem {
               const dist = ((seed * 7919) % innerR);
               const starX = p.x + Math.cos(angle) * dist + dx;
               const starY = p.y + Math.sin(angle) * dist + dy;
-              const starSize = 0.5 + (seed % 3) * 0.5;
+              const starSize = (0.5 + (seed % 3) * 0.5) * zoom;
               const twinkle = 0.5 + Math.sin(now * 0.003 + seed) * 0.5;
               const starAlpha = twinkle * (0.6 + (seed % 40) * 0.01);
               ctx.fillStyle = `rgba(255,255,255,${starAlpha})`;
@@ -490,8 +490,8 @@ export class DomainVisualSystem {
             if (trainImg && trainImg.width) {
               ctx.save();
               ctx.translate(trainX, trainY);
-              ctx.shadowColor = 'rgba(255, 107, 157, 0.4)';
-              ctx.shadowBlur = 12;
+          ctx.shadowColor = 'rgba(255, 107, 157, 0.4)';
+          ctx.shadowBlur = 12 * zoom;
               this.drawScaledImage(ctx, trainImg, 0, 0, vz, 0, 0, 1.2);
               ctx.restore();
             }
@@ -569,6 +569,7 @@ export class DomainVisualSystem {
         ctx.globalAlpha = Math.max(0, shard.alpha);
         ctx.translate(px, py);
         ctx.rotate(shard.rot);
+        ctx.scale(z, z);
 
         ctx.beginPath();
         ctx.moveTo(shard.vertices[0].x, shard.vertices[0].y);
@@ -589,6 +590,7 @@ export class DomainVisualSystem {
         ctx.globalAlpha = Math.max(0, shard.alpha * 0.5);
         ctx.translate(px, py);
         ctx.rotate(shard.rot);
+        ctx.scale(z, z);
         ctx.strokeStyle = "rgba(220,235,255,0.7)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();

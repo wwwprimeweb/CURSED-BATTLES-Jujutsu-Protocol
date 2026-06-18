@@ -149,7 +149,7 @@ export class YutaSpriteRenderer {
   }
 
   render(ctx, x, y, state, facing = 1, _scale = 1, playerId = "default") {
-    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    const scale = Number.isFinite(_scale) ? _scale : 1;
     if (state === "teleport") {
       const p = this.teleportAnimator.players.get(playerId);
       if (p && p.done) {
@@ -161,7 +161,7 @@ export class YutaSpriteRenderer {
   }
 
   renderRika(ctx, x, y, facing = 1, floatPhase = 0, floatAmp = 2.2, _scale = 1) {
-    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    const scale = Number.isFinite(_scale) ? _scale : 1;
     const hover = floatAmp > 0 ? Math.sin(this.walkTime * 3.1 + floatPhase) * floatAmp : 0;
     const finalY = y + hover;
     if (this.rikaSprite) {
@@ -175,7 +175,7 @@ export class YutaSpriteRenderer {
   }
 
   renderRikaIncompletaFrame(ctx, x, y, facing, row, frameIndex, alpha = 1, _scale = 1) {
-    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    const scale = Number.isFinite(_scale) ? _scale : 1;
     if (!this.rikaIncompletaSheet) {
       ctx.fillStyle = `rgba(200,100,255,${alpha * 0.5})`;
       ctx.beginPath();
@@ -208,7 +208,7 @@ export class YutaSpriteRenderer {
   }
 
   renderFullRikaFrame(ctx, x, y, facing, row, frameIndex, alpha = 1, _scale = 1) {
-    const scale = Number.isFinite(_scale) ? Math.max(0.6, _scale) : 1;
+    const scale = Number.isFinite(_scale) ? _scale : 1;
     if (!this.fullRikaSheet) {
       ctx.fillStyle = `rgba(200,100,255,${alpha * 0.5})`;
       ctx.beginPath();

@@ -202,7 +202,7 @@ export class YujiVisualSystem {
       ctx.save();
       ctx.translate(pos.x, pos.y);
       ctx.scale(zoom, zoom);
-      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress);
+      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress, zoom);
       ctx.restore();
     }
 
@@ -212,7 +212,7 @@ export class YujiVisualSystem {
       ctx.save();
       ctx.translate(pos.x, pos.y);
       ctx.scale(zoom, zoom);
-      drawHitReaction(ctx, 0, 0, facing, flashIntensity);
+      drawHitReaction(ctx, 0, 0, facing, flashIntensity, zoom);
       ctx.restore();
     }
 
@@ -280,7 +280,7 @@ export class YujiVisualSystem {
     if (!p.alive) return;
 
     ctx.fillStyle = "#f2f6ff";
-    ctx.font = "600 14px Rajdhani";
+    ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
     ctx.textAlign = "center";
     ctx.fillText(p.name || "punho-indomavel", pos.x, pos.y - (65 * 1.9 + 10) * zoom);
   }
@@ -475,9 +475,9 @@ export class YujiVisualSystem {
       ctx.fillStyle = "rgba(255,80,80,0.3)";
       ctx.beginPath();
       ctx.arc(
-        flash.x - camera.x + ctx.canvas.width * 0.5,
-        flash.y - camera.y + ctx.canvas.height * 0.5,
-        30,
+        (flash.x - camera.x) * camera.zoom + ctx.canvas.width * 0.5,
+        (flash.y - camera.y) * camera.zoom + ctx.canvas.height * 0.5,
+        30 * camera.zoom,
         0,
         Math.PI * 2,
       );

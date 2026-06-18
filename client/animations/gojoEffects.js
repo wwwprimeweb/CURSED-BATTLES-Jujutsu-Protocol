@@ -101,20 +101,20 @@ export function drawDeathPose(ctx, x, y, progress, time) {
   ctx.restore();
 }
 
-export function drawHitReaction(ctx, x, y, facing, flashIntensity) {
+export function drawHitReaction(ctx, x, y, facing, flashIntensity, zoom = 1) {
   if (flashIntensity <= 0) return;
   ctx.save();
   ctx.globalAlpha = flashIntensity * 0.4;
   ctx.fillStyle = "#ff3030";
   ctx.shadowColor = "#ff0000";
-  ctx.shadowBlur = 25;
+  ctx.shadowBlur = 25 * zoom;
   ctx.beginPath();
   ctx.arc(x, y, 35, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
 
-export function drawDodgeEffect(ctx, x, y, facing, progress) {
+export function drawDodgeEffect(ctx, x, y, facing, progress, zoom = 1) {
   if (progress <= 0) return;
   ctx.save();
   ctx.globalAlpha = (1 - progress) * 0.5;
@@ -123,7 +123,7 @@ export function drawDodgeEffect(ctx, x, y, facing, progress) {
     ctx.strokeStyle = C.blueGlow;
     ctx.lineWidth = 2.5 - i * 0.5;
     ctx.shadowColor = C.blueCore;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 15 * zoom;
     ctx.beginPath();
     ctx.arc(x - facing * offset, y, 24 - i * 2, 0, Math.PI * 2);
     ctx.stroke();
@@ -131,7 +131,7 @@ export function drawDodgeEffect(ctx, x, y, facing, progress) {
   ctx.restore();
 }
 
-export function drawGojoM1Sprite(ctx, x, y, dirX, dirY, progress, comboStep, sprite) {
+export function drawGojoM1Sprite(ctx, x, y, dirX, dirY, progress, comboStep, sprite, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.98) return;
 
   const rawFadeIn = Math.min(1, progress * 4);
@@ -142,21 +142,21 @@ export function drawGojoM1Sprite(ctx, x, y, dirX, dirY, progress, comboStep, spr
   if (alpha <= 0.01) return;
 
   const angle = Math.atan2(dirY, dirX);
-  const range = 85;
+  const range = 85 * zoom;
   const moveIn = Math.min(0.8, progress * 5);
   const spriteDist = range * 1.15 * moveIn;
   const perpX = -dirY;
   const perpY = dirX;
   const offsetMap = { 1: 0, 2: 35, 3: 18 };
-  const offset = offsetMap[comboStep] || 0;
-  const baseY = y - 25;
+  const offset = (offsetMap[comboStep] || 0) * zoom;
+  const baseY = y - 25 * zoom;
   const sx = Math.cos(angle) * spriteDist + perpX * offset;
   const sy = Math.sin(angle) * spriteDist + perpY * offset;
 
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {
     const aspect = sprite.naturalWidth / sprite.naturalHeight;
     const sizes = { 1: 65, 2: 85, 3: 75 };
-    const spriteHeight = (sizes[comboStep] || 65) * 0.7;
+    const spriteHeight = (sizes[comboStep] || 65) * 0.7 * zoom;
     const spriteWidth = spriteHeight * aspect;
 
     ctx.save();

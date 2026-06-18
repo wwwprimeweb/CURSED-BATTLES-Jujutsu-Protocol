@@ -120,11 +120,11 @@ export class GojoVisualSystem {
     if (animState === "dash") {
       if (this.dashImage.complete && this.dashImage.naturalWidth > 0) {
         const targetSize = 105 * spriteScale;
-        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 50 * spriteScale, facing, targetSize);
+        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 50, facing, targetSize);
       }
       if (p.alive) {
         ctx.fillStyle = "#dce9ff";
-        ctx.font = "600 14px Rajdhani";
+        ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
         ctx.textAlign = "center";
         ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
       }
@@ -139,11 +139,11 @@ export class GojoVisualSystem {
       const img = this.domainPrepFrames[4];
       if (img && img.complete && img.naturalWidth > 0) {
         const targetSize = 96 * spriteScale;
-        this.drawSprite(ctx, img, pos.x, pos.y - 54 * spriteScale, facing, targetSize);
+        this.drawSprite(ctx, img, pos.x, pos.y - 54, facing, targetSize);
       }
       if (p.alive) {
         ctx.fillStyle = "#dce9ff";
-        ctx.font = "600 14px Rajdhani";
+        ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
         ctx.textAlign = "center";
         ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
       }
@@ -156,7 +156,7 @@ export class GojoVisualSystem {
       ctx.save();
       ctx.translate(pos.x, pos.y);
       ctx.scale(zoom, zoom);
-      drawHitReaction(ctx, 0, 0, facing, flashIntensity);
+      drawHitReaction(ctx, 0, 0, facing, flashIntensity, zoom);
       ctx.restore();
     }
 
@@ -166,7 +166,7 @@ export class GojoVisualSystem {
     }
 
     if (animState === "run") {
-      pos.y += Math.sin(this.time * 10) * 2.5;
+      pos.y += Math.sin(this.time * 10) * 2.5 * zoom;
     }
 
     this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
@@ -174,7 +174,7 @@ export class GojoVisualSystem {
     if (!p.alive) return;
 
      ctx.fillStyle = "#dce9ff";
-     ctx.font = "600 14px Rajdhani";
+     ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
      ctx.textAlign = "center";
      ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
 

@@ -462,9 +462,10 @@ export class GojoSkillEffects {
   }
 
   render(ctx, camera) {
+    const z = camera.zoom;
     const w2s = (wx, wy) => ({
-      x: wx - camera.x + ctx.canvas.width * 0.5,
-      y: wy - camera.y + ctx.canvas.height * 0.5,
+      x: (wx - camera.x) * z + ctx.canvas.width * 0.5,
+      y: (wy - camera.y) * z + ctx.canvas.height * 0.5,
     });
 
     for (const a of this.afterimages) {
@@ -474,9 +475,9 @@ export class GojoSkillEffects {
       ctx.globalAlpha = t * 0.4;
       ctx.fillStyle = C.blueGlow;
       ctx.shadowColor = C.blueCore;
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 20 * z;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, 25, 0, Math.PI * 2);
+      ctx.arc(s.x, s.y, 25 * z, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -490,15 +491,15 @@ export class GojoSkillEffects {
       const fade = prog > 0.6 ? 1 - (prog - 0.6) / 0.4 : 1;
       const alpha = appear * fade;
       const open = prog < 0.5 ? prog / 0.5 : (1 - (prog - 0.5) / 0.5);
-      const spread = open * 8;
+      const spread = open * 8 * z;
 
       ctx.shadowColor = "#ffffff";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 12 * z;
       ctx.globalAlpha = alpha * 0.65;
       ctx.strokeStyle = "rgba(255,255,255,0.85)";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.5 * z;
 
-      const height = 30;
+      const height = 30 * z;
       for (let i = 0; i < 3; i++) {
         const ox = (i - 1) * spread;
         ctx.beginPath();
@@ -512,31 +513,32 @@ export class GojoSkillEffects {
 
     for (const d of this.domains) {
       const s = w2s(d.x, d.y);
+      const dr = d.radius * z;
       const alpha = Math.min(1, (d.maxLife - d.life) * 2) * Math.min(1, d.life / 3);
       ctx.save();
-      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, d.radius);
+      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, dr);
       grad.addColorStop(0, `rgba(180,220,255,${alpha * 0.12})`);
       grad.addColorStop(0.7, `rgba(140,180,255,${alpha * 0.06})`);
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, d.radius, 0, Math.PI * 2);
+      ctx.arc(s.x, s.y, dr, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = `rgba(160,210,255,${alpha})`;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 4 * z;
       ctx.shadowColor = C.blueBright;
-      ctx.shadowBlur = 25;
+      ctx.shadowBlur = 25 * z;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, d.radius, 0, Math.PI * 2);
+      ctx.arc(s.x, s.y, dr, 0, Math.PI * 2);
       ctx.stroke();
-      const t = Date.now() * 0.002;
+      const now = Date.now() * 0.002;
       for (let i = 0; i < 12; i++) {
-        const angle = (i / 12) * Math.PI * 2 + t;
-        const sx = s.x + Math.cos(angle) * d.radius;
-        const sy = s.y + Math.sin(angle) * d.radius;
+        const angle = (i / 12) * Math.PI * 2 + now;
+        const sx = s.x + Math.cos(angle) * dr;
+        const sy = s.y + Math.sin(angle) * dr;
         ctx.fillStyle = `rgba(220,240,255,${alpha * 0.8})`;
         ctx.beginPath();
-        ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+        ctx.arc(sx, sy, 4 * z, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -549,21 +551,21 @@ export class GojoSkillEffects {
       ctx.save();
       ctx.globalAlpha = t;
       ctx.shadowColor = "#c080ff";
-      ctx.shadowBlur = 40;
+      ctx.shadowBlur = 40 * z;
       const gradient = ctx.createLinearGradient(s1.x, s1.y, s2.x, s2.y);
       gradient.addColorStop(0, "rgba(180,80,255,0.9)");
       gradient.addColorStop(0.5, "rgba(220,140,255,1)");
       gradient.addColorStop(1, "rgba(200,100,255,0.9)");
       ctx.strokeStyle = gradient;
-      ctx.lineWidth = 40 * t;
+      ctx.lineWidth = 40 * t * z;
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(s1.x, s1.y);
       ctx.lineTo(s2.x, s2.y);
       ctx.stroke();
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 20 * z;
       ctx.strokeStyle = "rgba(240,200,255,0.8)";
-      ctx.lineWidth = 15 * t;
+      ctx.lineWidth = 15 * t * z;
       ctx.stroke();
       ctx.restore();
     }
@@ -573,7 +575,7 @@ export class GojoSkillEffects {
       const t = e.life / e.maxLife;
       ctx.save();
       ctx.globalAlpha = t;
-      const r = e.radius * (2 - t);
+      const r = e.radius * (2 - t) * z;
       if (e.type === "purple") {
         const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r);
         grad.addColorStop(0, "rgba(220,160,255,0.9)");
@@ -581,7 +583,7 @@ export class GojoSkillEffects {
         grad.addColorStop(1, "rgba(80,20,200,0)");
         ctx.fillStyle = grad;
         ctx.shadowColor = "#c080ff";
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 30 * z;
         ctx.beginPath();
         ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
         ctx.fill();
@@ -592,7 +594,7 @@ export class GojoSkillEffects {
         grad.addColorStop(1, "rgba(200,0,40,0)");
         ctx.fillStyle = grad;
         ctx.shadowColor = "#ff4060";
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 25 * z;
         ctx.beginPath();
         ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
         ctx.fill();
@@ -606,36 +608,36 @@ export class GojoSkillEffects {
       ctx.save();
       ctx.globalAlpha = t;
       if (p.type === "blue") {
-        const size = p.radius * 2 * 1.4;
+        const size = p.radius * 2 * 1.4 * z;
         if (this.blueImg.complete && this.blueImg.naturalWidth > 0) {
           ctx.shadowColor = C.blueGlow;
-          ctx.shadowBlur = 25;
+          ctx.shadowBlur = 25 * z;
           ctx.drawImage(this.blueImg, s.x - size / 2, s.y - size / 2, size, size);
         } else {
           ctx.fillStyle = "#4cb4ff";
           ctx.shadowColor = C.blueGlow;
-          ctx.shadowBlur = 25;
+          ctx.shadowBlur = 25 * z;
           ctx.beginPath();
-          ctx.arc(s.x, s.y, p.radius * 1.4, 0, Math.PI * 2);
+          ctx.arc(s.x, s.y, p.radius * 1.4 * z, 0, Math.PI * 2);
           ctx.fill();
         }
       } else if (p.type === "red") {
         const angle = Math.atan2(p.vy, p.vx);
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, p.radius);
+        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, p.radius * z);
         grad.addColorStop(0, "rgba(255,220,220,1)");
         grad.addColorStop(0.4, "rgba(255,80,100,0.9)");
         grad.addColorStop(1, "rgba(200,20,60,0)");
         ctx.fillStyle = grad;
         ctx.shadowColor = "#ff4060";
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 30 * z;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, p.radius * z, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = "rgba(255,200,200,0.9)";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 * z;
         ctx.beginPath();
-        ctx.moveTo(s.x - Math.cos(angle) * p.radius * 2, s.y - Math.sin(angle) * p.radius * 2);
-        ctx.lineTo(s.x + Math.cos(angle) * p.radius * 0.5, s.y + Math.sin(angle) * p.radius * 0.5);
+        ctx.moveTo(s.x - Math.cos(angle) * p.radius * 2 * z, s.y - Math.sin(angle) * p.radius * 2 * z);
+        ctx.lineTo(s.x + Math.cos(angle) * p.radius * 0.5 * z, s.y + Math.sin(angle) * p.radius * 0.5 * z);
         ctx.stroke();
       }
       ctx.restore();

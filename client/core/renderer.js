@@ -789,7 +789,7 @@ export class Renderer {
         const rimX = fx + Math.cos(angle) * fragSize * 0.3;
         const rimY = fy + Math.sin(angle) * fragSize * 0.3;
         ctx.strokeStyle = `rgba(255,100,130,${t * 0.5})`;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1 * z;
         ctx.beginPath();
         ctx.moveTo(rimX - fragSize * 0.2, rimY - fragSize * 0.2);
         ctx.lineTo(rimX + fragSize * 0.2, rimY + fragSize * 0.2);
@@ -1166,7 +1166,7 @@ export class Renderer {
       const p = worldToScreen(this.camera, this.canvas, zone.x, zone.y);
       ctx.strokeStyle = "rgba(95,148,255,0.2)";
       ctx.fillStyle = "rgba(50,80,140,0.08)";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.arc(p.x, p.y, zone.radius * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -1188,14 +1188,14 @@ export class Renderer {
       const p = worldToScreen(this.camera, this.canvas, obs.x, obs.y);
       ctx.fillStyle = "rgba(20,26,38,0.95)";
       ctx.strokeStyle = "rgba(115,140,185,0.25)";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 * zoom;
       ctx.fillRect(p.x, p.y, obs.w * zoom, obs.h * zoom);
       ctx.strokeRect(p.x + 0.5, p.y + 0.5, obs.w * zoom - 1, obs.h * zoom - 1);
     });
 
     const topLeft = worldToScreen(this.camera, this.canvas, 0, 0);
     ctx.strokeStyle = "rgba(170,200,255,0.2)";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 * zoom;
     ctx.strokeRect(topLeft.x, topLeft.y, this.map.width * zoom, this.map.height * zoom);
 
     if (w && h) {
@@ -1346,7 +1346,7 @@ export class Renderer {
         ctx.save();
 
         ctx.shadowColor = "#00d4b0";
-        ctx.shadowBlur = 65;
+        ctx.shadowBlur = 65 * zoom;
         const bgGrad = ctx.createRadialGradient(px, py, 0, px, py, sphereR * pulse * 2);
         bgGrad.addColorStop(0, "rgba(0,230,190,0.15)");
         bgGrad.addColorStop(0.15, "rgba(0,200,170,0.12)");
@@ -1382,12 +1382,12 @@ export class Renderer {
         ctx.arc(px, py, sphereR * pulse, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.shadowBlur = 50;
+        ctx.shadowBlur = 50 * zoom;
         const spriteSize = sphereR * 2.3 * pulse;
         if (this.hollowPurpleImg.complete && this.hollowPurpleImg.naturalWidth > 0) {
           ctx.drawImage(this.hollowPurpleImg, px - spriteSize / 2, py - spriteSize / 2, spriteSize, spriteSize);
         } else {
-          ctx.shadowBlur = 30;
+          ctx.shadowBlur = 30 * zoom;
           const fallbackGrad = ctx.createRadialGradient(px, py, 0, px, py, spriteSize * 0.5);
           fallbackGrad.addColorStop(0, "rgba(255,255,255,0.7)");
           fallbackGrad.addColorStop(0.3, "rgba(200,130,255,0.5)");
@@ -1410,7 +1410,7 @@ export class Renderer {
             const dist = sphereR * (0.15 + t * 0.75);
             const dx = px + Math.cos(a) * dist;
             const dy = py + Math.sin(a) * dist;
-            const sz = 1 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.003) * 0.8 + 0.8;
+            const sz = (1 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.003) * 0.8 + 0.8) * zoom;
             const alpha = 0.3 + Math.sin(vein * 2.1 + d * 1.1 + now * 0.002) * 0.15 + 0.2;
             ctx.fillStyle = `rgba(230,210,255,${alpha})`;
             ctx.beginPath();
@@ -1424,7 +1424,7 @@ export class Renderer {
           const dist = sphereR * (0.1 + (Math.sin(i * 3.7 + now * 0.001) * 0.5 + 0.5) * 0.8);
           const sx = px + Math.cos(angle) * dist;
           const sy = py + Math.sin(angle) * dist;
-          const sz = 0.5 + Math.sin(i * 1.9 + now * 0.004) * 0.4 + 0.5;
+          const sz = (0.5 + Math.sin(i * 1.9 + now * 0.004) * 0.4 + 0.5) * zoom;
           const alpha = 0.2 + Math.sin(i * 2.3 + now * 0.003) * 0.1 + 0.15;
           ctx.fillStyle = `rgba(255,245,255,${alpha})`;
           ctx.beginPath();
@@ -1441,12 +1441,12 @@ export class Renderer {
           const arcLen = sphereR * (0.15 + Math.sin(now * 0.004 + i * 0.7) * 0.08 + 0.1);
           for (let s = 0; s < 2; s++) {
             const st = (s + 1) / 4;
-            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.005 + i + s) * 3;
-            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.005 + i + s) * 3;
+            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.005 + i + s) * 3 * zoom;
+            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.005 + i + s) * 3 * zoom;
             const alpha = (0.3 - st * 0.15) * (0.6 + Math.sin(now * 0.006 + i * 1.1) * 0.2);
             ctx.fillStyle = `rgba(200,160,255,${alpha})`;
             ctx.beginPath();
-            ctx.arc(ax, ay, 1.2, 0, Math.PI * 2);
+            ctx.arc(ax, ay, 1.2 * zoom, 0, Math.PI * 2);
             ctx.fill();
           }
         }
@@ -1463,15 +1463,15 @@ export class Renderer {
         const size = baseR * 2 * 1.3;
         if (this.blueImg.complete && this.blueImg.naturalWidth > 0) {
           ctx.shadowColor = "#66ccff";
-          ctx.shadowBlur = 100;
+          ctx.shadowBlur = 100 * zoom;
           ctx.drawImage(this.blueImg, screen.x - size / 2, screen.y - size / 2, size, size);
           ctx.shadowColor = "#88ddff";
-          ctx.shadowBlur = 20;
+          ctx.shadowBlur = 20 * zoom;
           ctx.drawImage(this.blueImg, screen.x - size / 2, screen.y - size / 2, size, size);
         } else {
           ctx.fillStyle = "#4cb4ff";
           ctx.shadowColor = "#66ccff";
-          ctx.shadowBlur = 80;
+          ctx.shadowBlur = 80 * zoom;
           ctx.beginPath();
           ctx.arc(screen.x, screen.y, baseR * 1.3, 0, Math.PI * 2);
           ctx.fill();
@@ -1523,10 +1523,10 @@ export class Renderer {
         ctx.save();
         const spriteSize = r * 2 * 2.2 * 0.7;
         ctx.shadowColor = "#ff2040";
-        ctx.shadowBlur = 70;
+        ctx.shadowBlur = 70 * zoom;
         ctx.drawImage(this.redImg, screen.x - spriteSize / 2, screen.y - spriteSize / 2, spriteSize, spriteSize);
         ctx.shadowColor = "#ff6080";
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 20 * zoom;
         ctx.drawImage(this.redImg, screen.x - spriteSize / 2, screen.y - spriteSize / 2, spriteSize, spriteSize);
         ctx.shadowBlur = 0;
 
@@ -1554,7 +1554,7 @@ export class Renderer {
           const dist = r * (0.05 + (Math.sin(i * 3.7 + now * 0.002) * 0.5 + 0.5) * 0.85);
           const sx = px + Math.cos(angle) * dist;
           const sy = py + Math.sin(angle) * dist;
-          const sz = 0.6 + Math.sin(i * 1.9 + now * 0.005) * 0.5 + 0.6;
+          const sz = (0.6 + Math.sin(i * 1.9 + now * 0.005) * 0.5 + 0.6) * zoom;
           const alpha = 0.25 + Math.sin(i * 2.3 + now * 0.004) * 0.15 + 0.2;
           ctx.fillStyle = `rgba(255,245,245,${alpha})`;
           ctx.beginPath();
@@ -1567,7 +1567,7 @@ export class Renderer {
           const dist = r * (0.6 + Math.sin(now * 0.006 + i * 1.1) * 0.5 + 0.5);
           const sx2 = px + Math.cos(angle) * dist;
           const sy2 = py + Math.sin(angle) * dist;
-          const sz = 1.5 + Math.abs(Math.sin(now * 0.008 + i * 0.7)) * 2.5;
+          const sz = (1.5 + Math.abs(Math.sin(now * 0.008 + i * 0.7)) * 2.5) * zoom;
           const alpha = 0.4 + Math.sin(now * 0.005 + i * 1.2) * 0.3;
           ctx.fillStyle = `rgba(255,180,200,${alpha})`;
           ctx.beginPath();
@@ -1584,12 +1584,12 @@ export class Renderer {
           const arcLen = r * (0.15 + Math.sin(now * 0.005 + i * 0.7) * 0.1 + 0.12);
           for (let s = 0; s < 2; s++) {
             const st = (s + 1) / 4;
-            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.006 + i + s) * 4;
-            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.006 + i + s) * 4;
+            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.006 + i + s) * 4 * zoom;
+            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.006 + i + s) * 4 * zoom;
             const alpha = (0.3 - st * 0.15) * (0.6 + Math.sin(now * 0.007 + i * 1.1) * 0.3);
             ctx.fillStyle = `rgba(255,170,190,${alpha})`;
             ctx.beginPath();
-            ctx.arc(ax, ay, 1.2, 0, Math.PI * 2);
+            ctx.arc(ax, ay, 1.2 * zoom, 0, Math.PI * 2);
             ctx.fill();
           }
         }
@@ -1744,7 +1744,7 @@ export class Renderer {
         ctx.strokeStyle = frozen ? "rgba(246,253,255,0.92)" : "rgba(242,156,177,0.58)";
         if (frozen) {
           ctx.shadowColor = "rgba(227,244,255,0.85)";
-          ctx.shadowBlur = 16;
+          ctx.shadowBlur = 16 * zoom;
         }
         ctx.lineWidth = 2 * zoom;
         ctx.beginPath();
@@ -2039,7 +2039,7 @@ export class Renderer {
       if (p.recoveryActive && p.alive) {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
         const erFrame = Math.floor(now * 0.009) % this._erFrames;
-        this._drawERFrame(ctx, sp.x, sp.y, 140, erFrame, p.character, 1);
+        this._drawERFrame(ctx, sp.x, sp.y, 140 * this.camera.zoom, erFrame, p.character, 1);
       }
 
       visual.renderPlayer(ctx, this.camera, entry, isYou, facing, dashState, rx + stunShakeX, ry + stunShakeY, this._renderDt);
@@ -2047,7 +2047,7 @@ export class Renderer {
       if (p.recoveryActive && p.alive) {
         const sp = worldToScreen(this.camera, this.canvas, rx, ry);
         const erFrame = Math.floor(now * 0.009) % this._erFrames;
-        this._drawERFrame(ctx, sp.x, sp.y, 140, erFrame, p.character, 0.25);
+        this._drawERFrame(ctx, sp.x, sp.y, 140 * this.camera.zoom, erFrame, p.character, 0.25);
       }
 
       ctx.restore();
@@ -2105,7 +2105,7 @@ export class Renderer {
       // Trail sprites
       if (slash.trail && sprite && sprite.complete && sprite.naturalWidth > 0) {
         const aspect = sprite.naturalWidth / sprite.naturalHeight;
-        const tHeight = 12 + slash.comboStep * 3;
+        const tHeight = (12 + slash.comboStep * 3) * this.camera.zoom;
         const tWidth = tHeight * aspect;
         const angle = Math.atan2(slash.dirY, slash.dirX);
         for (const t of slash.trail) {
@@ -2122,7 +2122,7 @@ export class Renderer {
         }
       }
 
-      drawGojoM1Sprite(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, sprite);
+      drawGojoM1Sprite(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, sprite, this.camera.zoom);
     }
   }
 
