@@ -334,7 +334,13 @@ function handleEvents(events) {
         audio.play("skillRed");
       }
     } else if (ev.type === "kill" || ev.type === "enemyDeath") {
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff78a0", count: 16, speed: 220, life: 0.33, size: 2.8 });
+      const grade = ev.grade || 3;
+      if (ev.type === "enemyDeath") {
+        const facing = renderer.enemyFacing.get(ev.enemyId) || 1;
+        renderer.addDissolve(ev.enemyType + "_" + ev.x + "_" + ev.y, ev.x, ev.y, ev.enemyType, grade, facing);
+      }
+      if (grade === 1) renderer.triggerScreenShake(3, 0.15);
+      else if (grade === "special") renderer.triggerScreenShake(5, 0.25);
       audio.play("kill");
     } else if (ev.type === "skillBlue") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66c6ff", count: 12, speed: 180, life: 0.24, size: 2.4 });

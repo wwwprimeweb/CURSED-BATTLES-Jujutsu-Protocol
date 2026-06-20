@@ -3282,6 +3282,11 @@ class GameServer {
       entity.y = originalY;
     }
 
+    if (constrained.blocked) {
+      entity.vx = 0;
+      entity.vy = 0;
+    }
+
     if (!instant && entity.kind === "player") {
       entity.vx *= 0.94;
       entity.vy *= 0.94;
@@ -3469,14 +3474,23 @@ class GameServer {
 
     const enemies = [];
     this.enemies.forEach((enemy) => {
+      let svx = Math.round(enemy.vx * 100) / 100;
+      let svy = Math.round(enemy.vy * 100) / 100;
+      if (enemy.state === "frozen" || enemy.state === "pressureBarrier" || enemy.state === "stunned" || enemy.state === "windup") {
+        svx = 0;
+        svy = 0;
+      }
+      if (enemy.type === "staring_beast" && Math.abs(svx) < 5 && Math.abs(svy) > Math.abs(svx) * 6) {
+        svx = 0;
+      }
       enemies.push({
         id: enemy.id,
         type: enemy.type,
         grade: enemy.grade,
         x: Math.round(enemy.x),
         y: Math.round(enemy.y),
-        vx: Math.round(enemy.vx * 100) / 100,
-        vy: Math.round(enemy.vy * 100) / 100,
+        vx: svx,
+        vy: svy,
         attackDirX: enemy.attackDirX || 0,
         attackDirY: enemy.attackDirY || 0,
         hp: Math.round(enemy.hp * 10) / 10,

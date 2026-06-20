@@ -92,6 +92,8 @@ export class Renderer {
     this.acidPuddles = [];
 
     this.monsterSprites = {};
+    this.spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25, staring_beast: 3.5 };
+    this.dissolveEffects = [];
     this.enemyFacing = new Map();
     this.enemyHpVisuals = new Map();
     this._staringEyeOpacity = new Map();
@@ -196,6 +198,77 @@ export class Renderer {
     ctx.stroke();
 
     ctx.restore();
+  }
+
+  addDissolve(id, x, y, type, grade, facing) {
+    const sprite = this.monsterSprites[type];
+    if (!sprite || !sprite.complete || !sprite.naturalWidth) return;
+    const duration = grade === "special" ? 1.2 : grade === 1 ? 0.9 : grade === 2 ? 0.6 : 0.4;
+    const scaleEnd = grade === 3 ? 0.5 : grade === 2 ? 0.4 : 0.3;
+    this.dissolveEffects.push({ id, x, y, type, grade, sprite, timer: duration, duration, scaleEnd, facing: facing || 1 });
+  }
+
+  updateDissolveEffects(dt) {
+    const particles = this.particles;
+    for (let i = this.dissolveEffects.length - 1; i >= 0; i--) {
+      const d = this.dissolveEffects[i];
+      d.timer -= dt;
+      const progress = 1 - d.timer / d.duration;
+      if (progress >= 0 && progress < 1) {
+        const emitRate = d.grade === "special" ? 6 : d.grade === 1 ? 4 : d.grade === 2 ? 2 : 1;
+        const spread = 40 + progress * 80;
+        for (let j = 0; j < emitRate; j++) {
+          if (particles.pool.length === 0) break;
+          const p = particles.pool.pop();
+          p.x = d.x + (Math.random() - 0.5) * spread;
+          p.y = d.y + (Math.random() - 0.5) * spread;
+          p.vx = (Math.random() - 0.5) * 60;
+          p.vy = -(20 + Math.random() * 80);
+          p.life = 0.5 + Math.random() * 0.8;
+          p.maxLife = p.life;
+          p.size = 1.5 + Math.random() * 2;
+          p.color = "rgb(140, 70, 200)";
+          p.borderColor = "#000000";
+          p.borderWidth = 3;
+          p.shape = "circle";
+          p.rotation = 0;
+          p.spin = 0;
+          particles.active.push(p);
+        }
+      }
+      if (d.timer <= 0) {
+        this.dissolveEffects.splice(i, 1);
+      }
+    }
+  }
+
+  drawDissolveEffects() {
+    const ctx = this.ctx;
+    const zoom = this.camera.zoom;
+    for (let i = 0; i < this.dissolveEffects.length; i++) {
+      const d = this.dissolveEffects[i];
+      const progress = 1 - d.timer / d.duration;
+      const easeOut = 1 - Math.pow(progress, 1.5);
+      const alpha = easeOut;
+      const scaleMul = 1 - progress * (1 - d.scaleEnd);
+      const mult = this.spriteScale[d.type] || 1;
+      const baseR = 18;
+      const h = baseR * 2.5 * mult * zoom * scaleMul;
+      const w = h * (d.sprite.naturalWidth / d.sprite.naturalHeight);
+      const p = worldToScreen(this.camera, this.canvas, d.x, d.y);
+      ctx.save();
+      if (d.facing < 0) {
+        ctx.translate(p.x, p.y);
+        ctx.scale(-1, 1);
+        ctx.translate(-p.x, -p.y);
+      }
+      ctx.globalAlpha = alpha;
+      ctx.filter = "grayscale(1) brightness(0.5) contrast(1.3)";
+      ctx.drawImage(d.sprite, p.x - w / 2, p.y - h / 2, w, h);
+      ctx.filter = "none";
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
   }
 
   setMap(map) {
@@ -606,6 +679,8 @@ export class Renderer {
       if (p.life <= 0) this.acidPuddles.splice(i, 1);
     }
 
+    this.updateDissolveEffects(dt);
+
     if (this.shakeIntensity > 0) {
       this.shakeTime += dt;
       if (this.shakeTime >= this.shakeDuration) {
@@ -759,6 +834,7 @@ export class Renderer {
     this.crawlerExplosions = [];
     this.acidPuddles = [];
     this.damageNumbers = [];
+    this.dissolveEffects = [];
     this.gojoVisual.m1Slashes = [];
     this.gojoVisual.effects.projectiles = [];
     this.gojoVisual.effects.beams = [];
@@ -1695,7 +1771,7 @@ export class Renderer {
       }
     }
 
-    const spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25, staring_beast: 3.5 };
+    const spriteScale = this.spriteScale;
     const bobConfig = {
       crawler_nest: { freq: 3, amp: 3, minSpeed: 2 },
       fleshmaw: { freq: 1.5, amp: 2, minSpeed: 3 },
@@ -1732,9 +1808,8 @@ export class Renderer {
         let facing = this.enemyFacing.get(e.id);
         if (Math.abs(e.vx || 0) > 1) facing = (e.vx || 0) > 0 ? -1 : 1;
         if (!facing) facing = 1;
-        if (e.type === "staring_beast") facing *= -1;
         this.enemyFacing.set(e.id, facing);
-        if (facing < 0) {
+        if (e.type === "staring_beast" ? facing > 0 : facing < 0) {
           ctx.translate(p.x, drawY);
           ctx.scale(-1, 1);
           ctx.translate(-p.x, -drawY);
@@ -2550,6 +2625,7 @@ export class Renderer {
       this._players = interpolation.players;
       this._enemies = interpolation.enemies;
       this.drawEnemies(interpolation.enemies);
+      this.drawDissolveEffects();
       this.drawM1PunchEffects();
       this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);

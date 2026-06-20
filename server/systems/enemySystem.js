@@ -115,6 +115,8 @@ class EnemySystem {
             x: enemy.x,
             y: enemy.y,
             enemyType: enemy.type,
+            grade: enemy.grade,
+            enemyId: enemy.id,
           });
         }
         return;
@@ -235,10 +237,15 @@ class EnemySystem {
             const chargeDir = normalize(targetPoint.x - enemy.x, targetPoint.y - enemy.y);
             enemy.vx = chargeDir.x * 400;
             enemy.vy = chargeDir.y * 400;
+            this.server.moveEntityWithCollisions(enemy, enemy.vx * dt, enemy.vy * dt);
+            return;
           } else {
             this.executeAttack(enemy, target, barrierContext);
           }
         }
+        enemy.vx *= 0.82;
+        enemy.vy *= 0.82;
+        this.server.moveEntityWithCollisions(enemy, enemy.vx * dt, enemy.vy * dt);
         return;
       }
 
@@ -267,13 +274,18 @@ class EnemySystem {
         });
       }
 
-      const avoid = this.avoidObstacles(enemy);
+      const avoid = this.avoidObstacles(enemy, targetPoint);
       if (avoid) {
         const currentSpeed = Math.sqrt(enemy.vx ** 2 + enemy.vy ** 2);
-        const blend = currentSpeed > 5 ? 0.55 : 0;
+        const blend = currentSpeed > 5 ? 0.35 : 0;
         if (blend > 0) {
           enemy.vx = enemy.vx * (1 - blend) + avoid.steerX * currentSpeed * blend;
           enemy.vy = enemy.vy * (1 - blend) + avoid.steerY * currentSpeed * blend;
+          const newSpeed = Math.sqrt(enemy.vx ** 2 + enemy.vy ** 2);
+          if (newSpeed > 0.01) {
+            enemy.vx = (enemy.vx / newSpeed) * currentSpeed;
+            enemy.vy = (enemy.vy / newSpeed) * currentSpeed;
+          }
         }
       }
 
@@ -347,6 +359,8 @@ class EnemySystem {
 
     const hit = this.server.findFirstDomainBarrierIntersection(enemy.x, enemy.y, target.x, target.y);
     if (!hit || !hit.domain) return null;
+
+    if (distance(enemy.x, enemy.y, hit.domain.x, hit.domain.y) <= hit.domain.radius) return null;
 
     let dir = normalize(hit.x - enemy.x, hit.y - enemy.y);
     if (dir.len <= 0.0001) {
@@ -707,33 +721,80 @@ class EnemySystem {
     });
   }
 
-  avoidObstacles(enemy) {
+  avoidObstacles(enemy, targetPoint) {
     const obstacles = this.server.map.obstacles;
+    if (!obstacles || obstacles.length === 0) return null;
     const lookDist = 45 + Math.min(enemy.speed * 0.12, 25);
     const spread = 0.35;
 
     const dir = normalize(enemy.vx, enemy.vy);
     if (dir.len < 0.01) return null;
 
-    const angles = [0, spread, -spread];
+    let straightBlocked = false;
+    for (const obs of obstacles) {
+      if (circleIntersectsRect(enemy.x + dir.x * lookDist, enemy.y + dir.y * lookDist, enemy.radius, obs)) {
+        straightBlocked = true;
+        break;
+      }
+    }
+    if (!straightBlocked) return null;
+
+    const angles = [-spread * 1.5, -spread * 0.7, 0, spread * 0.7, spread * 1.5];
+    let bestAngle = null;
+    let bestScore = -Infinity;
+    let fallback = null;
+
+    const targetDir = targetPoint && targetPoint.x != null
+      ? normalize(targetPoint.x - enemy.x, targetPoint.y - enemy.y)
+      : null;
+
     for (const angle of angles) {
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
-      const fx = enemy.x + (dir.x * cos - dir.y * sin) * lookDist;
-      const fy = enemy.y + (dir.x * sin + dir.y * cos) * lookDist;
+      const sx = dir.x * cos - dir.y * sin;
+      const sy = dir.x * sin + dir.y * cos;
+      const fx = enemy.x + sx * lookDist;
+      const fy = enemy.y + sy * lookDist;
 
+      let blocked = false;
       for (const obs of obstacles) {
         if (circleIntersectsRect(fx, fy, enemy.radius, obs)) {
-          const cx = obs.x + obs.w * 0.5;
-          const cy = obs.y + obs.h * 0.5;
-          const dx = enemy.x - cx;
-          const dy = enemy.y - cy;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d > 0.01) return { steerX: dx / d, steerY: dy / d };
+          blocked = true;
+          if (!fallback) {
+            const cx = obs.x + obs.w * 0.5;
+            const cy = obs.y + obs.h * 0.5;
+            const dx = enemy.x - cx;
+            const dy = enemy.y - cy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d > 0.01) fallback = { steerX: dx / d, steerY: dy / d };
+          }
+          break;
+        }
+      }
+
+      if (!blocked) {
+        let score = 0;
+        if (targetDir && targetDir.len > 0.01) {
+          score = sx * targetDir.x + sy * targetDir.y;
+        }
+        score += (1 - Math.abs(angle) / (spread * 1.5)) * 0.3;
+        if (score > bestScore) {
+          bestScore = score;
+          bestAngle = angle;
         }
       }
     }
-    return null;
+
+    if (bestAngle !== null) {
+      const cos = Math.cos(bestAngle);
+      const sin = Math.sin(bestAngle);
+      return {
+        steerX: dir.x * cos - dir.y * sin,
+        steerY: dir.x * sin + dir.y * cos,
+      };
+    }
+
+    return fallback;
   }
 }
 

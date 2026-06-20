@@ -142,6 +142,8 @@ class CombatSystem {
         x: target.x,
         y: target.y,
         enemyType: target.type,
+        grade: target.grade,
+        enemyId: target.id,
       });
     }
 
