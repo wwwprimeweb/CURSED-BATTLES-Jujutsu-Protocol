@@ -9,6 +9,15 @@ function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
+const CHAR_SPRITE = {
+  "o-honrado":          { pw: 40, ph: 65, ox: 0,  cw: 80, ch: 80, rs: 1.7 },
+  "portador-do-vinculo": { pw: 40, ph: 65, ox: 16, cw: 80, ch: 80, rs: 1.7 },
+  "punho-indomavel":    { pw: 40, ph: 65, ox: 0,  cw: 80, ch: 80, rs: 1.9 },
+  "rei-amaldicoado":    { pw: 40, ph: 65, ox: 0,  cw: 80, ch: 80, rs: 1.7 },
+  "invocador-de-sombras": { pw: 40, ph: 65, ox: 0, cw: 80, ch: 80, rs: 1.7 },
+  "lutador-de-sorte":   { pw: 40, ph: 65, ox: 0,  cw: 80, ch: 80, rs: 1.7 },
+};
+
 function worldToScreen(camera, canvas, x, y) {
   const zoom = camera.zoom;
   return {
@@ -85,6 +94,7 @@ export class Renderer {
     this.monsterSprites = {};
     this.enemyFacing = new Map();
     this.enemyHpVisuals = new Map();
+    this._staringEyeOpacity = new Map();
     this._loadMonsterSprite("crawler_nest", "/assets/spritesmonsters/Crawler Nest.png");
     this._loadMonsterSprite("crawler_baby", "/assets/spritesmonsters/Crawler Nest Baby.png");
     this._loadMonsterSprite("staring_beast", "/assets/spritesmonsters/Staring Beast.png");
@@ -1824,8 +1834,14 @@ export class Renderer {
             if (hasTarget) {
               const eyeY = drawY - h / 2 - 25 * zoom + Math.sin(now * 0.005) * 5 * zoom;
               if (this.staringBeastEyeSprite && this.staringBeastEyeSprite.complete && this.staringBeastEyeSprite.naturalWidth > 0) {
-                const eyeSize = 48 * zoom;
-                ctx.drawImage(this.staringBeastEyeSprite, p.x - eyeSize / 2, eyeY - eyeSize / 2, eyeSize, eyeSize);
+                const aspect = this.staringBeastEyeSprite.naturalWidth / this.staringBeastEyeSprite.naturalHeight;
+                const eyeH = 42 * zoom;
+                const eyeW = eyeH * aspect;
+                ctx.save();
+                ctx.shadowColor = "#9933ff";
+                ctx.shadowBlur = 25 * zoom;
+                ctx.drawImage(this.staringBeastEyeSprite, p.x - eyeW / 2, eyeY - eyeH / 2, eyeW, eyeH);
+                ctx.restore();
               } else {
                 this._drawProceduralPurpleEye(ctx, p.x, eyeY, 12 * zoom, now);
               }
@@ -2178,26 +2194,49 @@ export class Renderer {
         const base = nameOffsets[p.character] || 120.5;
 
         if (this._isPlayerInStaringAura(rx, ry)) {
-          const eyeY = sp.y - (base + 15) * zoom + Math.sin(now * 0.005) * 5 * zoom;
+          const eyeY = sp.y - (base + 20) * zoom + Math.sin(now * 0.005) * 5 * zoom;
+          let eyeAlpha = this._staringEyeOpacity.get(p.id) || 0;
+          eyeAlpha = Math.min(1, eyeAlpha + this._renderDt * 4);
+          this._staringEyeOpacity.set(p.id, eyeAlpha);
           if (this.staringBeastEyeSprite && this.staringBeastEyeSprite.complete && this.staringBeastEyeSprite.naturalWidth > 0) {
-            const eyeSize = 40 * zoom;
-            ctx.drawImage(this.staringBeastEyeSprite, sp.x - eyeSize / 2, eyeY - eyeSize / 2, eyeSize, eyeSize);
+            const aspect = this.staringBeastEyeSprite.naturalWidth / this.staringBeastEyeSprite.naturalHeight;
+            const eyeH = 35 * zoom;
+            const eyeW = eyeH * aspect;
+            ctx.save();
+            ctx.globalAlpha = eyeAlpha;
+            ctx.shadowColor = "#9933ff";
+            ctx.shadowBlur = 25 * zoom;
+            ctx.drawImage(this.staringBeastEyeSprite, sp.x - eyeW / 2, eyeY - eyeH / 2, eyeW, eyeH);
+            ctx.restore();
           } else {
+            ctx.save();
+            ctx.globalAlpha = eyeAlpha;
             this._drawProceduralPurpleEye(ctx, sp.x, eyeY, 10 * zoom, now);
+            ctx.restore();
+          }
+        } else {
+          let eyeAlpha = this._staringEyeOpacity.get(p.id) || 0;
+          if (eyeAlpha > 0) {
+            eyeAlpha = Math.max(0, eyeAlpha - this._renderDt * 4);
+            this._staringEyeOpacity.set(p.id, eyeAlpha);
           }
         }
 
-        this._drawStaringSlowVFX(ctx, sp, zoom, now, base);
+        this._drawStaringSlowVFX(ctx, sp, zoom, now, base, p.character);
       }
     });
   }
 
-  _drawStaringSlowVFX(ctx, sp, zoom, now, base) {
+  _drawStaringSlowVFX(ctx, sp, zoom, now, base, character) {
+    const cfg = CHAR_SPRITE[character] || CHAR_SPRITE["o-honrado"];
+    const sprW = cfg.cw * cfg.rs * zoom;
+    const sprH = cfg.ch * cfg.rs * zoom;
     const cx = sp.x;
-    const h = base * zoom;
-    const cy = sp.y - h * 0.35;
-    const topY = cy - h * 0.45;
-    const botY = cy + h * 0.35;
+    const cy = sp.y - cfg.ph * cfg.rs * zoom + sprH / 2;
+    const h = sprH;
+    const topY = cy - h * 0.50;
+    const botY = cy + h * 0.48;
+    const baseAmp = sprW * 0.35;
     const time = now * 0.002;
 
     ctx.save();
@@ -2228,7 +2267,7 @@ export class Renderer {
         const t = j / steps;
         const y = topY + (botY - topY) * t;
         const ampMul = Math.sin(t * Math.PI) * 0.55;
-        const amp = h * (0.18 + 0.07 * Math.sin(time * 0.4 + i)) * ampMul;
+        const amp = (baseAmp + sprW * 0.08 * Math.sin(time * 0.4 + i)) * ampMul;
         const x = cx + Math.sin(t * Math.PI * 3.5 + time + phaseOff) * amp;
         if (j === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -2254,7 +2293,7 @@ export class Renderer {
         const t = j / steps;
         const y = topY + (botY - topY) * t;
         const ampMul = Math.sin(t * Math.PI) * 0.4;
-        const amp = h * (0.12 + 0.05 * Math.sin(time * 0.5 + i * 1.2)) * ampMul;
+        const amp = (sprW * 0.14 + sprW * 0.06 * Math.sin(time * 0.5 + i * 1.2)) * ampMul;
         const x = cx + Math.sin(t * Math.PI * 4 + time * 1.2 + phaseOff) * amp;
         if (j === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -2268,7 +2307,7 @@ export class Renderer {
       const seed = i * 1.37;
       const t = ((i / numParticles) + (time * 0.04) % 1) % 1;
       const y = topY + (botY - topY) * t;
-      const amp = h * 0.16 * Math.sin(t * Math.PI);
+      const amp = sprW * 0.28 * Math.sin(t * Math.PI);
       const x = cx + Math.sin(t * Math.PI * 3.5 + time + seed) * amp + Math.sin(seed * 2.3 + time * 0.5) * 3 * zoom;
       const py = y + Math.sin(seed * 3.1 + time * 1.5) * 2 * zoom;
       const colors = ["#d4a0ff", "#b07cf0", "#e0c0ff", "#c080f0"];

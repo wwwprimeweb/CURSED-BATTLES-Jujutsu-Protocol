@@ -25,3 +25,11 @@ export function playTabSwitchSound(audio) {
 export function playSliderTickSound(audio) {
   audio.syntheticClick(0.02);
 }
+
+export function playProntoSound(audio) {
+  audio.playBuffer("prontoSound", 0.7);
+}
+
+export function playCharacterHoverSound(audio) {
+  audio.playBuffer("characterHoverSound", 0.3);
+}

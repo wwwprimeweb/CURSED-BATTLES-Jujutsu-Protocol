@@ -8,13 +8,15 @@ import { AUDIO_PATHS } from "./audio/audioConfig.js";
 import { Hud } from "./ui/hud.js";
 import { AnimationStateMachine } from "./animations/stateMachine.js";
 import { initCyclingBackground } from "./animations/gifBackground.js";
-import { playHoverSound, playClickSound, playSelectSound, playOpenSound, playCloseSound, playTabSwitchSound, playSliderTickSound } from "./audio/uiSounds.js";
+import { playHoverSound, playClickSound, playSelectSound, playOpenSound, playCloseSound, playTabSwitchSound, playSliderTickSound, playProntoSound, playCharacterHoverSound } from "./audio/uiSounds.js";
 
 const SESSION_KEY = "cursed_battles_session";
 const NICK_KEY = "cursed_battles_nick";
 
 let _lastTremorSound = 0;
 const _prevWindup = new Map();
+let _prevStaringEye = false;
+let _lastStaringEyeSoundAt = 0;
 
 function playSoundIfNear(ev, sound) {
   const px = state.localPred?.x;
@@ -96,6 +98,9 @@ const hud = new Hud();
 const audio = new AudioSystem();
 audio.loadSound(AUDIO_PATHS.domainStart, "domainStart");
 audio.loadSound(AUDIO_PATHS.yutaVoice, "yutaVoice");
+audio.loadSound(AUDIO_PATHS.staringEyeEnter, "staringEyeEnter");
+audio.loadSound(AUDIO_PATHS.prontoSound, "prontoSound");
+audio.loadSound(AUDIO_PATHS.characterHoverSound, "characterHoverSound");
 audio.preloadMusic(AUDIO_PATHS.menuMusic);
 audio.unlock();
 async function resumeOnInteraction(event) {
@@ -729,12 +734,13 @@ function cycleSpectatePrev() {
   updateSpectateTarget();
 }
 
-function start() {
+async function start() {
   closeSettings();
   const nick = (nickInput.value || "Sorcerer").trim().slice(0, 20) || "Sorcerer";
   localStorage.setItem(NICK_KEY, nick);
   audio.setGameActive(true);
-  audio.resume();
+  await audio.resume();
+  playProntoSound(audio);
   audio.stopMusic(300);
 
   const char = state.selectedChar || 'o-honrado';
@@ -819,6 +825,29 @@ function loop(nowMs) {
 
   updateEnemyAttackSounds(interpolation.enemies);
 
+  const localEntry = interpolation.players && interpolation.players.get(state.playerId);
+  if (localEntry) {
+    const p = localEntry.raw;
+    const px = localEntry.x;
+    const py = localEntry.y;
+    const auraRadius = 200;
+    let inAura = false;
+    interpolation.enemies.forEach((entry) => {
+      const e = entry.raw;
+      if (e && e.type === "staring_beast" && e.alive) {
+        if (Math.hypot(px - entry.x, py - entry.y) < auraRadius) {
+          inAura = true;
+        }
+      }
+    });
+    const eyeActive = inAura && (p.staringStacks || 0) > 0;
+    if (eyeActive && !_prevStaringEye && (nowMs - _lastStaringEyeSoundAt) > 2000) {
+      audio.play("staringEyeEnter");
+      _lastStaringEyeSoundAt = nowMs;
+    }
+    _prevStaringEye = eyeActive;
+  }
+
   renderer.render({
     interpolation,
     youId: state.playerId,
@@ -901,7 +930,7 @@ function setAccentColor(charId) {
 }
 
 characterCards.forEach((card) => {
-  card.addEventListener("mouseenter", () => playHoverSound(audio));
+  card.addEventListener("mouseenter", () => playCharacterHoverSound(audio));
   card.addEventListener("click", () => {
     if (card.classList.contains("selected")) return;
     characterCards.forEach((item) => item.classList.remove("selected"));

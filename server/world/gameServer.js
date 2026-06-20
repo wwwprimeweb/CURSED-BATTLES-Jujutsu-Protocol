@@ -751,7 +751,8 @@ class GameServer {
       player.aimX = input.aimX;
       player.aimY = input.aimY;
       const kit = this.getKit(player);
-      const slideSpeed = kit.dashSlash.slideSpeed;
+      const staringSlow = 1 - (player.staringStacks || 0) * 0.10;
+      const slideSpeed = kit.dashSlash.slideSpeed * Math.max(0.2, staringSlow);
       const moveAmount = Math.min(player.dashSlash.remainingDist, slideSpeed * dt);
       this.moveEntityWithCollisions(player, player.dashSlash.dirX * moveAmount, player.dashSlash.dirY * moveAmount);
       player.dashSlash.remainingDist -= moveAmount;
@@ -1127,7 +1128,8 @@ class GameServer {
     player.dodgeCooldown = player.dodgeCooldownBase;
     player.invulnTimer = Math.max(player.invulnTimer, 0.18);
     player.dodgeTimer = 0.2;
-    this.moveEntityWithCollisions(player, dirX * player.dodgeDistance, dirY * player.dodgeDistance, true);
+    const dodgeSlow = Math.max(0.2, 1 - (player.staringStacks || 0) * 0.10);
+    this.moveEntityWithCollisions(player, dirX * player.dodgeDistance * dodgeSlow, dirY * player.dodgeDistance * dodgeSlow, true);
 
     this.emitEventNear(player.x, player.y, {
       type: "dodge",

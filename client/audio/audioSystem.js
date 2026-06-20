@@ -50,10 +50,10 @@ export class AudioSystem {
   }
 
   async resume() {
+    this.enabled = true;
     if (this.ctx && this.ctx.state === "suspended") {
       await this.ctx.resume();
     }
-    this.enabled = true;
     if (this._musicPlayRequested && !this._gameActive) {
       this._musicPlayRequested = false;
       this.playMusic();
@@ -480,6 +480,13 @@ export class AudioSystem {
           this.playBuffer("domainStart", 2.0);
         } else {
           this.tone(100, 0.3, "sine", 0.16);
+        }
+        break;
+      case "staringEyeEnter":
+        if (this.buffers.staringEyeEnter) {
+          this.playBuffer("staringEyeEnter", 0.35);
+        } else {
+          this.tone(120, 0.15, "sawtooth", 0.12);
         }
         break;
       case "crawlerTremor":
