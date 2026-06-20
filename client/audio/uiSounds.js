@@ -33,3 +33,7 @@ export function playProntoSound(audio) {
 export function playCharacterHoverSound(audio) {
   audio.playBuffer("characterHoverSound", 1.0);
 }
+
+export function playSelectCharSound(audio) {
+  audio.playBuffer("selectCharSound", 0.7);
+}

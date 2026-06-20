@@ -8,7 +8,7 @@ import { AUDIO_PATHS } from "./audio/audioConfig.js";
 import { Hud } from "./ui/hud.js";
 import { AnimationStateMachine } from "./animations/stateMachine.js";
 import { initCyclingBackground } from "./animations/gifBackground.js";
-import { playHoverSound, playClickSound, playSelectSound, playOpenSound, playCloseSound, playTabSwitchSound, playSliderTickSound, playProntoSound, playCharacterHoverSound } from "./audio/uiSounds.js";
+import { playHoverSound, playClickSound, playOpenSound, playCloseSound, playTabSwitchSound, playSliderTickSound, playProntoSound, playCharacterHoverSound, playSelectCharSound } from "./audio/uiSounds.js";
 
 const SESSION_KEY = "cursed_battles_session";
 const NICK_KEY = "cursed_battles_nick";
@@ -101,6 +101,7 @@ audio.loadSound(AUDIO_PATHS.yutaVoice, "yutaVoice");
 audio.loadSound(AUDIO_PATHS.staringEyeEnter, "staringEyeEnter");
 audio.loadSound(AUDIO_PATHS.prontoSound, "prontoSound");
 audio.loadSound(AUDIO_PATHS.characterHoverSound, "characterHoverSound");
+audio.loadSound(AUDIO_PATHS.selectCharSound, "selectCharSound");
 audio.preloadMusic(AUDIO_PATHS.menuMusic);
 audio.unlock();
 async function resumeOnInteraction(event) {
@@ -945,7 +946,7 @@ characterCards.forEach((card) => {
     const charId = card.dataset.character;
     state.selectedChar = charId;
     setAccentColor(charId);
-    playSelectSound(audio);
+    playSelectCharSound(audio);
   });
 });
 

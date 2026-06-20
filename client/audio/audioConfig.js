@@ -5,6 +5,7 @@ export const AUDIO_PATHS = {
   staringEyeEnter: "/assets/sounds/staring_eye_enter.mp3",
   prontoSound: "/assets/music/PRONTO.mp3",
   characterHoverSound: "/assets/music/hover%20personagens%20inicio.mp3",
+  selectCharSound: "/assets/music/selecionarpersonageminicio.mp3",
 };
 
 export const AUDIO_DEFAULTS = {

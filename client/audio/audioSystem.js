@@ -16,6 +16,7 @@ export class AudioSystem {
     this._musicPlayRequested = false;
     this._musicDecodedBuffer = null;
     this._gameActive = false;
+    this._activeSources = {};
   }
 
   async unlock() {
@@ -77,15 +78,24 @@ export class AudioSystem {
 
   playBuffer(key, volume = 0.5) {
     if (!this.enabled || !this.ctx || !this.buffers[key]) return;
+
+    if (this._activeSources[key]) {
+      try { this._activeSources[key].stop(); } catch (_) {}
+    }
+
     const source = this.ctx.createBufferSource();
     const gain = this.ctx.createGain();
     source.buffer = this.buffers[key];
     gain.gain.value = volume * this._sfxVol;
     source.connect(gain);
     gain.connect(this.masterGain);
-    try {
-      source.start(0);
-    } catch (_) {}
+
+    this._activeSources[key] = source;
+    source.onended = () => {
+      if (this._activeSources[key] === source) delete this._activeSources[key];
+    };
+
+    try { source.start(0); } catch (_) {}
   }
 
   tone(freq, duration = 0.08, type = "sine", gain = 0.35) {
