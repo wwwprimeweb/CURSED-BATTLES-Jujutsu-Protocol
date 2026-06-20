@@ -87,6 +87,7 @@ export class Renderer {
     this.enemyHpVisuals = new Map();
     this._loadMonsterSprite("crawler_nest", "/assets/spritesmonsters/Crawler Nest.png");
     this._loadMonsterSprite("crawler_baby", "/assets/spritesmonsters/Crawler Nest Baby.png");
+    this._loadMonsterSprite("staring_beast", "/assets/spritesmonsters/Staring Beast.png");
     this.monsterSprites["fleshmaw"] = new Image();
     this.monsterSprites["fleshmaw"].src = "/assets/spritesmonsters/Fleshmaw.png";
     this.fleshmawAttackFrames = [];
@@ -96,6 +97,13 @@ export class Renderer {
       img.src = `/assets/spritesmonsters/fleshmaw_atk_${i}.png`;
       this.fleshmawAttackFrames.push(img);
     }
+    this.staringBeastAttackFrames = [];
+    for (let i = 0; i < 8; i++) {
+      const img = new Image();
+      img.onerror = () => { console.error(`[MONSTER] Failed to load attack frame: staring_beast_atk_${i}.png`); };
+      img.src = `/assets/spritesmonsters/staring_beast_atk_${i}.png`;
+      this.staringBeastAttackFrames.push(img);
+    }
     this.crawlerAttackFrames = [];
     for (let i = 0; i < 18; i++) {
       const img = new Image();
@@ -103,6 +111,8 @@ export class Renderer {
       img.src = `/assets/spritesmonsters/crawler_atk_${i}.png`;
       this.crawlerAttackFrames.push(img);
     }
+    this.staringBeastEyeSprite = new Image();
+    this.staringBeastEyeSprite.src = "/assets/spritesmonsters/staring_beast_eye.png";
 
     this._renderDt = 1 / 60;
     this._lastRenderTime = 0;
@@ -128,6 +138,54 @@ export class Renderer {
     img.onerror = () => { console.error(`[MONSTER] Failed to load: ${path}`); };
     img.src = path;
     if (img.complete) this.monsterSprites[type] = img;
+  }
+
+  _drawProceduralPurpleEye(ctx, x, y, size, now) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const pulse = 1 + Math.sin(now * 0.004) * 0.08;
+    const s = size * pulse;
+
+    ctx.shadowColor = "#9933ff";
+    ctx.shadowBlur = 20 * (s / 10);
+
+    ctx.fillStyle = "rgba(30, 5, 50, 0.85)";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 1.15, s * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s);
+    grad.addColorStop(0, "#e0c0ff");
+    grad.addColorStop(0.4, "#b07cf0");
+    grad.addColorStop(0.8, "#7a3db8");
+    grad.addColorStop(1, "#4a1a7a");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.95, s * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#0a0018";
+    ctx.shadowColor = "#cc66ff";
+    ctx.shadowBlur = 6 * (s / 10);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.18, s * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#ff2060";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.05, s * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#6020a0";
+    ctx.lineWidth = s * 0.1;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 1.15, s * 0.65, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
   }
 
   setMap(map) {
@@ -1092,8 +1150,8 @@ export class Renderer {
               ctx.lineWidth = baseWidth * taper * alpha * z;
               
               ctx.beginPath();
-              ctx.moveTo(p.x + prev.x, p.y + prev.y);
-              ctx.lineTo(p.x + currentX, p.y + currentY);
+              ctx.moveTo(p.x + prev.x * z, p.y + prev.y * z);
+              ctx.lineTo(p.x + currentX * z, p.y + currentY * z);
               ctx.stroke();
               
               acc += actualSeg;
@@ -1487,7 +1545,7 @@ export class Renderer {
           const px = screen.x + Math.cos(angle) * dist;
           const py = screen.y + Math.sin(angle) * dist;
           const alpha = (1 - phase) * 0.5;
-          const sz = (3 + Math.sin(now * 0.005 + i) * 1) * (1 - phase * 0.5);
+          const sz = (3 + Math.sin(now * 0.005 + i) * 1) * (1 - phase * 0.5) * zoom;
           ctx.fillStyle = `rgba(180,230,255,${alpha})`;
           ctx.beginPath();
           ctx.arc(px, py, sz, 0, Math.PI * 2);
@@ -1540,7 +1598,7 @@ export class Renderer {
             const dist = r * (0.1 + t * 0.8);
             const dx2 = px + Math.cos(a) * dist;
             const dy2 = py + Math.sin(a) * dist;
-            const sz = 1.2 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.004) * 1 + 1;
+            const sz = (1.2 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.004) * 1 + 1) * zoom;
             const alpha = 0.35 + Math.sin(vein * 2.1 + d * 1.1 + now * 0.003) * 0.2 + 0.25;
             ctx.fillStyle = `rgba(255,210,220,${alpha})`;
             ctx.beginPath();
@@ -1627,10 +1685,11 @@ export class Renderer {
       }
     }
 
-    const spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25 };
+    const spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25, staring_beast: 3.5 };
     const bobConfig = {
       crawler_nest: { freq: 3, amp: 3, minSpeed: 2 },
       fleshmaw: { freq: 1.5, amp: 2, minSpeed: 3 },
+      staring_beast: { freq: 2, amp: 2, minSpeed: 3 },
     };
 
     enemies.forEach((entry) => {
@@ -1663,6 +1722,7 @@ export class Renderer {
         let facing = this.enemyFacing.get(e.id);
         if (Math.abs(e.vx || 0) > 1) facing = (e.vx || 0) > 0 ? -1 : 1;
         if (!facing) facing = 1;
+        if (e.type === "staring_beast") facing *= -1;
         this.enemyFacing.set(e.id, facing);
         if (facing < 0) {
           ctx.translate(p.x, drawY);
@@ -1728,6 +1788,48 @@ export class Renderer {
             ctx.beginPath();
             ctx.arc(p.x, drawY, h * 0.2, 0, Math.PI * 2);
             ctx.fill();
+          }
+        }
+
+        if (e.type === "staring_beast") {
+          if (e.windupTimer > 0) {
+            const progress = 1 - Math.max(0, e.windupTimer) / (e.attackWindup || 0.5);
+            const frameIdx = Math.min(7, Math.floor(progress * 8));
+            const atkSprite = this.staringBeastAttackFrames[frameIdx];
+            const atkMlen = Math.sqrt((e.attackDirX || 0) * (e.attackDirX || 0) + (e.attackDirY || 0) * (e.attackDirY || 0));
+            const dirX = atkMlen > 0.01 ? (e.attackDirX || 0) / atkMlen : (facing < 0 ? 1 : -1);
+            const dirY = atkMlen > 0.01 ? (e.attackDirY || 0) / atkMlen : 0.01;
+            if (atkSprite && atkSprite.naturalWidth > 0) {
+              const atkSize = h * 0.7;
+              ctx.save();
+              ctx.translate(p.x, drawY + h * 0.2);
+              if (dirX < 0) ctx.scale(-1, 1);
+              ctx.rotate(Math.atan2(dirY, Math.abs(dirX || 0.01)));
+              ctx.translate(atkSize * 0.5, 0);
+              ctx.drawImage(atkSprite, -atkSize / 2, -atkSize / 2, atkSize, atkSize);
+              ctx.restore();
+            } else if (atkSprite) {
+              ctx.fillStyle = "rgba(160, 80, 255, 0.7)";
+              ctx.beginPath();
+              ctx.arc(p.x, drawY + h * 0.2, h * 0.3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          if (this._players) {
+            const hasTarget = [...this._players.values()].some(entry => {
+              const pl = entry.raw;
+              return pl.alive && Math.hypot(e.x - pl.x, e.y - pl.y) < 200;
+            });
+            if (hasTarget) {
+              const eyeY = drawY - h / 2 - 25 * zoom + Math.sin(now * 0.005) * 5 * zoom;
+              if (this.staringBeastEyeSprite && this.staringBeastEyeSprite.complete && this.staringBeastEyeSprite.naturalWidth > 0) {
+                const eyeSize = 48 * zoom;
+                ctx.drawImage(this.staringBeastEyeSprite, p.x - eyeSize / 2, eyeY - eyeSize / 2, eyeSize, eyeSize);
+              } else {
+                this._drawProceduralPurpleEye(ctx, p.x, eyeY, 12 * zoom, now);
+              }
+            }
           }
         }
       } else {
@@ -2064,7 +2166,140 @@ export class Renderer {
         ctx.setLineDash([]);
         ctx.restore();
       }
+
+      if (p.staringStacks > 0) {
+        const sp = worldToScreen(this.camera, this.canvas, rx, ry);
+        const zoom = this.camera.zoom;
+        const nameOffsets = {
+          "rei-amaldicoado": 70, "invocador-de-sombras": 70, "lutador-de-sorte": 70,
+          "o-honrado": 120.5, "portador-do-vinculo": 120.5,
+          "punho-indomavel": 133.5,
+        };
+        const base = nameOffsets[p.character] || 120.5;
+
+        if (this._isPlayerInStaringAura(rx, ry)) {
+          const eyeY = sp.y - (base + 15) * zoom + Math.sin(now * 0.005) * 5 * zoom;
+          if (this.staringBeastEyeSprite && this.staringBeastEyeSprite.complete && this.staringBeastEyeSprite.naturalWidth > 0) {
+            const eyeSize = 40 * zoom;
+            ctx.drawImage(this.staringBeastEyeSprite, sp.x - eyeSize / 2, eyeY - eyeSize / 2, eyeSize, eyeSize);
+          } else {
+            this._drawProceduralPurpleEye(ctx, sp.x, eyeY, 10 * zoom, now);
+          }
+        }
+
+        this._drawStaringSlowVFX(ctx, sp, zoom, now, base);
+      }
     });
+  }
+
+  _drawStaringSlowVFX(ctx, sp, zoom, now, base) {
+    const cx = sp.x;
+    const h = base * zoom;
+    const cy = sp.y - h * 0.35;
+    const topY = cy - h * 0.45;
+    const botY = cy + h * 0.35;
+    const time = now * 0.002;
+
+    ctx.save();
+
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, h * 0.55);
+    grad.addColorStop(0, "rgba(100, 40, 170, 0.06)");
+    grad.addColorStop(0.5, "rgba(70, 25, 130, 0.04)");
+    grad.addColorStop(1, "rgba(30, 5, 60, 0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, h * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+
+    const ribbonColors = ["#b07cf0", "#8a4fd0", "#6a2ab0"];
+    for (let i = 0; i < 3; i++) {
+      const phaseOff = (i / 3) * Math.PI * 2;
+      ctx.save();
+      ctx.shadowColor = "#9933ff";
+      ctx.shadowBlur = 10 * zoom;
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = ribbonColors[i];
+      ctx.lineWidth = 3 * zoom;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      const steps = 40;
+      for (let j = 0; j <= steps; j++) {
+        const t = j / steps;
+        const y = topY + (botY - topY) * t;
+        const ampMul = Math.sin(t * Math.PI) * 0.55;
+        const amp = h * (0.18 + 0.07 * Math.sin(time * 0.4 + i)) * ampMul;
+        const x = cx + Math.sin(t * Math.PI * 3.5 + time + phaseOff) * amp;
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const innerColors = ["#d4a0ff", "#c080f0", "#b060e0"];
+    for (let i = 0; i < 3; i++) {
+      const phaseOff = (i / 3) * Math.PI * 2 + 0.5;
+      ctx.save();
+      ctx.shadowColor = "#b07cf0";
+      ctx.shadowBlur = 6 * zoom;
+      ctx.globalAlpha = 0.2;
+      ctx.strokeStyle = innerColors[i];
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      const steps = 30;
+      for (let j = 0; j <= steps; j++) {
+        const t = j / steps;
+        const y = topY + (botY - topY) * t;
+        const ampMul = Math.sin(t * Math.PI) * 0.4;
+        const amp = h * (0.12 + 0.05 * Math.sin(time * 0.5 + i * 1.2)) * ampMul;
+        const x = cx + Math.sin(t * Math.PI * 4 + time * 1.2 + phaseOff) * amp;
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const numParticles = 10;
+    for (let i = 0; i < numParticles; i++) {
+      const seed = i * 1.37;
+      const t = ((i / numParticles) + (time * 0.04) % 1) % 1;
+      const y = topY + (botY - topY) * t;
+      const amp = h * 0.16 * Math.sin(t * Math.PI);
+      const x = cx + Math.sin(t * Math.PI * 3.5 + time + seed) * amp + Math.sin(seed * 2.3 + time * 0.5) * 3 * zoom;
+      const py = y + Math.sin(seed * 3.1 + time * 1.5) * 2 * zoom;
+      const colors = ["#d4a0ff", "#b07cf0", "#e0c0ff", "#c080f0"];
+      const col = colors[i % colors.length];
+      const size = (1.5 + Math.sin(seed * 4.3 + time * 2) * 0.5) * zoom;
+      const alpha = 0.35 + 0.3 * ((Math.sin(seed * 5 + time * 3) * 0.5 + 0.5));
+
+      ctx.save();
+      ctx.shadowColor = "#b07cf0";
+      ctx.shadowBlur = 8 * zoom;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(x, py, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  _isPlayerInStaringAura(wx, wy) {
+    if (!this._enemies) return false;
+    let inRange = false;
+    this._enemies.forEach((entry) => {
+      const e = entry.raw;
+      if (e.type === "staring_beast" && Math.hypot(e.x - wx, e.y - wy) < 200) {
+        inRange = true;
+      }
+    });
+    return inRange;
   }
 
   _getERImg(character) {
@@ -2273,6 +2508,8 @@ export class Renderer {
       this.drawProjectiles(interpolation.projectiles);
       this.renderPurpleCharges(this.ctx, this.camera);
       this.renderPurpleExplosions(this.ctx, this.camera);
+      this._players = interpolation.players;
+      this._enemies = interpolation.enemies;
       this.drawEnemies(interpolation.enemies);
       this.drawM1PunchEffects();
       this.drawPlayers(interpolation.players, youId, localPred);

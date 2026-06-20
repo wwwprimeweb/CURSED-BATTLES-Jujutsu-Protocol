@@ -427,6 +427,9 @@ class GameServer {
       player.invulnTimer = 0;
       player.stunTimer = 0;
       player.hitFlash = 0;
+      player.staringStacks = 0;
+      player.staringAccumTimer = 0;
+      player.staringDecayTimer = 0;
       player.comboStep = 0;
       player.comboResetTimer = 0;
       player.m1Timer = 0;
@@ -900,7 +903,8 @@ class GameServer {
     const yujiOwnDomainSpeedMul = this.isYujiInsideOwnDomain(player)
       ? YUJI_OWN_DOMAIN_SPEED_MULTIPLIER
       : 1;
-    const moveSpeed = player.moveSpeed * player.modifiers.speedMul * yujiOwnDomainSpeedMul * castSlow * domainSlow;
+    const staringSlow = 1 - (player.staringStacks || 0) * 0.10;
+    const moveSpeed = player.moveSpeed * player.modifiers.speedMul * yujiOwnDomainSpeedMul * castSlow * domainSlow * staringSlow;
     if (isBeatdownCasting) {
       player.vx = 0;
       player.vy = 0;
@@ -3457,6 +3461,7 @@ class GameServer {
         pureLoveTotalLifetime: (() => { const b = this.pureLoveBeams.get(player.id); return b ? b.totalLifetime : undefined; })(),
         aimX: Math.round(player.aimX),
         aimY: Math.round(player.aimY),
+        staringStacks: player.staringStacks || 0,
       });
     });
 
@@ -4213,6 +4218,7 @@ class GameServer {
             almaAbaladaTimer: Number((player.almaAbaladaTimer || 0).toFixed(1)),
             rikaBuffTime: Number((player.rikaBuffTime || 0).toFixed(1)),
             domainExhaustionTimer: Number((player.domainExhaustionTimer || 0).toFixed(1)),
+            staringStacks: player.staringStacks || 0,
             energyRecoveryTime: (() => {
               if (player.cast && player.cast.type === "domain") return 0;
               if (this.domainSystem.hasActiveDomain(player.id)) return 0;
@@ -4292,6 +4298,7 @@ class GameServer {
             almaAbaladaTimer: Number((player.almaAbaladaTimer || 0).toFixed(1)),
             rikaBuffTime: Number((player.rikaBuffTime || 0).toFixed(1)),
             domainExhaustionTimer: Number((player.domainExhaustionTimer || 0).toFixed(1)),
+            staringStacks: player.staringStacks || 0,
             energyRecoveryTime: (() => {
               if (player.cast && player.cast.type === "domain") return 0;
               if (this.domainSystem.hasActiveDomain(player.id)) return 0;

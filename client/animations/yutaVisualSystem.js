@@ -576,7 +576,7 @@ export class YutaVisualSystem {
           let bobY = 0;
           if (summon.timer >= appearEnd && summon.timer < loopEnd) {
             const loopElapsed = summon.timer - appearEnd;
-            bobY = Math.sin(this.time * 4 + loopElapsed * 2) * 4;
+            bobY = Math.sin(this.time * 4 + loopElapsed * 2) * 4 * zoom;
           }
 
           if (alpha > 0.01) {
@@ -883,8 +883,8 @@ export class YutaVisualSystem {
 
         const fadeOut = Math.max(0, 1 - atkProgress * 1.3);
         if (this.yutaSprite.rikaSprite && fadeOut > 0.01) {
-          const swayX = impactX + Math.sin(this.time * 8) * 6;
-          const swayY = impactY + Math.abs(Math.sin(this.time * 7)) * -12;
+          const swayX = impactX + Math.sin(this.time * 8) * 6 * z;
+          const swayY = impactY + Math.abs(Math.sin(this.time * 7)) * -12 * z;
           ctx.save();
           ctx.globalAlpha = fadeOut;
           ctx.shadowColor = "#ff66b2";

@@ -70,6 +70,7 @@ const BUFF_DEFS = {
   rikaBuffTime: { label: "RIK", name: "Rika Ativa", type: "buff" },
   domainExhaustionTimer: { label: "DOM", name: "Exaustão de Domínio", type: "debuff" },
   energyRecoveryTime: { label: "REC", name: "Recuperação de Energia", type: "buff" },
+  staringStacks: { label: "OLH", name: "Olhar do Staring Beast", type: "debuff" },
 };
 
 function clamp(value, min, max) {
@@ -1003,14 +1004,16 @@ export class Hud {
           key === "almaAbaladaTimer" ? Math.min(val / 3 * 100, 100) :
           key === "stunTimer" ? Math.min(val / 0.5 * 100, 100) :
           key === "domainExhaustionTimer" ? Math.min(val / 60 * 100, 100) :
-          key === "energyRecoveryTime" ? 100 : 50;
+          key === "energyRecoveryTime" ? 100 :
+          key === "staringStacks" ? Math.min(val / 5 * 100, 100) : 50;
+        const text = key === "staringStacks" ? `${val}x` : `${val.toFixed(1)}s`;
         return `
           <div class="buff-item" data-key="${key}">
             <div class="buff-icon is-${def.type}">
               ${def.label}
               <div class="buff-timer-fill" style="width:${pct}%"></div>
             </div>
-            <span class="buff-timer-text">${val.toFixed(1)}s</span>
+            <span class="buff-timer-text">${text}</span>
           </div>
         `;
       })

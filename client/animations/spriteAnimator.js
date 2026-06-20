@@ -66,7 +66,7 @@ export class SpriteAnimator {
 
     const effectivePivotX = this.config.pivotX - (this.config.offsetX || 0);
     const dx = x - effectivePivotX * renderScale;
-    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 40) * 2 : 0;
+    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 40) * 2 * renderScale : 0;
     const dy = y - this.config.pivotY * renderScale + bobY;
     const dw = sw * renderScale;
     const dh = sh * renderScale;

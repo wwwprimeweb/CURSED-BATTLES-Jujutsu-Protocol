@@ -231,7 +231,7 @@ export class YujiVisualSystem {
     if (animState !== "idle" && animState !== "death" && animState !== "walk" && animState !== "run") {
       const isMoving = Math.abs(p.vx) > 5 || Math.abs(p.vy) > 5;
       if (isMoving) {
-        drawY += Math.sin(this.time * 40) * 4;
+        drawY += Math.sin(this.time * 40) * 4 * zoom;
       }
     }
 

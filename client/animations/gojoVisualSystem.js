@@ -120,7 +120,7 @@ export class GojoVisualSystem {
     if (animState === "dash") {
       if (this.dashImage.complete && this.dashImage.naturalWidth > 0) {
         const targetSize = 105 * spriteScale;
-        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 50, facing, targetSize);
+        this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 50 * zoom, facing, targetSize);
       }
       if (p.alive) {
         ctx.fillStyle = "#dce9ff";
@@ -139,7 +139,7 @@ export class GojoVisualSystem {
       const img = this.domainPrepFrames[4];
       if (img && img.complete && img.naturalWidth > 0) {
         const targetSize = 96 * spriteScale;
-        this.drawSprite(ctx, img, pos.x, pos.y - 54, facing, targetSize);
+        this.drawSprite(ctx, img, pos.x, pos.y - 54 * zoom, facing, targetSize);
       }
       if (p.alive) {
         ctx.fillStyle = "#dce9ff";

@@ -162,7 +162,7 @@ export class YutaSpriteRenderer {
 
   renderRika(ctx, x, y, facing = 1, floatPhase = 0, floatAmp = 2.2, _scale = 1) {
     const scale = Number.isFinite(_scale) ? _scale : 1;
-    const hover = floatAmp > 0 ? Math.sin(this.walkTime * 3.1 + floatPhase) * floatAmp : 0;
+    const hover = floatAmp > 0 ? Math.sin(this.walkTime * 3.1 + floatPhase) * floatAmp * scale : 0;
     const finalY = y + hover;
     if (this.rikaSprite) {
       this.drawSprite(ctx, this.rikaSprite, x, finalY, facing, RIKA_SIZE * scale);

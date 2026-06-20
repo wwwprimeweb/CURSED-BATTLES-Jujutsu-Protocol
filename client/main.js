@@ -51,6 +51,7 @@ const startScreen = document.getElementById("start-screen");
 const playBtn = document.getElementById("play-btn");
 const nickInput = document.getElementById("nick-input");
 const characterCards = document.querySelectorAll(".character-card[data-character]");
+const characterGrid = document.querySelector(".character-grid");
 
 const menuBg = document.getElementById("menu-bg");
 if (menuBg) {
@@ -617,7 +618,7 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6d94", count: 26, speed: 300, life: 0.5, size: 3.2 });
       hud.pushNotice("Boss apareceu", "danger", "perigo no centro da arena");
     } else if (ev.type === "telegraph") {
-      if (ev.radius < 250 && ev.enemyType !== "fleshmaw") {
+      if (ev.radius < 250 && ev.enemyType !== "fleshmaw" && ev.enemyType !== "staring_beast") {
         renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 70, color: "rgba(255,140,180,0.5)", ttl: 0.45 });
       }
     } else if (ev.type === "bossSlamTelegraph") {
@@ -914,12 +915,63 @@ characterCards.forEach((card) => {
   });
 });
 
-nickInput.value = localStorage.getItem(NICK_KEY) || "";
-nickInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    start();
+document.addEventListener("keydown", (e) => {
+  if (!startScreen.classList.contains("visible")) return;
+  if (e.target === nickInput) return;
+  if (e.key === "Enter") {
+    if (e.target.closest(".character-card")) {
+      setTimeout(() => start(), 0);
+    } else {
+      start();
+    }
+    return;
   }
+
+  const cards = [...characterCards];
+  const current = cards.find((c) => c === document.activeElement) || cards.find((c) => c.classList.contains("selected"));
+  const idx = current ? cards.indexOf(current) : -1;
+
+  let targetIdx = -1;
+  const GRID_COLS = 3;
+  const totalRows = Math.ceil(cards.length / GRID_COLS);
+  const row = idx >= 0 ? Math.floor(idx / GRID_COLS) : -1;
+  const col = idx >= 0 ? idx % GRID_COLS : -1;
+
+  switch (e.key) {
+    case "ArrowRight":
+      if (idx >= 0 && col < GRID_COLS - 1) { targetIdx = idx + 1; }
+      else if (idx < 0) { targetIdx = 0; }
+      break;
+    case "ArrowLeft":
+      if (idx >= 0 && col > 0) { targetIdx = idx - 1; }
+      else if (idx < 0) { targetIdx = cards.length - 1; }
+      else { targetIdx = idx; }
+      break;
+    case "ArrowDown":
+      if (idx >= 0 && row < totalRows - 1) { targetIdx = idx + GRID_COLS; }
+      else if (idx < 0) { targetIdx = 0; }
+      break;
+    case "ArrowUp":
+      if (idx >= 0 && row > 0) { targetIdx = idx - GRID_COLS; }
+      else if (idx < 0) { targetIdx = 0; }
+      break;
+    case "Home":
+      targetIdx = 0;
+      break;
+    case "End":
+      targetIdx = cards.length - 1;
+      break;
+    default:
+      return;
+  }
+
+  e.preventDefault();
+  const clamped = Math.min(targetIdx, cards.length - 1);
+  cards[clamped].focus();
+  cards[clamped].click();
 });
+
+nickInput.value = localStorage.getItem(NICK_KEY) || "";
 
 document.addEventListener("keydown", (event) => {
   if (!state.spectating) return;

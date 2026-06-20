@@ -295,6 +295,49 @@ class EnemySystem {
 
       this.server.moveEntityWithCollisions(enemy, enemy.vx * dt, enemy.vy * dt);
     });
+
+    this.updateStaringAura(dt);
+  }
+
+  updateStaringAura(dt) {
+    const AURA_RANGE = 200;
+    const ACCUM_INTERVAL = 0.8;
+    const DECAY_INTERVAL = 0.3;
+    const MAX_STACKS = 5;
+
+    const affectedPlayers = new Set();
+
+    this.server.enemies.forEach((enemy) => {
+      if (!enemy.alive || enemy.type !== "staring_beast") return;
+      this.server.players.forEach((player) => {
+        if (!player.alive) return;
+        const d = distance(enemy.x, enemy.y, player.x, player.y);
+        if (d <= AURA_RANGE + player.radius) {
+          affectedPlayers.add(player.id);
+        }
+      });
+    });
+
+    this.server.players.forEach((player) => {
+      if (!player.alive) return;
+      if (affectedPlayers.has(player.id)) {
+        player.staringDecayTimer = 0;
+        player.staringAccumTimer += dt;
+        if (player.staringAccumTimer >= ACCUM_INTERVAL) {
+          player.staringStacks = Math.min(MAX_STACKS, (player.staringStacks || 0) + 1);
+          player.staringAccumTimer = 0;
+        }
+      } else {
+        player.staringAccumTimer = 0;
+        if (player.staringStacks > 0) {
+          player.staringDecayTimer += dt;
+          if (player.staringDecayTimer >= DECAY_INTERVAL) {
+            player.staringStacks = Math.max(0, (player.staringStacks || 0) - 1);
+            player.staringDecayTimer = 0;
+          }
+        }
+      }
+    });
   }
 
   getDomainBarrierContext(enemy, target) {

@@ -420,6 +420,11 @@ input {
 .character-card[data-character="invocador-de-sombras"] { --char-color: var(--invocador-de-sombras); }
 .character-card[data-character="lutador-de-sorte"] { --char-color: var(--lutador-de-sorte); }
 
+.character-card:focus-visible {
+  outline: 2px solid var(--char-color, var(--accent));
+  outline-offset: 3px;
+}
+
 @keyframes cardFadeIn {
   from { opacity: 0; translate: 0 30px; }
   to   { opacity: 1; translate: 0 0; }
@@ -433,6 +438,71 @@ input {
 @keyframes iconGlowPulse {
   0%, 100% { box-shadow: 0 0 20px var(--char-color, transparent); }
   50%      { box-shadow: 0 0 40px var(--char-color, transparent), 0 0 80px var(--char-color, transparent); }
+}
+
+/* =========================================================================
+   START SCREEN – RESPONSIVE
+   ========================================================================= */
+@media (max-width: 860px) {
+  .menu-top {
+    flex-direction: column;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .join-section {
+    width: 100%;
+  }
+  .logo-section {
+    padding-left: 0;
+    text-align: center;
+  }
+  .logo-section::before {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .character-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .menu-shell {
+    gap: 20px;
+  }
+  .section-title {
+    text-align: center;
+    font-size: 0.7rem;
+  }
+  .char-icon, .char-icon-img {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .character-card {
+    padding: 14px 10px 10px;
+    gap: 6px;
+  }
+  .char-icon, .char-icon-img {
+    width: 52px;
+    height: 52px;
+  }
+  .char-name {
+    font-size: 0.65rem;
+  }
+  .character-card.selected .char-name {
+    font-size: 0.7rem;
+  }
+  #start-screen {
+    padding: 16px;
+  }
+  #settings-gear {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
 }
 
 /* === HUD STYLES === */
