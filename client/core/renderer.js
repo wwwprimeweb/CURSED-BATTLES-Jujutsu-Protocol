@@ -1386,12 +1386,28 @@ export class Renderer {
     const activeOwnerIds = new Set();
     const z = this.camera.zoom;
 
+    const renderList = [];
     domains.forEach((entry) => {
-      const d = entry.raw;
-      const ownerId = d.ownerId;
-      activeOwnerIds.add(ownerId);
+      activeOwnerIds.add(entry.raw.ownerId);
+      renderList.push({ ownerId: entry.raw.ownerId, x: entry.x, y: entry.y, d: entry.raw });
+    });
 
-      const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
+    this.domainVisual.expanding.forEach((visEntry, ownerId) => {
+      if (!activeOwnerIds.has(ownerId)) {
+        renderList.push({ 
+           ownerId, 
+           x: visEntry.x, 
+           y: visEntry.y, 
+           d: { ownerId, radius: visEntry.targetRadius || 400, barrierMaxHp: 0, barrierHp: 0 } 
+        });
+      }
+    });
+
+    renderList.forEach((item) => {
+      const ownerId = item.ownerId;
+      const d = item.d;
+
+      const p = worldToScreen(this.camera, this.canvas, item.x, item.y);
       const isMine = ownerId === youId;
 
       const targetR = d.radius;
@@ -1410,7 +1426,7 @@ export class Renderer {
         char = "o-honrado";
       }
       try {
-        this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, entry.x, entry.y, p, vz, z, expandProgress, isMine, now, d);
+        this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, item.x, item.y, p, vz, z, expandProgress, isMine, now, d);
       } catch (e) {
         console.error("renderParallax call failed:", e);
       }
@@ -1453,8 +1469,8 @@ export class Renderer {
 
       const cx = localPred ? localPred.x : (you ? you.x : 0);
       const cy = localPred ? localPred.y : (you ? you.y : 0);
-      const ddx = cx - entry.x;
-      const ddy = cy - entry.y;
+      const ddx = cx - item.x;
+      const ddy = cy - item.y;
       if (ddx * ddx + ddy * ddy <= d.radius * d.radius) {
         insideDomain = true;
       }
@@ -2671,6 +2687,9 @@ export class Renderer {
       this.ctx.save();
       this.drawDomainPrivacy(interpolation.domains, you, localPred, this.canvas.clientWidth, this.canvas.clientHeight);
       this.ctx.restore();
+      
+      // Draw Domain Entry Effects (Flash, Typography) over everything
+      this.domainVisual.drawEntryEffects(this.ctx, this.camera, this.canvas);
     }
   }
 

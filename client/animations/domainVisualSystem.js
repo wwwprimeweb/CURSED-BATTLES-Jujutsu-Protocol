@@ -9,7 +9,7 @@ const CHAR_COLORS = {
   "lutador-de-sorte": [170, 68, 255],
 };
 
-const EXPAND_DURATION = 1.2;
+const EXPAND_DURATION = 1.6;
 const SHATTER_DURATION = 0.7;
 
 const LAYER_SCALE = {
@@ -80,10 +80,50 @@ export class DomainVisualSystem {
   update(dt) {
     this.rotationTime += dt;
     const now = performance.now();
+    
+    // Transição de pre-shatter para shattering
+    this.expanding.forEach((entry, ownerId) => {
+      if (entry.collapseStartTime) {
+         const age = (now - entry.collapseStartTime) / 1000;
+         if (age >= 1.3) {
+            const radius = entry.targetRadius || 400;
+            const shards = this.generateShards(radius);
+            this.shattering.push({
+               x: entry.x,
+               y: entry.y,
+               radius,
+               shards,
+               startTime: performance.now(),
+               character: entry.character,
+               offscreenCanvas: this.captureDomainSnapshot(entry),
+               ownerId: ownerId,
+            });
+            this.expanding.delete(ownerId);
+            this.parallaxData.delete(ownerId);
+         }
+      }
+    });
+
     for (let i = this.shattering.length - 1; i >= 0; i--) {
-      const age = (now - this.shattering[i].startTime) / 1000;
-      if (age >= SHATTER_DURATION) {
+      const entry = this.shattering[i];
+      const age = (now - entry.startTime) / 1000;
+      
+      // SHATTER_DURATION * 3.0 para cacos flutuantes
+      if (age >= SHATTER_DURATION * 3.0) {
         this.shattering.splice(i, 1);
+        continue;
+      }
+      
+      for (const shard of entry.shards) {
+        const shardDuration = SHATTER_DURATION * (shard.lifeScale || 1.0);
+        const life = 1 - (age / shardDuration);
+        
+        shard.vy += (shard.gravity || 0) * dt; 
+        
+        shard.offsetX += shard.vx * dt;
+        shard.offsetY += shard.vy * dt;
+        shard.rot += shard.rotSpeed * dt;
+        shard.alpha = Math.max(0, Math.min(1, life));
       }
     }
   }
@@ -200,66 +240,80 @@ export class DomainVisualSystem {
 
   onDomainCollapse(ev) {
     const entry = this.expanding.get(ev.ownerId);
-    const radius = ev.radius || (entry ? entry.targetRadius : 100);
-    const x = ev.x;
-    const y = ev.y;
-    const character = this.getCharacter(ev.ownerId);
+    if (!entry) return;
 
-    this.expanding.delete(ev.ownerId);
-    this.parallaxData.delete(ev.ownerId);
-
-    const shards = this.generateShards(radius);
-
-    this.shattering.push({
-      x,
-      y,
-      radius,
-      shards,
-      startTime: performance.now(),
-      character,
-      offscreenCanvas: null,
-      ownerId: ev.ownerId,
-    });
+    entry.collapseStartTime = performance.now();
+    
+    // Generate edge-to-edge and center-out sequential cracks for the 1.3s pre-shatter phase
+    entry.cracks = [];
+    const numCracks = 16;
+    const radius = ev.radius || entry.targetRadius || 400;
+    
+    for(let i=0; i<numCracks; i++) {
+       const points = [];
+       const isEdge = Math.random() > 0.4;
+       const startDist = isEdge ? radius : Math.random() * radius * 0.4;
+       const startAngle = Math.random() * Math.PI * 2;
+       
+       let cx = Math.cos(startAngle) * startDist;
+       let cy = Math.sin(startAngle) * startDist;
+       const targetAngle = startAngle + Math.PI + (Math.random() - 0.5) * 1.5;
+       
+       let len = 0;
+       const maxLen = radius * 2.5;
+       while(len < maxLen) {
+           points.push({x: cx, y: cy});
+           const step = 10 + Math.random() * 30; // Mais pontos, rachaduras mais detalhadas
+           const a = targetAngle + (Math.random() - 0.5) * 1.8; // Desvios mais bruscos
+           cx += Math.cos(a) * step;
+           cy += Math.sin(a) * step;
+           len += step;
+       }
+       
+       // Distribuição exponencial: começam poucas e depois aceleram muito no final
+       const timeP = Math.pow(i / numCracks, 1.5); 
+       const appearTime = timeP * 1.0; 
+       const duration = 0.1 + Math.random() * 0.15; // Velocidades de 'rasgo' variadas
+       
+       entry.cracks.push({ points, appearTime, duration });
+    }
   }
 
   generateShards(radius) {
-    const numShards = 12 + Math.floor(Math.random() * 9);
     const shards = [];
-    const angles = [];
-
-    let cumulative = 0;
+    const numShards = 150 + Math.random() * 50; // Quantidade massiva
+    
     for (let i = 0; i < numShards; i++) {
-      cumulative += (Math.PI * 2 / numShards) * (0.5 + Math.random() * 1.0);
-      angles.push(cumulative);
-    }
-    const total = angles[angles.length - 1] || Math.PI * 2;
-    for (let i = 0; i < angles.length; i++) {
-      angles[i] = (angles[i] / total) * Math.PI * 2;
-    }
-
-    let prevAngle = 0;
-    for (let i = 0; i < numShards; i++) {
-      const startAngle = prevAngle;
-      const endAngle = angles[i];
-      prevAngle = endAngle;
-      const midAngle = (startAngle + endAngle) / 2;
-      const angleSpan = endAngle - startAngle;
-      const numVerts = 4 + Math.floor(Math.random() * 3);
+      // Posição base do caco
+      const distFromCenter = Math.sqrt(Math.random()) * radius * 0.9;
+      const angleFromCenter = Math.random() * Math.PI * 2;
+      const cx = Math.cos(angleFromCenter) * distFromCenter;
+      const cy = Math.sin(angleFromCenter) * distFromCenter;
+      
+      // Apenas tamanhos pequenos a minúsculos (sem pedaços grandes)
+      const sizeBase = (radius / 15) + Math.random() * (radius / 20);
+      const size = sizeBase * (0.2 + Math.random() * 0.8);
+      
       const vertices = [];
-
-      for (let j = 0; j < numVerts; j++) {
-        const t = j / (numVerts - 1);
-        const angle = startAngle + angleSpan * t + (Math.random() - 0.5) * angleSpan * 0.3;
-        const radFrac = 0.15 + Math.random() * 0.85;
-        const r = radius * radFrac;
+      // Formatos completamente irregulares e diferentes (de 3 a 8 pontas)
+      const numVerts = 3 + Math.floor(Math.random() * 6);
+      let currentAngle = 0;
+      for (let v = 0; v < numVerts; v++) {
+        currentAngle += (Math.PI * 2 / numVerts) * (0.3 + Math.random() * 1.4);
+        const dist = size * (0.2 + Math.random() * 1.2); // Pontas muito irregulares
         vertices.push({
-          x: Math.cos(angle) * r,
-          y: Math.sin(angle) * r,
+          x: cx + Math.cos(currentAngle) * dist,
+          y: cy + Math.sin(currentAngle) * dist
         });
       }
 
-      const dirAngle = midAngle + (Math.random() - 0.5) * 0.5;
-      const speed = 100 + Math.random() * 250;
+      // Físicas variadas
+      const isFloater = Math.random() > 0.45;
+      const gravity = isFloater ? -10 - Math.random() * 140 : 100 + Math.random() * 800;
+      const lifeScale = isFloater ? 1.0 + Math.random() * 2.0 : 0.1 + Math.random() * 0.8;
+      
+      const dirAngle = angleFromCenter + (Math.random() - 0.5) * 4.0;
+      const speed = isFloater ? 5 + Math.random() * 60 : 50 + Math.random() * 200;
 
       shards.push({
         vertices,
@@ -267,12 +321,14 @@ export class DomainVisualSystem {
         offsetY: 0,
         vx: Math.cos(dirAngle) * speed,
         vy: Math.sin(dirAngle) * speed,
-        rot: 0,
-        rotSpeed: (Math.random() - 0.5) * 4,
+        gravity: gravity,
+        rot: Math.random() * Math.PI * 2, // Inclinados aleatoriamente desde o início
+        rotSpeed: 0, // Sem girar no ar
         alpha: 1,
+        lifeScale: lifeScale
       });
     }
-
+    
     return shards;
   }
 
@@ -398,6 +454,14 @@ export class DomainVisualSystem {
         }
 
         if (key === 'far') {
+          const overlay = this.overlays.get(char);
+          if (overlay) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            this.drawScaledImage(ctx, overlay, p.x, p.y, vz, 0, 0);
+            ctx.restore();
+          }
+
           const bg = this.backgrounds.get(char);
           if (bg) {
             ctx.globalAlpha = alpha * 0.5;
@@ -455,7 +519,7 @@ export class DomainVisualSystem {
       // Train (yuji2.png animado nos trilhos)
         // Sync to server timer for hitbox accuracy, extrapolate locally for smooth 60fps animation
         const trainEntry = this.expanding.get(ownerId);
-        if (trainEntry) {
+        if (trainEntry && char === 'punho-indomavel') {
           let progress = null;
           if (domainRaw && typeof domainRaw.trainTimer === 'number' && typeof domainRaw.trainInitialDelay === 'number') {
             if (domainRaw.trainInitialDelay <= 0) {
@@ -497,6 +561,46 @@ export class DomainVisualSystem {
             }
           }
         }
+
+      // --- DRAW PRE-SHATTER CRACKS ON ACTIVE DOMAIN ---
+      const entry = this.expanding.get(ownerId);
+      if (entry && entry.collapseStartTime && entry.cracks) {
+        const collapseAge = (now - entry.collapseStartTime) / 1000;
+        ctx.save();
+        for (const crack of entry.cracks) {
+          if (collapseAge >= crack.appearTime) {
+            const timeSinceAppear = collapseAge - crack.appearTime;
+            const isFlashing = timeSinceAppear < 0.15;
+            
+            ctx.strokeStyle = isFlashing ? "white" : "rgba(230, 245, 255, 0.9)";
+            ctx.lineWidth = isFlashing ? 6 * zoom : 3 * zoom;
+            ctx.shadowColor = "white";
+            ctx.shadowBlur = isFlashing ? 15 * zoom : 8 * zoom;
+            
+            const progress = Math.min(1, timeSinceAppear / crack.duration);
+            ctx.beginPath();
+            ctx.moveTo(p.x + crack.points[0].x * zoom, p.y + crack.points[0].y * zoom);
+            
+            const totalSegments = crack.points.length - 1;
+            const currentFloat = progress * totalSegments;
+            const currentIdx = Math.floor(currentFloat);
+            const fraction = currentFloat - currentIdx;
+            
+            for(let k=1; k<=currentIdx; k++) {
+               ctx.lineTo(p.x + crack.points[k].x * zoom, p.y + crack.points[k].y * zoom);
+            }
+            if (currentIdx < totalSegments && fraction > 0) {
+               const pA = crack.points[currentIdx];
+               const pB = crack.points[currentIdx + 1];
+               const intX = pA.x + (pB.x - pA.x) * fraction;
+               const intY = pA.y + (pB.y - pA.y) * fraction;
+               ctx.lineTo(p.x + intX * zoom, p.y + intY * zoom);
+            }
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
     } catch (e) {
       console.error("Parallax render error:", e);
     } finally {
@@ -506,13 +610,13 @@ export class DomainVisualSystem {
 
   captureDomainSnapshot(entry) {
     const canvas = document.createElement("canvas");
-    const r = entry.radius;
+    const r = entry.radius || entry.targetRadius || 400;
     canvas.width = r * 2;
     canvas.height = r * 2;
     const ctx = canvas.getContext("2d");
     const cx = r;
     const cy = r;
-    const char = entry.character;
+    const char = this.getCharacter(entry.ownerId);
 
     ctx.save();
     ctx.beginPath();
@@ -522,7 +626,22 @@ export class DomainVisualSystem {
     for (const key of ['3', '2', '1']) {
       const img = this.getLayerImage(char, key);
       if (img) {
-        this.drawScaledImage(ctx, img, cx, cy, r, 0, 0);
+        const reverseMap = { '3': 'far', '2': 'mid', '1': 'close' };
+        const layerKey = reverseMap[key];
+        let effectiveScale = LAYER_SCALE[layerKey];
+        let effectiveOffset = LAYER_OFFSET[layerKey] || { x: 0, y: 0 };
+        
+        if (char === 'portador-do-vinculo') {
+          if (key === '3') { effectiveScale = 2.0; effectiveOffset = { x: -0.6, y: 0.4 }; }
+          else if (key === '2') { effectiveScale = 1.0; effectiveOffset = { x: 0, y: 0.5 }; }
+        }
+        if (char === 'o-honrado' && key === '2') { effectiveOffset = { x: 0.3, y: -0.3 }; }
+        if (char === 'punho-indomavel' && key === '3') { effectiveScale = 1.0; effectiveOffset = { x: 0, y: 0.5 }; }
+
+        ctx.save();
+        ctx.translate(cx + effectiveOffset.x * r, cy + effectiveOffset.y * r);
+        this.drawScaledImage(ctx, img, 0, 0, r, 0, 0, effectiveScale);
+        ctx.restore();
       }
     }
 
@@ -551,7 +670,9 @@ export class DomainVisualSystem {
 
   renderShards(ctx, camera, canvas) {
     const z = camera.zoom;
+    const now = performance.now();
     for (const entry of this.shattering) {
+      const age = (now - entry.startTime) / 1000;
       const sx = (entry.x - camera.x) * z + canvas.width * 0.5;
       const sy = (entry.y - camera.y) * z + canvas.height * 0.5;
 
@@ -559,6 +680,7 @@ export class DomainVisualSystem {
         entry.offscreenCanvas = this.captureDomainSnapshot(entry);
       }
 
+      // SHATTER PHASE: Draw flying shards
       for (const shard of entry.shards) {
         if (shard.alpha <= 0) continue;
 
@@ -581,13 +703,14 @@ export class DomainVisualSystem {
 
         ctx.drawImage(
           entry.offscreenCanvas,
-          -entry.radius, -entry.radius,
-          entry.radius * 2, entry.radius * 2
+          -entry.radius * z, -entry.radius * z,
+          entry.radius * 2 * z, entry.radius * 2 * z
         );
         ctx.restore();
-
+        
+        // Draw thin bright border on flying shards
         ctx.save();
-        ctx.globalAlpha = Math.max(0, shard.alpha * 0.5);
+        ctx.globalAlpha = Math.max(0, shard.alpha * 0.4);
         ctx.translate(px, py);
         ctx.rotate(shard.rot);
         ctx.scale(z, z);
@@ -606,9 +729,61 @@ export class DomainVisualSystem {
   }
 
   cleanupExpanding(activeOwnerIds) {
-    this.expanding.forEach((_entry, ownerId) => {
-      if (!activeOwnerIds.has(ownerId)) {
+    this.expanding.forEach((entry, ownerId) => {
+      // Deleta se não está mais nos ativos do server, E não está no meio da animação de colapso
+      if (!activeOwnerIds.has(ownerId) && !entry.collapseStartTime) {
         this.expanding.delete(ownerId);
+      }
+    });
+  }
+
+  getDomainName(char) {
+    switch(char) {
+      case "o-honrado": return "Domínio: Vazio Absoluto";
+      case "rei-amaldicoado": return "Domínio: Santuário Devastador";
+      case "portador-do-vinculo": return "Laço Eterno";
+      case "punho-indomavel": return "Domínio: Manifestação Interior";
+      case "invocador-de-sombras": return "Domínio: Jardim das Sombras";
+      case "lutador-de-sorte": return "Domínio: Roleta da Morte";
+      default: return "Expansão de Domínio";
+    }
+  }
+
+  drawEntryEffects(ctx, camera, canvas) {
+    const now = performance.now();
+    const w = canvas.width;
+    const h = canvas.height;
+
+    this.expanding.forEach((entry, ownerId) => {
+      const elapsed = (now - entry.startTime) / 1000;
+
+      // Phase 4: Typography (0.2s to 1.6s)
+      if (elapsed > 0.2 && elapsed < EXPAND_DURATION + 0.5) {
+        const textProgress = (elapsed - 0.2) / (EXPAND_DURATION + 0.3);
+        const alpha = Math.min(1, Math.sin(textProgress * Math.PI) * 2);
+        
+        const char = this.getCharacter(ownerId);
+        const name = this.getDomainName(char);
+        
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.lineWidth = 4;
+        ctx.textAlign = "center";
+        
+        ctx.font = "italic 900 48px 'Impact', 'Arial Black', sans-serif";
+        const yOffset = h * 0.2 + (1 - Math.pow(1 - textProgress, 3)) * 50;
+        
+        ctx.strokeText("EXPANSÃO DE DOMÍNIO", w / 2, yOffset);
+        ctx.fillText("EXPANSÃO DE DOMÍNIO", w / 2, yOffset);
+        
+        ctx.font = "italic 700 32px 'Georgia', serif";
+        ctx.fillStyle = "rgba(200, 200, 255, 0.9)";
+        ctx.strokeText(name, w / 2, yOffset + 50);
+        ctx.fillText(name, w / 2, yOffset + 50);
+        
+        ctx.restore();
       }
     });
   }

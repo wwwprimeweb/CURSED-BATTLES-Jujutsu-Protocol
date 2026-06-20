@@ -495,6 +495,11 @@ export class AudioSystem {
           this.tone(100, 0.3, "sine", 0.16);
         }
         break;
+      case "domainBarrierBreak":
+        if (this.buffers.domainBarrierBreak) {
+          this.playBuffer("domainBarrierBreak", 1.0);
+        }
+        break;
       case "staringEyeEnter":
         if (this.buffers.staringEyeEnter) {
           this.playBuffer("staringEyeEnter", 0.35);

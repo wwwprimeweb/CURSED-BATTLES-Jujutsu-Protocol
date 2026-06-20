@@ -6,6 +6,7 @@ export const AUDIO_PATHS = {
   prontoSound: "/assets/music/PRONTO.mp3",
   characterHoverSound: "/assets/music/hover%20personagens%20inicio.mp3",
   selectCharSound: "/assets/music/selecionarpersonageminicio.mp3",
+  domainBarrierBreak: "/assets/sounds/domainBarrierBreak.mp3",
 };
 
 export const AUDIO_DEFAULTS = {

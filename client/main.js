@@ -101,8 +101,9 @@ audio.loadSound(AUDIO_PATHS.yutaVoice, "yutaVoice");
 audio.loadSound(AUDIO_PATHS.staringEyeEnter, "staringEyeEnter");
 audio.loadSound(AUDIO_PATHS.prontoSound, "prontoSound");
 audio.loadSound(AUDIO_PATHS.characterHoverSound, "characterHoverSound");
-audio.loadSound(AUDIO_PATHS.selectCharSound, "selectCharSound");
-audio.preloadMusic(AUDIO_PATHS.menuMusic);
+  audio.loadSound(AUDIO_PATHS.selectCharSound, "selectCharSound");
+  audio.loadSound(AUDIO_PATHS.domainBarrierBreak, "domainBarrierBreak");
+  audio.preloadMusic(AUDIO_PATHS.menuMusic);
 audio.unlock();
 async function resumeOnInteraction(event) {
   await audio.resume();
@@ -578,12 +579,18 @@ function handleEvents(events) {
       }
     } else if (ev.type === "domainCollapse") {
       renderer.onDomainCollapse(ev);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f4d2ff", count: 20, speed: 260, life: 0.32, size: 2.9 });
-      if (ev.broken) {
+      // Tremor leve para a primeira rachadura
+      renderer.triggerScreenShake(5, 0.1); 
+      
+      // Explosão massiva ocorre 1.3s depois quando o domínio realmente quebra
+      setTimeout(() => {
+        audio.play("domainBarrierBreak");
+        renderer.triggerScreenShake(25, 0.4);
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#f4d2ff", count: 20, speed: 260, life: 0.32, size: 2.9 });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 30, speed: 300, life: 0.5, size: 3.5 });
         particles.spawnBurst({ x: ev.x, y: ev.y, color: "#c080ff", count: 20, speed: 200, life: 0.4, size: 4 });
         renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 100, color: "rgba(200,150,255,0.6)", ttl: 0.6 });
-      }
+      }, 1300);
     } else if (ev.type === "domainBarrierHit") {
       const byEnemy = ev.attackerKind === "enemy";
       const isPurple = ev.projectileType === "purple";
