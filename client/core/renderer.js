@@ -203,9 +203,19 @@ export class Renderer {
   addDissolve(id, x, y, type, grade, facing) {
     const sprite = this.monsterSprites[type];
     if (!sprite || !sprite.complete || !sprite.naturalWidth) return;
-    const duration = grade === "special" ? 1.2 : grade === 1 ? 0.9 : grade === 2 ? 0.6 : 0.4;
+    const duration = grade === "special" ? 1.5 : grade === 1 ? 0.8 : grade === 2 ? 0.5 : 0.3;
     const scaleEnd = grade === 3 ? 0.5 : grade === 2 ? 0.4 : 0.3;
-    this.dissolveEffects.push({ id, x, y, type, grade, sprite, timer: duration, duration, scaleEnd, facing: facing || 1 });
+    this.dissolveEffects.push({ 
+      id, x, y, type, grade, sprite, 
+      timer: duration, duration, scaleEnd, facing: facing || 1,
+      seed: Math.random() * 1000 
+    });
+
+    const burstCount = grade === "special" ? 80 : grade === 1 ? 30 : grade === 2 ? 12 : 5;
+    this.particles.spawnBurst({ x, y, color: "#9933ff", count: burstCount, speed: grade === "special" ? 400 : 200, life: grade === "special" ? 0.6 : 0.3, size: grade === "special" ? 4 : 2.5 });
+    if (grade === "special" || grade === 1) {
+      this.particles.spawnBurst({ x, y, color: "#1a0033", count: Math.floor(burstCount/2), speed: grade === "special" ? 600 : 300, life: grade === "special" ? 0.8 : 0.4, size: grade === "special" ? 5 : 3 });
+    }
   }
 
   updateDissolveEffects(dt) {
@@ -215,28 +225,34 @@ export class Renderer {
       d.timer -= dt;
       const progress = 1 - d.timer / d.duration;
       if (progress >= 0 && progress < 1) {
-        const emitRate = d.grade === "special" ? 6 : d.grade === 1 ? 4 : d.grade === 2 ? 2 : 1;
-        const spread = 40 + progress * 80;
+        // Less particles for lower grades
+        const emitRate = d.grade === "special" ? 12 : d.grade === 1 ? 4 : d.grade === 2 ? 1 : (Math.random() > 0.5 ? 1 : 0);
+        const spread = 80 + progress * 100;
         for (let j = 0; j < emitRate; j++) {
           if (particles.pool.length === 0) break;
           const p = particles.pool.pop();
           p.x = d.x + (Math.random() - 0.5) * spread;
           p.y = d.y + (Math.random() - 0.5) * spread;
-          p.vx = (Math.random() - 0.5) * 60;
-          p.vy = -(20 + Math.random() * 80);
-          p.life = 0.5 + Math.random() * 0.8;
+          
+          p.vx = (Math.random() - 0.5) * (d.grade === "special" ? 200 : 100) + Math.sin(d.timer * 10 + j) * 50;
+          p.vy = -(50 + Math.random() * (d.grade === "special" ? 150 : 80)) - progress * 50;
+          p.life = 0.4 + Math.random() * (d.grade === "special" ? 0.6 : 0.3);
           p.maxLife = p.life;
-          p.size = 1.5 + Math.random() * 2;
-          p.color = "rgb(140, 70, 200)";
-          p.borderColor = "#000000";
-          p.borderWidth = 3;
-          p.shape = "circle";
-          p.rotation = 0;
-          p.spin = 0;
+          p.size = 1.5 + Math.random() * (d.grade === "special" ? 3 : 1.5);
+          
+          const colorRoll = Math.random();
+          p.color = colorRoll > 0.7 ? "rgb(255, 60, 150)" : colorRoll > 0.3 ? "rgb(120, 10, 180)" : "rgb(20, 0, 30)";
+          p.borderColor = colorRoll <= 0.3 ? "#8a2be2" : "#000000";
+          p.borderWidth = d.grade === "special" ? 1.5 : 1;
+          p.shape = Math.random() > 0.5 ? "circle" : "star";
+          p.rotation = Math.random() * Math.PI * 2;
+          p.spin = (Math.random() - 0.5) * 10;
           particles.active.push(p);
         }
       }
       if (d.timer <= 0) {
+        const finalCount = d.grade === "special" ? 50 : d.grade === 1 ? 15 : d.grade === 2 ? 8 : 4;
+        particles.spawnBurst({ x: d.x, y: d.y, color: "#8a2be2", count: finalCount, speed: d.grade === "special" ? 300 : 150, life: 0.4, size: d.grade === "special" ? 3 : 2 });
         this.dissolveEffects.splice(i, 1);
       }
     }
@@ -248,25 +264,40 @@ export class Renderer {
     for (let i = 0; i < this.dissolveEffects.length; i++) {
       const d = this.dissolveEffects[i];
       const progress = 1 - d.timer / d.duration;
-      const easeOut = 1 - Math.pow(progress, 1.5);
-      const alpha = easeOut;
-      const scaleMul = 1 - progress * (1 - d.scaleEnd);
+      const easeOut = 1 - Math.pow(progress, 3);
+      const alpha = Math.max(0, easeOut);
+      const scaleMul = 1 - Math.pow(progress, 2) * (1 - d.scaleEnd);
       const mult = this.spriteScale[d.type] || 1;
       const baseR = 18;
       const h = baseR * 2.5 * mult * zoom * scaleMul;
       const w = h * (d.sprite.naturalWidth / d.sprite.naturalHeight);
-      const p = worldToScreen(this.camera, this.canvas, d.x, d.y);
+      
+      const shakeBase = d.grade === "special" ? 20 : d.grade === 1 ? 8 : d.grade === 2 ? 3 : 0;
+      const shakeAmt = (1 - progress) * shakeBase * zoom;
+      const offsetX = (Math.random() - 0.5) * shakeAmt;
+      const offsetY = (Math.random() - 0.5) * shakeAmt;
+
+      const p = worldToScreen(this.camera, this.canvas, d.x + offsetX, d.y + offsetY);
+      
       ctx.save();
       if (d.facing < 0) {
         ctx.translate(p.x, p.y);
         ctx.scale(-1, 1);
         ctx.translate(-p.x, -p.y);
       }
+      
       ctx.globalAlpha = alpha;
-      ctx.filter = "grayscale(1) brightness(0.5) contrast(1.3)";
+      
+      const brightness = 1 + progress * (d.grade === "special" ? 3 : 1);
+      const invert = progress * (d.grade === "special" ? 100 : 50);
+      
+      ctx.filter = `invert(${invert}%) brightness(${brightness}) contrast(${2 + progress * 2}) drop-shadow(0 0 ${10 * progress * zoom}px #9900ff)`;
+      ctx.globalCompositeOperation = progress > 0.5 ? "lighter" : "source-over";
+      
       ctx.drawImage(d.sprite, p.x - w / 2, p.y - h / 2, w, h);
       ctx.filter = "none";
-      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      
       ctx.restore();
     }
   }
