@@ -31,5 +31,5 @@ export function playProntoSound(audio) {
 }
 
 export function playCharacterHoverSound(audio) {
-  audio.playBuffer("characterHoverSound", 0.3);
+  audio.playBuffer("characterHoverSound", 1.0);
 }

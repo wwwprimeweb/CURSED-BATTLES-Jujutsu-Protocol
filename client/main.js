@@ -110,9 +110,11 @@ async function resumeOnInteraction(event) {
   }
   document.removeEventListener("click", resumeOnInteraction);
   document.removeEventListener("keydown", resumeOnInteraction);
+  document.removeEventListener("mousemove", resumeOnInteraction);
 }
 document.addEventListener("click", resumeOnInteraction);
 document.addEventListener("keydown", resumeOnInteraction);
+document.addEventListener("mousemove", resumeOnInteraction);
 const interpolation = new InterpolationBuffer();
 const animation = new AnimationStateMachine();
 
@@ -930,7 +932,10 @@ function setAccentColor(charId) {
 }
 
 characterCards.forEach((card) => {
-  card.addEventListener("mouseenter", () => playCharacterHoverSound(audio));
+  card.addEventListener("mouseenter", () => {
+    audio.resume();
+    playCharacterHoverSound(audio);
+  });
   card.addEventListener("click", () => {
     if (card.classList.contains("selected")) return;
     characterCards.forEach((item) => item.classList.remove("selected"));

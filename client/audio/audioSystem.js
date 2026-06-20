@@ -47,6 +47,7 @@ export class AudioSystem {
         console.warn(`AudioSystem: failed to decode preloaded music`, e);
       }
     }
+    this.enabled = true;
   }
 
   async resume() {
@@ -82,7 +83,9 @@ export class AudioSystem {
     gain.gain.value = volume * this._sfxVol;
     source.connect(gain);
     gain.connect(this.masterGain);
-    source.start(0);
+    try {
+      source.start(0);
+    } catch (_) {}
   }
 
   tone(freq, duration = 0.08, type = "sine", gain = 0.35) {
