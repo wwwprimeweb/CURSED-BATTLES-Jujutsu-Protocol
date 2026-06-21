@@ -17,6 +17,7 @@ let _lastTremorSound = 0;
 const _prevWindup = new Map();
 let _prevStaringEye = false;
 let _lastStaringEyeSoundAt = 0;
+let _prevRecoveryActive = false;
 
 function playSoundIfNear(ev, sound) {
   const px = state.localPred?.x;
@@ -332,7 +333,7 @@ function handleEvents(events) {
         particles.spawnLine({ x: ev.x, y: ev.y, dirX, dirY, color: "#ffdd00", count: 12, life: 0.35, size: 3.5 });
         renderer.triggerBlackFlash(ev.x, ev.y, dirX, dirY);
         renderer.triggerScreenShake(6, 0.2);
-        audio.play("skillRed");
+        audio.play("blackFlash");
       }
     } else if (ev.type === "kill" || ev.type === "enemyDeath") {
       const grade = ev.grade || 3;
@@ -862,6 +863,11 @@ function loop(nowMs) {
       _lastStaringEyeSoundAt = nowMs;
     }
     _prevStaringEye = eyeActive;
+
+    if (p.recoveryActive && p.alive && !_prevRecoveryActive) {
+      audio.play("energyRecoveryStart");
+    }
+    _prevRecoveryActive = p.recoveryActive && p.alive;
   }
 
   renderer.render({

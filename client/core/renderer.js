@@ -280,7 +280,7 @@ export class Renderer {
       const p = worldToScreen(this.camera, this.canvas, d.x + offsetX, d.y + offsetY);
       
       ctx.save();
-      if (d.facing < 0) {
+      if (d.type === "staring_beast" ? d.facing > 0 : d.facing < 0) {
         ctx.translate(p.x, p.y);
         ctx.scale(-1, 1);
         ctx.translate(-p.x, -p.y);

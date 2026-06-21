@@ -696,6 +696,21 @@ export class AudioSystem {
         this.tone(100, 0.2, "square", 0.28);
         this.noise(0.15, 0.12, 2);
         break;
+      case "energyRecoveryStart":
+        this.syntheticWhoosh(0.12, true);
+        this.tone(300, 0.2, "sine", 0.18);
+        this.tone(450, 0.17, "sine", 0.12);
+        break;
+      case "blackFlash":
+        this.syntheticClick(0.3);
+        this.syntheticWhoosh(0.15, true);
+        this.tone(120, 0.25, "square", 0.35);
+        this.tone(220, 0.18, "triangle", 0.28);
+        this.tone(1500, 0.06, "sawtooth", 0.3);
+        this.tone(2800, 0.035, "sine", 0.22);
+        this.noise(0.08, 0.25, 2.5);
+        this.tone(55, 0.35, "sawtooth", 0.25);
+        break;
       default:
         break;
     }
