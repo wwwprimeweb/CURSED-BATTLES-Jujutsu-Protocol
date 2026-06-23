@@ -67,7 +67,7 @@ const PUNHO_INDOMAVEL = {
   },
   domain: {
     energyInitial: 75,
-    startup: 0.9,
+    startup: 0.8,
     drainPerSecond: 5,
     freezeDps: 10,
     freezePersistSec: 3.5,

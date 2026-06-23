@@ -520,6 +520,8 @@ function handleEvents(events) {
       renderer.yutaVisual.triggerPureLoveCharge(ev.playerId, ev.x, ev.y, ev.dirX, ev.dirY, ev.duration);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 8, speed: 120, life: 0.4, size: 2 });
       audio.play("yutaPureLoveCharge");
+    } else if (ev.type === "pureLoveChargeCancel") {
+      renderer.yutaVisual.cancelPureLoveCharge(ev.playerId);
     } else if (ev.type === "pureLoveBeam") {
       renderer.yutaVisual.triggerPureLoveBeam(ev.x, ev.y, ev.dirX, ev.dirY, ev.width, ev.lifetime);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 300, life: 0.5, size: 3.5 });
@@ -543,7 +545,24 @@ function handleEvents(events) {
       audio.play("yutaCursedWave");
     } else if (ev.type === "domainStart") {
       renderer.onDomainStart(ev);
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#d6ebff", count: 28, speed: 320, life: 0.45, size: 3.1 });
+      // Initial contamination phase is quiet.
+      // Ink spread starts fast at 300ms
+      setTimeout(() => {
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#111111", count: 20, speed: 200, life: 0.35, size: 2.5 });
+        renderer.triggerScreenShake(3, 0.15);
+      }, 300);
+
+      // Phase 5: Birth/Crack BOOOOM at 1500ms
+      setTimeout(() => {
+        const c = ev.character === "rei-amaldicoado" ? "#ff0033" :
+                  ev.character === "o-honrado" ? "#00e5ff" :
+                  ev.character === "punho-indomavel" ? "#ff6b9d" :
+                  ev.character === "portador-do-vinculo" ? "#ffffff" :
+                  ev.character === "lutador-de-sorte" ? "#aa44ff" : "#d6ebff";
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: c, count: 60, speed: 650, life: 0.65, size: 5 });
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 40, speed: 450, life: 0.5, size: 3 });
+        renderer.triggerScreenShake(15, 0.35); // Heavy boom
+      }, 1500);
       audio.play("domainStart");
       hud.pushNotice("Dominio ativado", "domain", "a atmosfera mudou");
 

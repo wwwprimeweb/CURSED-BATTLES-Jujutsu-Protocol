@@ -441,6 +441,10 @@ export class YutaVisualSystem {
     });
   }
 
+  cancelPureLoveCharge(playerId) {
+    this.pureLoveCharges.delete(playerId);
+  }
+
   triggerPureLoveBeam(x, y, dirX, dirY, width, lifetime) {
     this.pureLoveBeam = {
       originX: x,

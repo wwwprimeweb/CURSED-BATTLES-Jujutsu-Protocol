@@ -2,7 +2,7 @@
 
 const { O_HONRADO } = require("../gameplay/oHonradoKit");
 const { CHARACTER_REGISTRY } = require("../gameplay/characterRegistry");
-const { distance } = require("../utils/math");
+const { clamp, distance } = require("../utils/math");
 
 class DomainSystem {
   constructor(server) {
@@ -48,7 +48,10 @@ class DomainSystem {
       trainTimer: 0,
       trainInitialDelay: 6,
       trainHits: new Set(),
+      openingTimer: 1.6,
     };
+
+    this.snapEnemiesClearOfDomainEdge(domain);
 
     if (domain.character === "portador-do-vinculo") {
       domain.copiedCharacter = null;
@@ -73,9 +76,65 @@ class DomainSystem {
     return true;
   }
 
+  snapEnemiesClearOfDomainEdge(domain) {
+    this.server.enemies.forEach((enemy) => {
+      if (!enemy.alive) {
+        return;
+      }
+
+      const enemyRadius = enemy.radius || 0;
+      const d = distance(enemy.x, enemy.y, domain.x, domain.y);
+      const innerLimit = Math.max(0, domain.radius - enemyRadius);
+      const outerLimit = domain.radius + enemyRadius;
+
+      if (d <= innerLimit || d >= outerLimit) {
+        return;
+      }
+
+      let dirX = enemy.x - domain.x;
+      let dirY = enemy.y - domain.y;
+      let dirLen = Math.hypot(dirX, dirY);
+      if (dirLen < 0.0001) {
+        dirX = 1;
+        dirY = 0;
+        dirLen = 1;
+      }
+
+      const targetDist = d <= domain.radius ? innerLimit : outerLimit;
+      enemy.x = clamp(
+        domain.x + (dirX / dirLen) * targetDist,
+        enemyRadius,
+        this.server.map.width - enemyRadius
+      );
+      enemy.y = clamp(
+        domain.y + (dirY / dirLen) * targetDist,
+        enemyRadius,
+        this.server.map.height - enemyRadius
+      );
+      enemy.vx = 0;
+      enemy.vy = 0;
+    });
+  }
+
   getKitByDomain(domain) {
     const kit = CHARACTER_REGISTRY[domain.character];
     return kit ? kit.domain : O_HONRADO.domain;
+  }
+
+  getOwnerDomainSpeedMul(player) {
+    const domain = this.domains.get(player.id);
+    if (!domain || domain.openingTimer > 0) return 1;
+    if (domain.character !== "portador-do-vinculo") return 1;
+    const kit = this.getKitByDomain(domain);
+    return kit.speedBuff || 1;
+  }
+
+  getOwnerDomainDamageMul(player) {
+    const domain = this.domains.get(player.id);
+    if (!domain || domain.openingTimer > 0) return 1;
+    if (domain.character !== "portador-do-vinculo") return 1;
+    const kit = this.getKitByDomain(domain);
+    return kit.damageBuff || 1;
   }
 
   isSkillLocked() {
@@ -122,6 +181,14 @@ class DomainSystem {
         this.collapseDomain(domain.ownerId, null, true);
         return;
       }
+
+      // Skip gameplay effects during visual expansion opening (2.5s)
+      if (domain.openingTimer > 0) {
+        domain.openingTimer = Math.max(0, domain.openingTimer - dt);
+        owner.energy -= domain.drain * 4 * dt;
+        return;
+      }
+
       domain.conflict = false;
       owner.energy -= domain.drain * 4 * dt;
 
@@ -182,9 +249,12 @@ class DomainSystem {
       }
     });
 
-    this.applyDomainFreezeEffects(dt);
-    this.applyDomainPlayerEffects(dt);
-    this.applyYujiTrainHit(dt);
+    const anyOpening = Array.from(this.domains.values()).some((d) => d.openingTimer > 0);
+    if (!anyOpening) {
+      this.applyDomainFreezeEffects(dt);
+      this.applyDomainPlayerEffects(dt);
+      this.applyYujiTrainHit(dt);
+    }
   }
 
   applyDomainPlayerEffects(dt) {
@@ -433,6 +503,7 @@ class DomainSystem {
   getEnemySlowAt(enemyX, enemyY, enemyId) {
     let factor = 1;
     this.domains.forEach((domain) => {
+      if (domain.openingTimer > 0) return;
       const owner = this.server.players.get(domain.ownerId);
       if (!owner || !owner.alive) {
         return;
@@ -448,6 +519,7 @@ class DomainSystem {
   getPlayerSlowFactor(player) {
     let result = 1;
     this.domains.forEach((domain) => {
+      if (domain.openingTimer > 0) return;
       if (domain.ownerId === player.id) return;
       if (domain.character === "portador-do-vinculo") return;
       const d = distance(player.x, player.y, domain.x, domain.y);
@@ -461,6 +533,7 @@ class DomainSystem {
   getProjectileSlow(projectile) {
     let factor = 1;
     this.domains.forEach((domain) => {
+      if (domain.openingTimer > 0) return;
       const d = distance(projectile.x, projectile.y, domain.x, domain.y);
       if (d <= domain.radius) {
         const ownerId = domain.ownerId;

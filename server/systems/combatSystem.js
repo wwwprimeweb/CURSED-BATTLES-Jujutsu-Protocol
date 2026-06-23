@@ -36,13 +36,32 @@ class CombatSystem {
     let finalDamage = amount;
     if (source && source.kind === "player") {
       finalDamage *= source.modifiers.damageMul;
+      finalDamage *= this.server.domainSystem.getOwnerDomainDamageMul(source);
     }
     if (target.kind === "player") {
       target.lastDamageTaken = this.server.now;
       finalDamage = Math.max(1, finalDamage - target.armor);
       finalDamage *= target.modifiers.damageReductionMul;
-      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact" && target.cast.type !== "taidoBeatdown" && target.cast.type !== "taidoBeatdownAttack" && target.cast.type !== "rika" && target.cast.type !== "rikaImpulse" && target.cast.type !== "fullRika" && target.cast.type !== "dashSlash" && target.cast.type !== "cursedWave" && target.cast.type !== "pureLove") {
+      if (target.cast && finalDamage >= 30 && target.cast.type !== "divergentFist" && target.cast.type !== "soulImpact" && target.cast.type !== "taidoBeatdown" && target.cast.type !== "taidoBeatdownAttack" && target.cast.type !== "rika" && target.cast.type !== "rikaImpulse" && target.cast.type !== "fullRika" && target.cast.type !== "dashSlash" && target.cast.type !== "cursedWave") {
+        const cancelledCast = target.cast;
         target.cast = null;
+        if (cancelledCast.type === "pureLove" || cancelledCast.type === "domainCopy" || cancelledCast.type === "domainCopyFire") {
+          this.server.emitEventNear(target.x, target.y, {
+            type: "pureLoveChargeCancel",
+            playerId: target.id,
+          });
+          if (cancelledCast.needsRika) {
+            const rika = this.server.rikas.get(target.id);
+            if (rika) {
+              this.server.emitEventNear(rika.x, rika.y, {
+                type: "rikaDisappear",
+                x: rika.x,
+                y: rika.y,
+              });
+            }
+            this.server.rikas.delete(target.id);
+          }
+        }
       } else if (target.cast && target.cast.type === "soulImpact") {
         console.log(`[DIAG] soulImpact cast protected, damage=${finalDamage}`);
       }

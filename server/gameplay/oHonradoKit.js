@@ -63,7 +63,7 @@ const O_HONRADO = {
   },
   domain: {
     energyInitial: 80,
-    startup: 0.95,
+    startup: 0.8,
     drainPerSecond: 5,
     freezeDps: 12,
     freezePersistSec: 4,

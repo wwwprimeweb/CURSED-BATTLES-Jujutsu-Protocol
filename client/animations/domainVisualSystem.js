@@ -9,8 +9,27 @@ const CHAR_COLORS = {
   "lutador-de-sorte": [170, 68, 255],
 };
 
-const EXPAND_DURATION = 1.6;
+const OPENING_DURATION = 2.5;
 const SHATTER_DURATION = 0.7;
+
+// V3.0 Sumi-e Phase Timings
+const PHASE_TIME = {
+  CONTAMINATION: 0.0,  // Phase 1: Small blobs appear
+  GROWTH: 0.3,         // Phase 2: Blobs grow fast
+  CONSUMED: 1.1,       // Phase 3: Screen is consumed
+  SILENCE: 1.3,        // Phase 4: Absolute silence/black
+  BIRTH: 1.5,          // Phase 5: Crack appears (BOOOM)
+  BORDER: 1.6,         // Phase 6: Border is drawn
+  REVEAL: 1.8,         // Phase 7: Domain reveals
+  DONE: 2.5            // Fully opened
+};
+
+// Characters whose domain opens with WHITE ink blobs
+const WHITE_BLOB_CHARS = new Set(["o-honrado", "lutador-de-sorte"]);
+// Characters whose domain opens with BLACK/dark ink blobs
+const BLACK_BLOB_CHARS = new Set(["rei-amaldicoado", "invocador-de-sombras", "punho-indomavel", "portador-do-vinculo"]);
+
+const INK_BLOB_COUNT = 8;      // Number of fixed blobs for contamination
 
 const LAYER_SCALE = {
   far: 1.3,
@@ -81,27 +100,41 @@ export class DomainVisualSystem {
     this.rotationTime += dt;
     const now = performance.now();
     
-    // Transição de pre-shatter para shattering
+    // Update opening animation phases
     this.expanding.forEach((entry, ownerId) => {
       if (entry.collapseStartTime) {
-         const age = (now - entry.collapseStartTime) / 1000;
-         if (age >= 1.3) {
-            const radius = entry.targetRadius || 400;
-            const shards = this.generateShards(radius);
-            this.shattering.push({
-               x: entry.x,
-               y: entry.y,
-               radius,
-               shards,
-               startTime: performance.now(),
-               character: entry.character,
-               offscreenCanvas: this.captureDomainSnapshot(entry),
-               ownerId: ownerId,
-            });
-            this.expanding.delete(ownerId);
-            this.parallaxData.delete(ownerId);
-         }
+        const age = (now - entry.collapseStartTime) / 1000;
+        if (age >= 1.3) {
+          const radius = entry.targetRadius || 400;
+          const shards = this.generateShards(radius);
+          this.shattering.push({
+            x: entry.x,
+            y: entry.y,
+            radius,
+            shards,
+            startTime: performance.now(),
+            character: entry.character,
+            offscreenCanvas: this.captureDomainSnapshot(entry),
+            ownerId: ownerId,
+          });
+          this.expanding.delete(ownerId);
+          this.parallaxData.delete(ownerId);
+        }
+        return;
       }
+
+      // Advance opening animation state
+      const age = (now - entry.startTime) / 1000;
+
+      // Phase transitions based on PHASE_TIME
+      if (age < PHASE_TIME.GROWTH) entry.phase = 1;
+      else if (age < PHASE_TIME.CONSUMED) entry.phase = 2;
+      else if (age < PHASE_TIME.SILENCE) entry.phase = 3;
+      else if (age < PHASE_TIME.BIRTH) entry.phase = 4;
+      else if (age < PHASE_TIME.BORDER) entry.phase = 5;
+      else if (age < PHASE_TIME.REVEAL) entry.phase = 6;
+      else if (age < PHASE_TIME.DONE) entry.phase = 7;
+      else entry.phase = 8; // Fully opened
     });
 
     for (let i = this.shattering.length - 1; i >= 0; i--) {
@@ -228,6 +261,10 @@ export class DomainVisualSystem {
     return data;
   }
 
+  // ============================================================
+  // DOMAIN START — Initialize all v2.0 opening animation state
+  // ============================================================
+
   onDomainStart(ev) {
     this.expanding.set(ev.ownerId, {
       startTime: performance.now(),
@@ -235,7 +272,319 @@ export class DomainVisualSystem {
       x: ev.x,
       y: ev.y,
       ownerId: ev.ownerId,
+      phase: 1, // 1: contamination, 2: growth, 3: consumed, 4: silence, 5: birth, 6: border, 7: reveal
     });
+  }
+
+
+  // ============================================================
+  // RENDER DOMAIN BIRTH — Phase 5 (Crack) & Phase 6 (Border)
+  // ============================================================
+
+  renderDomainBirth(ctx, p, vz, entry, now, zoom, char, isMine) {
+    if (entry.phase < 4 || entry.phase > 6) return;
+
+    const perfNow = performance.now();
+    const age = (perfNow - entry.startTime) / 1000;
+    
+    ctx.save();
+    
+    // Phase 5: Crack appears (1.5s - 1.6s)
+    if (entry.phase === 4 || entry.phase === 5) { // Actually phase 4 is silence, 5 is birth. But silence renders nothing here.
+      if (entry.phase === 5 || age >= PHASE_TIME.BIRTH) {
+        const crackProgress = Math.min(1, (age - PHASE_TIME.BIRTH) / (PHASE_TIME.BORDER - PHASE_TIME.BIRTH));
+        const easeCrack = this.easeOutCubic(crackProgress);
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+        ctx.lineWidth = 6 * zoom;
+        ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+        ctx.shadowBlur = 20 * zoom;
+
+        // Draw a jagged line growing from center
+        ctx.beginPath();
+        ctx.moveTo(p.x - vz * 0.5 * easeCrack, p.y + vz * 0.2 * easeCrack);
+        ctx.lineTo(p.x, p.y);
+        ctx.lineTo(p.x + vz * 0.4 * easeCrack, p.y - vz * 0.3 * easeCrack);
+        ctx.stroke();
+      }
+    }
+
+    // Phase 6: Border drawn quickly (1.6s - 1.8s)
+    if (entry.phase === 6 || age >= PHASE_TIME.BORDER) {
+      const borderProgress = Math.min(1, (age - PHASE_TIME.BORDER) / (PHASE_TIME.REVEAL - PHASE_TIME.BORDER));
+      const easeBorder = 1 - Math.pow(1 - borderProgress, 4); // Fast ease out
+      
+      const isComplete = age >= PHASE_TIME.REVEAL;
+      
+      const borderAlpha = isComplete ? 1 : easeBorder;
+      const borderWidth = (5 + (1 - easeBorder) * 4) * zoom;
+      ctx.strokeStyle = `rgba(255,255,255,${borderAlpha})`;
+      ctx.lineWidth = borderWidth;
+      ctx.shadowColor = "rgba(255,255,255,0.9)";
+      ctx.shadowBlur = (18 + (1 - easeBorder) * 22) * zoom;
+
+      ctx.beginPath();
+      // Draw arc progressively
+      ctx.arc(p.x, p.y, vz, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * easeBorder);
+      ctx.stroke();
+      
+      // Inner subtle border
+      const innerProgress = Math.max(0, Math.min(1, (borderProgress - 0.18) / 0.82));
+      const easeInner = 1 - Math.pow(1 - innerProgress, 4);
+      ctx.strokeStyle = `rgba(255,255,255,${0.5 * easeInner})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, vz - 4 * zoom, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * easeInner);
+      ctx.stroke();
+    }
+    
+    ctx.restore();
+  }
+
+  // ============================================================
+  // ORGANIC RADIUS — 5-frequency distortion for irregular expansion
+  // ============================================================
+
+  getOrganicRadius(entry, targetR, angle) {
+    const progress = this.getExpandProgress(entry.ownerId);
+    const base = targetR * this.easeOutCubic(progress);
+    if (progress >= 1) return base;
+
+    const now = performance.now();
+    const age = (now - entry.startTime) / 1000;
+    // Amplitude diminishes as expansion completes
+    const waveAmp = targetR * Math.max(0, 1 - progress) * 0.15;
+    const t = age * 2;
+    // 5 frequencies for organic, non-repeating feel
+    const distortion = Math.sin(angle * 3 + t) * waveAmp
+                     + Math.sin(angle * 7 + t * 1.3) * waveAmp * 0.5
+                     + Math.sin(angle * 13 + t * 0.7) * waveAmp * 0.25
+                     + Math.sin(angle * 19 + t * 2.1) * waveAmp * 0.12
+                     + Math.sin(angle * 31 + t * 0.5) * waveAmp * 0.08;
+    return Math.max(base * 0.3, base + distortion);
+  }
+
+  // ============================================================
+  // INK BLOB SYSTEM — Ink-stain expansion (white or black per char)
+  // ============================================================
+
+  // Pre-generate deterministic blob positions for this domain entry
+  generateInkBlobs(entry) {
+    if (entry.inkBlobs) return entry.inkBlobs;
+    const seed = this.hashString(entry.ownerId + 'blobs');
+    const rng = this.mulberry32(seed);
+    const blobs = [];
+    const count = INK_BLOB_COUNT;
+    const sectorSize = Math.PI * 2 / count;
+
+    for (let i = 0; i < count; i++) {
+      const sectorAngle = i * sectorSize;
+      const angle = sectorAngle + (rng() - 0.5) * sectorSize * 0.9;
+      // Spread stains farther apart so the opening reads as separate ink blooms.
+      const ringOffset = (i % 2) * 0.08;
+      const dist = 0.50 + ringOffset + rng() * 0.32;
+      const satelliteCount = 2 + Math.floor(rng() * 5);
+      const tailCount = rng() > 0.65 ? 1 : 0;
+      blobs.push({
+        rx: Math.cos(angle) * dist,
+        ry: Math.sin(angle) * dist,
+        baseSize: 0.11 + rng() * 0.22,
+        growthSpeed: 0.75 + rng() * 0.7,
+        growthDelay: rng() * 0.12,
+        wobble: rng() * Math.PI * 2,
+        shapeSeed: rng() * 1000,
+        pointCount: 14 + Math.floor(rng() * 10),
+        jaggedness: 0.14 + rng() * 0.18,
+        stretchX: 0.8 + rng() * 0.55,
+        stretchY: 0.8 + rng() * 0.55,
+        rotation: rng() * Math.PI * 2,
+        spikeStrength: 0.04 + rng() * 0.10,
+        spikeFreq: 2 + Math.floor(rng() * 5),
+        satellites: Array.from({ length: satelliteCount }, () => ({
+          angle: angle + (rng() - 0.5) * Math.PI * 1.6,
+          dist: 0.75 + rng() * 0.7,
+          size: 0.14 + rng() * 0.32,
+          seed: rng() * 1000,
+          jaggedness: 0.10 + rng() * 0.14,
+          stretchX: 0.8 + rng() * 0.55,
+          stretchY: 0.8 + rng() * 0.55,
+          rotation: rng() * Math.PI * 2,
+          spikeStrength: 0.03 + rng() * 0.08,
+          spikeFreq: 2 + Math.floor(rng() * 4),
+          pointCount: 10 + Math.floor(rng() * 7),
+        })),
+        tails: Array.from({ length: tailCount }, () => ({
+          angle: angle + (rng() - 0.5) * 0.9,
+          dist: 0.85 + rng() * 0.55,
+          size: 0.28 + rng() * 0.32,
+          seed: rng() * 1000,
+          stretchX: 1.3 + rng() * 0.7,
+          stretchY: 0.35 + rng() * 0.25,
+          rotation: angle + (rng() - 0.5) * 0.5,
+        })),
+      });
+    }
+    entry.inkBlobs = blobs;
+    return blobs;
+  }
+
+  addOrganicInkBlobPath(ctx, cx, cy, radius, shape, age) {
+    const points = [];
+    const seed = shape.seed ?? shape.shapeSeed ?? 0;
+    const count = shape.pointCount || 18;
+    const jaggedness = shape.jaggedness ?? 0.35;
+    const stretchX = shape.stretchX ?? 1;
+    const stretchY = shape.stretchY ?? 1;
+    const rotation = shape.rotation || 0;
+    const spikeStrength = shape.spikeStrength ?? 0.22;
+    const spikeFreq = shape.spikeFreq || 3;
+    const pulse = Math.sin(age * 4 + seed) * 0.035;
+    const cosRot = Math.cos(rotation);
+    const sinRot = Math.sin(rotation);
+
+    for (let i = 0; i < count; i++) {
+      const t = i / count;
+      const angle = t * Math.PI * 2;
+      const n1 = Math.sin(seed + i * 1.73) * jaggedness;
+      const n2 = Math.sin(seed * 0.37 + i * 3.11) * jaggedness * 0.65;
+      const n3 = Math.cos(seed * 0.19 + i * 5.29) * jaggedness * 0.45;
+      const spike = Math.max(0, Math.sin(angle * spikeFreq + seed)) * spikeStrength;
+      const r = radius * Math.max(0.28, 0.78 + n1 + n2 + n3 + spike + pulse);
+      const localX = Math.cos(angle) * r * stretchX;
+      const localY = Math.sin(angle) * r * stretchY;
+      points.push({
+        x: cx + localX * cosRot - localY * sinRot,
+        y: cy + localX * sinRot + localY * cosRot,
+      });
+    }
+
+    const first = points[0];
+    const last = points[points.length - 1];
+    ctx.moveTo((last.x + first.x) * 0.5, (last.y + first.y) * 0.5);
+    for (let i = 0; i < points.length; i++) {
+      const current = points[i];
+      const next = points[(i + 1) % points.length];
+      ctx.quadraticCurveTo(current.x, current.y, (current.x + next.x) * 0.5, (current.y + next.y) * 0.5);
+    }
+  }
+
+  // Draw the ink splash overlay — white or black expanding blobs on top of world
+  renderInkSplashOverlay(ctx, p, vz, entry, zoom, char, canvasWidth, canvasHeight) {
+    const age = (performance.now() - entry.startTime) / 1000;
+    if (age >= PHASE_TIME.DONE) return;
+
+    const isWhite = WHITE_BLOB_CHARS.has(char);
+    const baseColor = isWhite ? '255,255,255' : '0,0,0';
+    const blobs = this.generateInkBlobs(entry);
+    
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Phase 1: Contamination (small blobs appear)
+    // Phase 2: Growth (blobs grow very fast)
+    // Phase 3 & 4: Consumed & Silence (Full screen)
+    // Phase 5 & 6: Birth & Border (Full screen ink shrinks/clips to domain bounds)
+    // Phase 7: Reveal (Ink inside domain fades out)
+
+    if (entry.phase >= 3 && entry.phase <= 4) {
+      // Full screen black/white
+      ctx.fillStyle = `rgb(${baseColor})`;
+      ctx.fillRect(-10000, -10000, 20000, 20000); // Massive fill to cover everything
+    } else if (entry.phase <= 2) {
+      // Blobs expanding
+      let globalScale = 0;
+      if (entry.phase === 1) {
+        globalScale = age / PHASE_TIME.GROWTH * 0.2; // Slow start
+      } else {
+        const growthP = (age - PHASE_TIME.GROWTH) / (PHASE_TIME.CONSUMED - PHASE_TIME.GROWTH);
+        // Exponential growth
+        globalScale = 0.2 + Math.pow(growthP, 3) * 15.0; 
+      }
+
+      const inkP = p;
+      const inkVz = (vz / zoom) * (entry.inkBaseZoom || zoom);
+
+      ctx.fillStyle = `rgb(${baseColor})`;
+      ctx.beginPath();
+      for (const blob of blobs) {
+        const blobAge = Math.max(0, age - (blob.growthDelay || 0));
+        let blobScale = globalScale;
+        if (entry.phase === 1) {
+          blobScale = Math.min(1, blobAge / PHASE_TIME.GROWTH * (blob.growthSpeed || 1)) * 0.2;
+        } else {
+          const growthP = Math.max(0, Math.min(1, (blobAge - PHASE_TIME.GROWTH) / (PHASE_TIME.CONSUMED - PHASE_TIME.GROWTH) * (blob.growthSpeed || 1)));
+          blobScale = 0.2 + Math.pow(growthP, 3) * 15.0;
+        }
+        const blobR = blob.baseSize * inkVz * blobScale;
+        if (blobR < 1) continue;
+
+        // Sumi-e rough edges effect
+        const wobbleAmt = blobR * 0.15 * Math.sin(age * 10 + blob.wobble);
+        const bx = inkP.x + blob.rx * inkVz;
+        const by = inkP.y + blob.ry * inkVz;
+        const organicR = Math.max(1, blobR + wobbleAmt);
+
+        this.addOrganicInkBlobPath(ctx, bx, by, organicR, blob, age);
+        for (const satellite of blob.satellites || []) {
+          const satR = organicR * satellite.size;
+          if (satR < 1) continue;
+          const satX = bx + Math.cos(satellite.angle) * organicR * satellite.dist;
+          const satY = by + Math.sin(satellite.angle) * organicR * satellite.dist;
+          this.addOrganicInkBlobPath(ctx, satX, satY, satR, satellite, age);
+        }
+        for (const tail of blob.tails || []) {
+          const tailR = organicR * tail.size;
+          if (tailR < 1) continue;
+          const tailX = bx + Math.cos(tail.angle) * organicR * tail.dist;
+          const tailY = by + Math.sin(tail.angle) * organicR * tail.dist;
+          this.addOrganicInkBlobPath(ctx, tailX, tailY, tailR, {
+            seed: tail.seed,
+            pointCount: 11,
+            jaggedness: 0.12,
+            stretchX: tail.stretchX,
+            stretchY: tail.stretchY,
+            rotation: tail.rotation,
+            spikeStrength: 0.08,
+            spikeFreq: 3,
+          }, age);
+        }
+      }
+      ctx.fill();
+    } else if (entry.phase >= 5 && entry.phase <= 7) {
+      // From phase 5 onwards, the world OUTSIDE the domain is revealed quickly.
+      // The ink becomes a massive sphere that bounds the domain, then fades to reveal parallax.
+      
+      let outerAlpha = 1.0;
+      if (entry.phase === 5) {
+        outerAlpha = 1 - (age - PHASE_TIME.BIRTH) / (PHASE_TIME.BORDER - PHASE_TIME.BIRTH);
+      } else if (entry.phase > 5) {
+        outerAlpha = 0;
+      }
+      
+      let innerAlpha = 1.0;
+      if (entry.phase === 7) {
+        innerAlpha = 1 - (age - PHASE_TIME.REVEAL) / (PHASE_TIME.DONE - PHASE_TIME.REVEAL);
+      }
+
+      // Draw outer fading black/white (the ink retreating from the world)
+      if (outerAlpha > 0) {
+        ctx.fillStyle = `rgba(${baseColor}, ${outerAlpha})`;
+        ctx.beginPath();
+        ctx.rect(-10000, -10000, 20000, 20000);
+        ctx.arc(p.x, p.y, vz, 0, Math.PI * 2, true); // Hole for the domain
+        ctx.fill();
+      }
+
+      // Draw inner solid/fading black/white (the domain's shell)
+      if (innerAlpha > 0) {
+        ctx.fillStyle = `rgba(${baseColor}, ${innerAlpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
   }
 
   onDomainCollapse(ev) {
@@ -340,12 +689,16 @@ export class DomainVisualSystem {
     const entry = this.expanding.get(ownerId);
     if (!entry) return 1;
     const elapsed = (performance.now() - entry.startTime) / 1000;
-    return Math.min(1, elapsed / EXPAND_DURATION);
+    return Math.min(1, elapsed / PHASE_TIME.DONE);
   }
 
-  getCurrentRadius(ownerId, targetRadius) {
+  getCurrentRadius(ownerId, targetRadius, angle) {
+    const entry = this.expanding.get(ownerId);
+    if (!entry) return targetRadius;
     const progress = this.getExpandProgress(ownerId);
-    return targetRadius * this.easeOutCubic(progress);
+    const base = targetRadius * this.easeOutCubic(progress);
+    // V3: No organic radius distortion for the final border, just a clean circle
+    return base;
   }
 
   easeOutCubic(t) {
@@ -365,9 +718,16 @@ export class DomainVisualSystem {
     ctx.drawImage(img, cx - dw / 2 + offsetX, cy - dh / 2 + offsetY, dw, dh);
   }
 
+  // ============================================================
+  // RENDER PARALLAX — Now with swallow mask instead of alpha fade
+  // ============================================================
+
   renderParallax(ctx, camera, ownerId, char, worldX, worldY, p, vz, zoom, expandProgress, isMine, now, domainRaw) {
     ctx.save();
     try {
+      const entry = this.expanding.get(ownerId);
+
+      // Domain is revealed cleanly inside the circle
       ctx.beginPath();
       ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
       ctx.clip();
@@ -377,24 +737,19 @@ export class DomainVisualSystem {
       const camX = camera.x || 0;
       const camY = camera.y || 0;
 
+      const swallowProgress = Math.min(1, expandProgress * 3);
+
       for (const key of layers) {
         const config = PARALLAX_DEPTHS[key];
-        const entry = this.expanding.get(ownerId);
         const elapsed = entry ? (performance.now() - entry.startTime) / 1000 : 0;
 
-        let alpha = 1;
+        const revealStart = PHASE_TIME.BIRTH;
+        const layerDelay = key === 'far' ? 0 : key === 'mid' ? 0.12 : 1.5;
+        const layerFade = key === 'far' ? 0.08 : key === 'mid' ? 0.18 : 0.35;
+        const layerElapsed = entry ? elapsed - revealStart - layerDelay : layerFade;
+        let alpha = Math.max(0, Math.min(1, layerElapsed / layerFade));
         if (key === 'far') {
-          alpha = Math.min(1, expandProgress * 3);
-        } else if (key === 'mid') {
-          alpha = Math.min(1, expandProgress * 1.8);
-        } else {
-          const delay = 1;
-          if (elapsed < delay) {
-            alpha = 0;
-          } else {
-            const fadeIn = Math.min(1, (elapsed - delay) / 0.5);
-            alpha = Math.min(1, expandProgress * 1.4) * fadeIn;
-          }
+          alpha = swallowProgress < 0.01 ? 0 : Math.min(1, alpha * 1.2 + Math.sin(now * 0.002 + 0.5) * 0.15);
         }
 
         if (alpha < 0.01) continue;
@@ -516,6 +871,11 @@ export class DomainVisualSystem {
         }
       }
 
+      // Swallow waves: emissive wavefront during expansion
+      if (entry && expandProgress < 1 && !entry.collapseStartTime) {
+        this.renderSwallowWaves(ctx, p, vz, entry, zoom, char);
+      }
+
       // Train (yuji2.png animado nos trilhos)
         // Sync to server timer for hitbox accuracy, extrapolate locally for smooth 60fps animation
         const trainEntry = this.expanding.get(ownerId);
@@ -563,7 +923,6 @@ export class DomainVisualSystem {
         }
 
       // --- DRAW PRE-SHATTER CRACKS ON ACTIVE DOMAIN ---
-      const entry = this.expanding.get(ownerId);
       if (entry && entry.collapseStartTime && entry.cracks) {
         const collapseAge = (now - entry.collapseStartTime) / 1000;
         ctx.save();
@@ -757,9 +1116,10 @@ export class DomainVisualSystem {
     this.expanding.forEach((entry, ownerId) => {
       const elapsed = (now - entry.startTime) / 1000;
 
-      // Phase 4: Typography (0.2s to 1.6s)
-      if (elapsed > 0.2 && elapsed < EXPAND_DURATION + 0.5) {
-        const textProgress = (elapsed - 0.2) / (EXPAND_DURATION + 0.3);
+      const textStart = 2.0;
+      const textEnd = 5.0;
+      if (elapsed > textStart && elapsed < textEnd) {
+        const textProgress = (elapsed - textStart) / (textEnd - textStart);
         const alpha = Math.min(1, Math.sin(textProgress * Math.PI) * 2);
         
         const char = this.getCharacter(ownerId);

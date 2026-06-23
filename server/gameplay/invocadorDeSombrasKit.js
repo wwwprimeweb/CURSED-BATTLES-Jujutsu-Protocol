@@ -61,7 +61,7 @@ const INVOCADOR_DE_SOMBRAS = {
   },
   domain: {
     energyInitial: 75,
-    startup: 0.95,
+    startup: 0.8,
     drainPerSecond: 5,
     freezeDps: 10,
     katanaDamage: 20,

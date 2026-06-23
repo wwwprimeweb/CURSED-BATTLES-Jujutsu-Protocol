@@ -62,7 +62,7 @@ const REI_AMALDICOADO = {
   },
   domain: {
     energyInitial: 80,
-    startup: 1.0,
+    startup: 0.8,
     drainPerSecond: 6,
     freezeDps: 14,
     freezePersistSec: 4,

@@ -74,6 +74,7 @@ function createPlayer({ id, sessionToken, name, x, y, now, character }) {
     m1AnimTimer: 0,
     taidoBeatdownAnimState: null,
     animLockTimer: 0,
+    domainRevealTimer: 0,
     dodgeTimer: 0,
     cast: null,
     flyingKnee: null,

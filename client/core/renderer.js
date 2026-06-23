@@ -596,9 +596,13 @@ export class Renderer {
 
   onDomainStart(ev) {
     this.domainVisual.onDomainStart(ev);
+    const entry = this.domainVisual.expanding.get(ev.ownerId);
+    if (entry) {
+      entry.inkBaseZoom = this.camera.zoom;
+    }
     this.startZoomSeq([
-      { target: 1.4, duration: 300, pause: 500 },
-      { target: 1.2, duration: 300, pause: 0 },
+      { target: 1.4, duration: 300, pause: 1800 },
+      { target: 1.2, duration: 400, pause: 0 },
     ]);
   }
 
@@ -1413,6 +1417,7 @@ export class Renderer {
       const targetR = d.radius;
       const currentR = this.domainVisual.getCurrentRadius(ownerId, targetR);
       const expandProgress = this.domainVisual.getExpandProgress(ownerId);
+      const expEntry = this.domainVisual.expanding.get(ownerId);
       const expandAlpha = Math.min(1, expandProgress * 1.5);
       const vz = currentR * z;
 
@@ -1426,35 +1431,50 @@ export class Renderer {
         char = "o-honrado";
       }
       try {
-        this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, item.x, item.y, p, vz, z, expandProgress, isMine, now, d);
+        if (!expEntry || expEntry.phase >= 5) {
+          this.domainVisual.renderParallax(ctx, this.camera, ownerId, char, item.x, item.y, p, vz, z, expandProgress, isMine, now, d);
+        }
       } catch (e) {
         console.error("renderParallax call failed:", e);
       }
 
       ctx.save();
-      ctx.globalAlpha = expandAlpha;
-      ctx.shadowColor = isMine ? "#88ccff" : "#cc80ff";
-      ctx.shadowBlur = 30 * expandAlpha * z;
-      ctx.strokeStyle = isMine ? "rgba(180,220,255,0.95)" : "rgba(220,180,255,0.95)";
-      ctx.lineWidth = 4 * z;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = isMine ? "rgba(255,255,255,0.5)" : "rgba(255,220,255,0.5)";
-      ctx.lineWidth = 1.5 * z;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, vz - 3 * z, 0, Math.PI * 2);
-      ctx.stroke();
 
-      if (d.barrierMaxHp > 0) {
-        const barrierPct = d.barrierHp / d.barrierMaxHp;
-        if (barrierPct < 1) {
-          this.drawDomainCracks(ctx, p.x, p.y, vz, barrierPct, isMine);
-        }
+      // Draw Ink Splash Overlay (Covers the screen and/or domain depending on phase)
+      try {
+        this.domainVisual.renderInkSplashOverlay(ctx, p, vz, expEntry || { phase: 8 }, z, char, this.canvas.width, this.canvas.height);
+      } catch (e) {
+        console.error("renderInkSplashOverlay call failed:", e);
       }
 
-      if (char !== 'portador-do-vinculo') {
+      ctx.restore();
+      ctx.save();
+
+      // Draw domain birth (Crack and border)
+      if (expEntry && !expEntry.collapseStartTime) {
+        this.domainVisual.renderDomainBirth(ctx, p, vz, expEntry, now, z, char, isMine);
+      }
+
+      // Draw final smooth border when completely expanded
+      if (!expEntry || expEntry.phase >= 7) {
+        ctx.globalAlpha = expandAlpha;
+        ctx.shadowColor = "#ffffff";
+        ctx.shadowBlur = 30 * expandAlpha * z;
+        ctx.strokeStyle = "rgba(255,255,255,0.95)";
+        ctx.lineWidth = 4 * z;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 1.5 * z;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, vz - 3 * z, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      const isAssembling = !!(expEntry && !expEntry.collapseStartTime);
+      if (!isAssembling && char !== 'portador-do-vinculo') {
         for (let i = 0; i < 12; i++) {
           const a = (i / 12) * Math.PI * 2 + now * 0.001;
           const rx = p.x + Math.cos(a) * vz;
@@ -1471,7 +1491,7 @@ export class Renderer {
       const cy = localPred ? localPred.y : (you ? you.y : 0);
       const ddx = cx - item.x;
       const ddy = cy - item.y;
-      if (ddx * ddx + ddy * ddy <= d.radius * d.radius) {
+      if (ddx * ddx + ddy * ddy <= currentR * currentR) {
         insideDomain = true;
       }
     });
@@ -1486,38 +1506,6 @@ export class Renderer {
       ctx.fillStyle = `rgba(5,10,30,${0.12 * this.domainOverlayAlpha})`;
       ctx.fillRect(0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
     }
-  }
-
-  drawDomainCracks(ctx, cx, cy, radius, hpPct, isMine) {
-    const z = this.camera.zoom;
-    const crackCount = Math.floor((1 - hpPct) * 12) + 2;
-    const color = isMine ? "rgba(255,255,255,0.4)" : "rgba(255,200,220,0.4)";
-    const inner = radius * 0.92;
-    const outer = radius * 1.02;
-
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = (1.5 + (1 - hpPct) * 2) * z;
-
-    for (let i = 0; i < crackCount; i++) {
-      const seed = i * 47.11;
-      const angle = ((seed * 137.5) % 360) * Math.PI / 180;
-      const segments = 3 + Math.floor((1 - hpPct) * 4);
-      let lastX = cx + Math.cos(angle) * (inner + Math.random() * (outer - inner));
-      let lastY = cy + Math.sin(angle) * (inner + Math.random() * (outer - inner));
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      for (let j = 0; j < segments; j++) {
-        const spread = 0.3 + (1 - hpPct) * 0.5;
-        const aOff = (Math.random() - 0.5) * spread;
-        const rOff = (j / segments) * (radius * 0.15 * (1 - hpPct));
-        const nx = cx + Math.cos(angle + aOff) * (inner + (outer - inner) * ((j + 1) / segments) + rOff);
-        const ny = cy + Math.sin(angle + aOff) * (inner + (outer - inner) * ((j + 1) / segments) + rOff);
-        ctx.lineTo(nx, ny);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
   }
 
   drawProjectiles(projectiles) {
@@ -1803,7 +1791,46 @@ export class Renderer {
     });
   }
 
-  drawEnemies(enemies) {
+  applyEnemyDomainClip(ctx, enemyEntry, domains) {
+    if (!domains || domains.size === 0) {
+      return false;
+    }
+
+    let clipped = false;
+    domains.forEach((entry) => {
+      const d = entry.raw || entry;
+      const currentR = this.domainVisual.getCurrentRadius(d.ownerId, d.radius);
+      if (currentR < 2) return;
+
+      // Skip hard clip during domain expansion (phases 1-7) to avoid cutting sprites
+      const exp = this.domainVisual.expanding.get(d.ownerId);
+      if (exp && exp.phase < 8) return;
+
+      const dx = enemyEntry.x - entry.x;
+      const dy = enemyEntry.y - entry.y;
+      const enemyInside = dx * dx + dy * dy <= currentR * currentR;
+      const p = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
+      const vz = currentR * this.camera.zoom;
+
+      ctx.beginPath();
+      if (enemyInside) {
+        ctx.arc(p.x, p.y, vz, 0, Math.PI * 2);
+      } else {
+        ctx.rect(0, 0, this.canvas.clientWidth, this.canvas.clientHeight);
+        ctx.arc(p.x, p.y, vz, 0, Math.PI * 2, true);
+      }
+      if (enemyInside) {
+        ctx.clip();
+      } else {
+        ctx.clip("evenodd");
+      }
+      clipped = true;
+    });
+
+    return clipped;
+  }
+
+  drawEnemies(enemies, domains) {
     const ctx = this.ctx;
     const zoom = this.camera.zoom;
     const now = Date.now();
@@ -1843,6 +1870,9 @@ export class Renderer {
       const drawY = p.y + bob;
       const drawX = p.x + stunShakeX;
       const renderY = drawY + stunShakeY;
+
+      ctx.save();
+      this.applyEnemyDomainClip(ctx, entry, domains);
 
       const sprite = this.monsterSprites[e.type];
       if (sprite) {
@@ -2009,6 +2039,7 @@ export class Renderer {
 
         this.drawEnemyHealthBar(ctx, p.x, drawY - baseRadius * zoom - 12 * zoom, e, zoom);
       }
+      ctx.restore();
     });
   }
 
@@ -2671,7 +2702,7 @@ export class Renderer {
       this.renderPurpleExplosions(this.ctx, this.camera);
       this._players = interpolation.players;
       this._enemies = interpolation.enemies;
-      this.drawEnemies(interpolation.enemies);
+      this.drawEnemies(interpolation.enemies, interpolation.domains);
       this.drawDissolveEffects();
       this.drawM1PunchEffects();
       this.drawPlayers(interpolation.players, youId, localPred);
@@ -2700,6 +2731,7 @@ export class Renderer {
     const py = localPred ? localPred.y : (you ? you.y : 0);
 
     let viewerInsideAny = false;
+    let privacyAlpha = 0;
 
     domains.forEach((entry) => {
       const d = entry.raw || entry;
@@ -2708,11 +2740,14 @@ export class Renderer {
       const targetR = d.radius;
       const currentR = this.domainVisual.getCurrentRadius(d.ownerId, targetR);
       if (currentR < 2) return;
+      const progress = this.domainVisual.getExpandProgress(d.ownerId);
+      const entryAlpha = progress <= 0.64 ? 0 : Math.min(1, (progress - 0.64) / 0.08);
+      if (entryAlpha > privacyAlpha) privacyAlpha = entryAlpha;
       const vz = currentR * this.camera.zoom;
       const sp = worldToScreen(this.camera, this.canvas, ex, ey);
       const ddx = px - ex;
       const ddy = py - ey;
-      const viewerInside = ddx * ddx + ddy * ddy <= targetR * targetR;
+      const viewerInside = ddx * ddx + ddy * ddy <= currentR * currentR;
 
       if (viewerInside) {
         viewerInsideAny = true;
@@ -2720,7 +2755,7 @@ export class Renderer {
         ctx.save();
         ctx.beginPath();
         ctx.arc(sp.x, sp.y, vz, 0, Math.PI * 2);
-        ctx.fillStyle = "#000000";
+        ctx.fillStyle = `rgba(0,0,0,${privacyAlpha})`;
         ctx.fill();
         ctx.restore();
       }
@@ -2742,7 +2777,7 @@ export class Renderer {
         const sp = worldToScreen(this.camera, this.canvas, ex, ey);
         const ddx = px - ex;
         const ddy = py - ey;
-        const viewerInside = ddx * ddx + ddy * ddy <= targetR * targetR;
+        const viewerInside = ddx * ddx + ddy * ddy <= currentR * currentR;
 
         if (viewerInside) {
           ctx.arc(sp.x, sp.y, vz, 0, Math.PI * 2, true);
@@ -2750,7 +2785,7 @@ export class Renderer {
         }
       });
 
-      ctx.fillStyle = "rgba(0,0,0,1)";
+      ctx.fillStyle = `rgba(0,0,0,${privacyAlpha})`;
       ctx.fill("evenodd");
       ctx.restore();
     }

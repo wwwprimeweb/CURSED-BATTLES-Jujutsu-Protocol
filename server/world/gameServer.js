@@ -24,6 +24,7 @@ const { Rng } = require("../utils/rng");
 const YUJI_OWN_DOMAIN_BLACK_FLASH_BONUS = 0.10;
 const YUJI_OWN_DOMAIN_SPEED_MULTIPLIER = 1.30;
 const YUJI_OWN_DOMAIN_ENERGY_REGEN_MULTIPLIER = 1.15;
+const DOMAIN_OPENING_DURATION = 2.5;
 
 class GameServer {
   constructor(config) {
@@ -561,6 +562,7 @@ class GameServer {
       player.m1Timer = Math.max(0, player.m1Timer - dt);
       player.m1AnimTimer = Math.max(0, player.m1AnimTimer - dt);
       player.animLockTimer = Math.max(0, player.animLockTimer - dt);
+      player.domainRevealTimer = Math.max(0, (player.domainRevealTimer || 0) - dt);
       player.dodgeTimer = Math.max(0, player.dodgeTimer - dt);
       if (player.rikaBuffTime > 0) {
         player.rikaBuffTime = Math.max(0, player.rikaBuffTime - dt);
@@ -625,7 +627,7 @@ class GameServer {
       this.resolveInput(player, dt, skillLockedAtTickStart);
 
       if (this.domainSystem.hasActiveDomain(player.id)) {
-        if (player.input.f) {
+        if (player.domainRevealTimer <= 0 && player.input.f) {
           player.domainCancelTimer = Math.min(3, player.domainCancelTimer + dt);
           if (player.domainCancelTimer >= 3) {
             this.domainSystem.collapseDomain(player.id, null, false);
@@ -892,6 +894,7 @@ class GameServer {
     const moveY = (input.down ? 1 : 0) - (input.up ? 1 : 0);
     const moveNorm = normalize(moveX, moveY);
     const isDomainCasting = player.cast && player.cast.type === "domain";
+    const isDomainPreparing = isDomainCasting || player.domainRevealTimer > 0;
     const isCharging = player.cast && (player.cast.type === "purple");
     const isPureLoveCharging = player.cast && (player.cast.type === "pureLove" || player.cast.type === "domainCopyFire");
     if (isPureLoveCharging) {
@@ -899,13 +902,14 @@ class GameServer {
       player.cast.dirX = curAim.x;
       player.cast.dirY = curAim.y;
     }
-    const castSlow = isBeatdownCasting ? 0 : isPureLoveCharging ? 0 : isCharging ? 0.72 : isDomainCasting ? 0 : 1;
+    const castSlow = isBeatdownCasting ? 0 : isPureLoveCharging ? 0 : isCharging ? 0.72 : isDomainPreparing ? 0 : 1;
     const domainSlow = this.domainSystem.getPlayerSlowFactor(player);
     const yujiOwnDomainSpeedMul = this.isYujiInsideOwnDomain(player)
       ? YUJI_OWN_DOMAIN_SPEED_MULTIPLIER
       : 1;
+    const yutaDomainSpeedMul = this.domainSystem.getOwnerDomainSpeedMul(player);
     const staringSlow = 1 - (player.staringStacks || 0) * 0.10;
-    const moveSpeed = player.moveSpeed * player.modifiers.speedMul * yujiOwnDomainSpeedMul * castSlow * domainSlow * staringSlow;
+    const moveSpeed = player.moveSpeed * player.modifiers.speedMul * yutaDomainSpeedMul * yujiOwnDomainSpeedMul * castSlow * domainSlow * staringSlow;
     if (isBeatdownCasting) {
       player.vx = 0;
       player.vy = 0;
@@ -914,7 +918,7 @@ class GameServer {
       player.vy = moveNorm.y * moveSpeed;
     }
 
-    if (!isDomainCasting && !isBeatdownCasting) {
+    if (!isDomainPreparing && !isBeatdownCasting) {
       const dodgePressed = input.dodge && !player.prevInput.dodge;
       if (dodgePressed && !skillLockedAtTickStart) {
         this.tryDodge(player, moveNorm);
@@ -932,7 +936,7 @@ class GameServer {
     const spacePressed = input.space && !player.prevInput.space;
     const fPressed = input.f && !player.prevInput.f;
 
-    if (!player.cast && !skillLockedAtTickStart && player.domainExhaustionTimer <= 0) {
+    if (!isDomainPreparing && !player.cast && !skillLockedAtTickStart && player.domainExhaustionTimer <= 0) {
       const chara = player.character || "o-honrado";
       const domainActive = this.domainSystem.hasActiveDomain(player.id);
       if (chara === "portador-do-vinculo" || chara === "invocador-de-sombras") {
@@ -995,15 +999,10 @@ class GameServer {
       return;
     }
 
-    if (player.cast && player.cast.type === "domain") {
+    if ((player.cast && player.cast.type === "domain") || player.domainRevealTimer > 0) {
       player.animState = "domain_prepare";
       player.statePriority = 2;
       return;
-    }
-
-    if (this.domainSystem.domains.has(player.id)) {
-      player.animState = "domain";
-      player.statePriority = 2;
     }
 
     if (player.cast && player.cast.type === "pureLove") {
@@ -3041,7 +3040,7 @@ class GameServer {
       let endY = beam.y + beam.dirY * beamLength;
       const totalDamage = kit.pureLove.damage * owner.modifiers.pureLoveDamageMul;
       const damagePerTick = totalDamage * dt / 4.0;
-      const knockbackPerTick = kit.pureLove.knockback * dt / 4.0;
+      const knockbackPerTick = kit.pureLove.knockback * dt * 5.0;
       const hitInterval = 0.15;
       const now = this.elapsedSeconds;
 
@@ -3612,7 +3611,9 @@ class GameServer {
   }
 
   fireDomain(player) {
-    this.domainSystem.activateDomain(player);
+    if (this.domainSystem.activateDomain(player)) {
+      player.domainRevealTimer = DOMAIN_OPENING_DURATION;
+    }
   }
 
   findTeleportDestination(player, dirX, dirY, distance) {

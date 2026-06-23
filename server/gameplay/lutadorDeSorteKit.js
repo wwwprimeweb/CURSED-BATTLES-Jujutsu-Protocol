@@ -62,7 +62,7 @@ const LUTADOR_DE_SORTE = {
   },
   domain: {
     energyInitial: 80,
-    startup: 0.9,
+    startup: 0.8,
     drainPerSecond: 4,
     freezeDps: 10,
     freezePersistSec: 3.5,
