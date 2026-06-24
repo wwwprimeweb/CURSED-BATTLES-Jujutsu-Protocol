@@ -63,6 +63,7 @@ export class Renderer {
     this.domainOverlayAlpha = 0;
     this.activeDomainOwnerIds = new Set();
     this.playerFacing = new Map();
+    this.m1FacingTimers = new Map();
     this.localVisualPos = null;
     this.dashVisuals = new Map();
     this.dashTweens = new Map();
@@ -609,7 +610,6 @@ export class Renderer {
   onDomainCollapse(ev) {
     this.domainVisual.onDomainCollapse(ev);
     this.zoomSeq = null;
-    this.startZoom(1, 400);
   }
 
   getVisualForPlayer(character) {
@@ -647,6 +647,10 @@ export class Renderer {
     this.megumiVisual.update(dt);
     this.hakariVisual.update(dt);
     this.domainVisual.update(dt);
+    if (this.domainVisual._needsZoomReset) {
+      this.domainVisual._needsZoomReset = false;
+      this.startZoom(1, 400);
+    }
     const now = performance.now();
     this.dashVisuals.forEach((expiry, id) => {
       if (now > expiry) this.dashVisuals.delete(id);
@@ -2279,7 +2283,15 @@ export class Renderer {
       let facing = this.playerFacing.get(p.id) || 1;
       const pvx = p.vx || 0;
       const isM1 = p.animState && p.animState.startsWith("m1_");
-      if (isM1 && Number.isFinite(p.aimX) && Number.isFinite(p.aimY)) {
+
+      let m1Expiry = this.m1FacingTimers.get(p.id) || 0;
+      if (isM1) {
+        m1Expiry = now + 500;
+        this.m1FacingTimers.set(p.id, m1Expiry);
+      }
+      const recentlyM1 = now < m1Expiry;
+
+      if (recentlyM1 && Number.isFinite(p.aimX) && Number.isFinite(p.aimY)) {
         const aimDx = p.aimX - rx;
         if (Math.abs(aimDx) > 1) {
           facing = aimDx < 0 ? -1 : 1;

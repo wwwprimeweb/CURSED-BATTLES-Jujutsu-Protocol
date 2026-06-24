@@ -278,20 +278,27 @@ class DomainSystem {
             }
           } else if (domain.character === "portador-do-vinculo") {
             targetPlayer.domainFrozen = false;
+          } else if (domain.character === "o-honrado") {
+            targetPlayer.domainFrozen = false;
+            targetPlayer.vx *= 0.5;
+            targetPlayer.vy *= 0.5;
+            this.server.combat.applyDamage({
+              target: targetPlayer,
+              source: owner,
+              amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
+              kind: "domainFreeze",
+              fromX: domain.x,
+              fromY: domain.y,
+            });
+            this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
+              type: "freezeTick",
+              x: targetPlayer.x,
+              y: targetPlayer.y,
+            });
           } else {
             targetPlayer.domainFrozen = true;
             targetPlayer.vx *= 0.5;
             targetPlayer.vy *= 0.5;
-            if (domain.character === "o-honrado") {
-              this.server.combat.applyDamage({
-                target: targetPlayer,
-                source: owner,
-                amount: (this.getKitByDomain(domain).freezeDps || 0) * 0.6 * dt,
-                kind: "domainFreeze",
-                fromX: domain.x,
-                fromY: domain.y,
-              });
-            }
             this.server.emitEventNear(targetPlayer.x, targetPlayer.y, {
               type: "freezeTick",
               x: targetPlayer.x,

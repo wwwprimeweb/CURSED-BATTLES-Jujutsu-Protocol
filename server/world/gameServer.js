@@ -1147,7 +1147,9 @@ class GameServer {
     }
     const kit = this.getKit(player);
     const isYutaSlash = player.character === "portador-do-vinculo";
-    const m1AnimDuration = kit.m1.animDuration || kit.m1.cooldown;
+    const stepDurations = kit.m1.stepDurations || [kit.m1.animDuration || kit.m1.cooldown];
+    const nextStep = (player.comboStep % 3) + 1;
+    const m1AnimDuration = stepDurations[nextStep - 1] ?? (kit.m1.animDuration || kit.m1.cooldown);
 
     const baseM1Damage = kit.m1.damage * player.modifiers.m1DamageMul;
     const baseBlackFlashChance = player.character === "o-honrado" ? 0.01 : player.character === "punho-indomavel" ? 0.05 : 0.01;
@@ -1157,7 +1159,7 @@ class GameServer {
 
     player.m1Timer = kit.m1.cooldown;
     player.m1AnimTimer = m1AnimDuration;
-    player.comboStep = (player.comboStep % 4) + 1;
+    player.comboStep = nextStep;
     player.comboResetTimer = 0.9;
     player.lastAttackAt = this.now;
 

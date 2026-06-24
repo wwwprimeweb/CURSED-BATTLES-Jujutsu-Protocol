@@ -119,6 +119,7 @@ export class DomainVisualSystem {
           });
           this.expanding.delete(ownerId);
           this.parallaxData.delete(ownerId);
+          this._needsZoomReset = true;
         }
         return;
       }
@@ -621,8 +622,8 @@ export class DomainVisualSystem {
        
        // Distribuição exponencial: começam poucas e depois aceleram muito no final
        const timeP = Math.pow(i / numCracks, 1.5); 
-       const appearTime = timeP * 1.0; 
-       const duration = 0.1 + Math.random() * 0.15; // Velocidades de 'rasgo' variadas
+        const appearTime = timeP * 0.5; 
+        const duration = (0.1 + Math.random() * 0.15) * 0.5; // Velocidades de 'rasgo' variadas
        
        entry.cracks.push({ points, appearTime, duration });
     }
@@ -924,7 +925,7 @@ export class DomainVisualSystem {
 
       // --- DRAW PRE-SHATTER CRACKS ON ACTIVE DOMAIN ---
       if (entry && entry.collapseStartTime && entry.cracks) {
-        const collapseAge = (now - entry.collapseStartTime) / 1000;
+        const collapseAge = (performance.now() - entry.collapseStartTime) / 1000;
         ctx.save();
         for (const crack of entry.cracks) {
           if (collapseAge >= crack.appearTime) {
