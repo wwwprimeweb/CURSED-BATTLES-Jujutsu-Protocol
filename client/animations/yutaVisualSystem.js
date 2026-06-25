@@ -735,6 +735,12 @@ export class YutaVisualSystem {
         drawDashSlideTrail(ctx, pos.x, pos.y - trailOffY, dirX, dirY, dashProgress, this.time, zoom);
       }
 
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      const movingM1 = speed > 20 && animState && animState.startsWith("m1_");
+      if (movingM1) {
+        pos.y += Math.sin(this.time * 40) * 2 * zoom;
+      }
+
       // Render Yuta
       this.yutaSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
 

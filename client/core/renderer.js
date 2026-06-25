@@ -3,7 +3,8 @@ import { YutaVisualSystem } from "../animations/yutaVisualSystem.js";
 import { YujiVisualSystem } from "../animations/yujiVisualSystem.js";
 import { GenericVisualSystem } from "../animations/genericVisualSystem.js";
 import { DomainVisualSystem } from "../animations/domainVisualSystem.js";
-import { drawGojoM1Sprite } from "../animations/gojoEffects.js";
+import { drawGojoM1Slash } from "../animations/gojoEffects.js";
+import { SmokeEffect } from "../animations/smokeEffect.js";
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
@@ -38,6 +39,8 @@ export class Renderer {
     this.megumiVisual = new GenericVisualSystem("invocador-de-sombras");
     this.hakariVisual = new GenericVisualSystem("lutador-de-sorte");
     this.domainVisual = new DomainVisualSystem();
+    this.smokeFx = new SmokeEffect();
+    this.smokeFx.load();
     this.map = null;
     this.camera = {
       x: 0,
@@ -67,6 +70,8 @@ export class Renderer {
     this.localVisualPos = null;
     this.dashVisuals = new Map();
     this.dashTweens = new Map();
+    this._movePuffTimers = new Map();
+    this._wasMoving = new Map();
     this.markers = [];
     this.redExplosions = [];
     this.blueExplosions = [];
@@ -633,6 +638,70 @@ export class Renderer {
       startTime: performance.now(),
       duration: 200,
     });
+    const sheet = Math.floor(Math.random() * 3);
+    const dirX = ev.dirX !== undefined ? ev.dirX : 1;
+    const dirY = ev.dirY !== undefined ? ev.dirY : 0;
+    const angle = Math.atan2(dirY, dirX);
+    this.smokeFx.spawnBurst(
+      startX - dirX * 15,
+      startY - dirY * 15,
+      sheet, 0.9 + Math.random() * 0.3, angle,
+    );
+    this.smokeFx.spawnBurst(
+      ev.x + dirX * 10,
+      ev.y + dirY * 10,
+      (sheet + 1) % 3, 1.0 + Math.random() * 0.4, angle,
+    );
+  }
+
+  _updateMovementSmoke(dt) {
+    const interp = this.interpolationRef;
+    if (!interp) return;
+    const now = performance.now();
+
+    interp.players.forEach((entry, id) => {
+      const p = entry.raw;
+      const ex = entry.x;
+      const ey = entry.y;
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      const isMoving = speed > 20 && (p.animState === "walk" || p.animState === "run" || (p.animState && p.animState.startsWith("m1_")));
+
+      const dx = entry.tx - ex;
+      const dy = entry.ty - ey;
+      const moveSpeed = Math.sqrt(dx * dx + dy * dy);
+
+      const ndx = moveSpeed > 1 ? -dx / moveSpeed : 0;
+      const ndy = moveSpeed > 1 ? -dy / moveSpeed : 0;
+      const angle = moveSpeed > 1 ? Math.atan2(dy, dx) : 0;
+      const dist = 10;
+
+      const wasMoving = this._wasMoving.get(id) || false;
+      if (isMoving && !wasMoving && moveSpeed > 1) {
+        this.smokeFx.spawnBurst(
+          ex + ndx * dist, ey + ndy * 2 + 10,
+          0, 1.0, angle, 0.25,
+        );
+      }
+      this._wasMoving.set(id, isMoving);
+
+      if (!isMoving || moveSpeed <= 1) {
+        this._movePuffTimers.delete(id);
+        return;
+      }
+
+      const interval = speed > 80 ? 300 : 500;
+      const last = this._movePuffTimers.get(id) || 0;
+      if (now - last < interval) return;
+      this._movePuffTimers.set(id, now);
+
+      this.smokeFx.spawnBurst(
+        ex + ndx * dist, ey + ndy * 2 + 10,
+        Math.floor(Math.random() * 3),
+        0.7 + Math.random() * 0.2,
+        angle,
+        0.25,
+      );
+    });
   }
 
   updateEffects(dt) {
@@ -647,6 +716,7 @@ export class Renderer {
     this.megumiVisual.update(dt);
     this.hakariVisual.update(dt);
     this.domainVisual.update(dt);
+    this.smokeFx.update(dt);
     if (this.domainVisual._needsZoomReset) {
       this.domainVisual._needsZoomReset = false;
       this.startZoom(1, 400);
@@ -2539,29 +2609,9 @@ export class Renderer {
       if (slash.life <= 0) continue;
       const pos = worldToScreen(this.camera, this.canvas, slash.worldX, slash.worldY);
       const progress = 1 - slash.life / slash.maxLife;
-      const sprite = this.gojoVisual.gojoAttackSprite;
 
-      // Trail sprites
-      if (slash.trail && sprite && sprite.complete && sprite.naturalWidth > 0) {
-        const aspect = sprite.naturalWidth / sprite.naturalHeight;
-        const tHeight = (12 + slash.comboStep * 3) * this.camera.zoom;
-        const tWidth = tHeight * aspect;
-        const angle = Math.atan2(slash.dirY, slash.dirX);
-        for (const t of slash.trail) {
-          const tp = worldToScreen(this.camera, this.canvas, t.x, t.y);
-          const baseY = tp.y - 25;
-          const tAlpha = (t.life / 0.4) * 0.25;
-          ctx.save();
-          ctx.translate(tp.x, baseY);
-          ctx.globalCompositeOperation = "lighter";
-          ctx.rotate(angle);
-          ctx.globalAlpha = tAlpha;
-          ctx.drawImage(sprite, -tWidth / 2, -tHeight / 2, tWidth, tHeight);
-          ctx.restore();
-        }
-      }
-
-      drawGojoM1Sprite(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep, sprite, this.camera.zoom);
+      drawGojoM1Slash(ctx, pos.x, pos.y, slash.dirX, slash.dirY, progress, slash.comboStep,
+        this.gojoVisual.gojoM1Vertical, this.gojoVisual.gojoM1Horizontal, this.camera.zoom);
     }
   }
 
@@ -2687,6 +2737,7 @@ export class Renderer {
     this._renderDt = this._lastRenderTime ? Math.min((now - this._lastRenderTime) / 1000, 0.05) : 1 / 60;
     this._lastRenderTime = now;
     this.interpolationRef = interpolation || this.interpolationRef;
+    this._updateMovementSmoke(this._renderDt);
     if (typeof window._diagRender === 'undefined') {
       window._diagRender = 0;
     }
@@ -2717,6 +2768,7 @@ export class Renderer {
       this.drawEnemies(interpolation.enemies, interpolation.domains);
       this.drawDissolveEffects();
       this.drawM1PunchEffects();
+      this.smokeFx.render(this.ctx, this.camera);
       this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);
       this.yutaVisual.renderEffects(this.ctx, this.camera);

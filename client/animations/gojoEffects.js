@@ -131,41 +131,40 @@ export function drawDodgeEffect(ctx, x, y, facing, progress, zoom = 1) {
   ctx.restore();
 }
 
-export function drawGojoM1Sprite(ctx, x, y, dirX, dirY, progress, comboStep, sprite, zoom = 1) {
+export function drawGojoM1Slash(ctx, x, y, dirX, dirY, progress, comboStep, vSprite, hSprite, zoom = 1) {
   if (progress <= 0.01 || progress >= 0.98) return;
 
-  const rawFadeIn = Math.min(1, progress * 4);
-  const fadeIn = rawFadeIn * rawFadeIn * (3 - 2 * rawFadeIn);
-  const rawFadeOut = Math.max(0, 1 - progress * 1.4);
-  const fadeOut = rawFadeOut * rawFadeOut * (3 - 2 * rawFadeOut);
-  const alpha = fadeIn * fadeOut;
+  const fadeIn = Math.min(1, progress * 5);
+  const fadeOut = Math.max(0, 1 - progress * 1.8);
+  const alpha = fadeIn * fadeOut * (3 - 2 * fadeIn) * fadeOut * (3 - 2 * fadeOut);
   if (alpha <= 0.01) return;
 
+  const sprite = comboStep === 2 ? hSprite : vSprite;
+  if (!sprite || !sprite.complete || sprite.naturalWidth === 0) return;
+
+  const sizeMap = { 1: 130, 2: 100, 3: 160 };
+  const distMap = { 1: 25, 2: 35, 3: 20 };
+  const displaySize = (sizeMap[comboStep] || 60) * zoom;
+
+  const frameW = 48;
+  const frameH = 48;
+  const totalFrames = Math.floor(sprite.naturalWidth / frameW);
+  const usableFrames = totalFrames > 5 ? 5 : totalFrames;
+  const frameIndex = Math.min(Math.floor(progress * usableFrames), usableFrames - 1);
+
   const angle = Math.atan2(dirY, dirX);
-  const range = 85 * zoom;
-  const moveIn = Math.min(0.8, progress * 5);
-  const spriteDist = range * 1.15 * moveIn;
-  const perpX = -dirY;
-  const perpY = dirX;
-  const offsetMap = { 1: 0, 2: 35, 3: 18 };
-  const offset = (offsetMap[comboStep] || 0) * zoom;
-  const baseY = y - 25 * zoom;
-  const sx = Math.cos(angle) * spriteDist + perpX * offset;
-  const sy = Math.sin(angle) * spriteDist + perpY * offset;
+  const dist = distMap[comboStep] * zoom;
 
-  if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-    const aspect = sprite.naturalWidth / sprite.naturalHeight;
-    const sizes = { 1: 65, 2: 85, 3: 75 };
-    const spriteHeight = (sizes[comboStep] || 65) * 0.7 * zoom;
-    const spriteWidth = spriteHeight * aspect;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.translate(x, y - 30 * zoom);
+  ctx.translate(Math.cos(angle) * dist, Math.sin(angle) * dist);
+  ctx.rotate(angle);
+  ctx.globalAlpha = alpha;
 
-    ctx.save();
-    ctx.translate(x, baseY);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.translate(sx, sy);
-    ctx.rotate(angle);
-    ctx.globalAlpha = alpha;
-    ctx.drawImage(sprite, -spriteWidth / 2, -spriteHeight / 2, spriteWidth, spriteHeight);
-    ctx.restore();
-  }
+  ctx.shadowColor = "rgba(255,255,255,0.5)";
+  ctx.shadowBlur = 15 * zoom;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, frameIndex * frameW, 0, frameW, frameH, -displaySize / 2, -displaySize / 2, displaySize, displaySize);
+  ctx.restore();
 }

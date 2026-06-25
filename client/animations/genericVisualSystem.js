@@ -81,6 +81,12 @@ export class GenericVisualSystem {
       return;
     }
 
+    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    const movingM1 = speed > 20 && animState && animState.startsWith("m1_");
+    if (movingM1) {
+      pos.y += Math.sin(this.time * 40) * 2 * zoom;
+    }
+
     this.sprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
 
     if (!p.alive) return;

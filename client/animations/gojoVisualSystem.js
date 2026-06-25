@@ -1,7 +1,7 @@
 ﻿import { SpriteAnimator } from "./spriteAnimator.js";
 import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH } from "./gojoSprites.js";
 import { GojoSkillEffects } from "./proceduralGojo.js";
-import { drawHitReaction } from "./gojoEffects.js";
+import { drawHitReaction, drawGojoM1Slash } from "./gojoEffects.js";
 
 export class GojoVisualSystem {
   constructor() {
@@ -19,8 +19,10 @@ export class GojoVisualSystem {
     this.dodgeEffects = new Map();
     this.m1Slashes = [];
     this.time = 0;
-    this.gojoAttackSprite = new Image();
-    this.gojoAttackSprite.src = "/assets/habilit/o-honradoattack.png";
+    this.gojoM1Vertical = new Image();
+    this.gojoM1Vertical.src = "/assets/habilit/gojo_m1_vertical.png";
+    this.gojoM1Horizontal = new Image();
+    this.gojoM1Horizontal.src = "/assets/habilit/gojo_m1_horizontal.png";
     this.dashImage = new Image();
     this.dashImage.src = "/assets/sprites/o-honrado-dash.png";
     this.domainPrepFrames = [];
@@ -61,10 +63,12 @@ export class GojoVisualSystem {
   }
 
   triggerM1(worldX, worldY, dirX, dirY, comboStep, playerId) {
+    const lifeMap = { 1: 0.15, 2: 0.18, 3: 0.22 };
+    const life = lifeMap[comboStep] || 0.18;
     this.m1Slashes.push({
-      worldX: worldX - dirX * 35,
-      worldY: worldY - 35,
-      dirX, dirY, comboStep, life: 0.2, maxLife: 0.2,
+      worldX: worldX + dirX * 75,
+      worldY: worldY + dirY * 75,
+      dirX, dirY, comboStep, life, maxLife: life,
     });
   }
 
@@ -167,6 +171,12 @@ export class GojoVisualSystem {
 
     if (animState === "run") {
       pos.y += Math.sin(this.time * 10) * 2.5 * zoom;
+    }
+
+    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    const movingM1 = speed > 20 && animState && animState.startsWith("m1_");
+    if (movingM1) {
+      pos.y += Math.sin(this.time * 40) * 2 * zoom;
     }
 
     this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
