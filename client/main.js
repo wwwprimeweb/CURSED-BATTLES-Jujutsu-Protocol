@@ -276,6 +276,11 @@ function handleEvents(events) {
         } else if (ev.sourceId === state.playerId) {
           category = "dealt";
         }
+        if (ev.targetKind === "player") {
+          const dirX = ev.x - ev.fromX;
+          const dirY = ev.y - ev.fromY;
+          renderer.bloodEffect.spawnBurst(ev.x, ev.y, dirX, dirY, ev.amount, ev.targetId);
+        }
         renderer.spawnDamageNumber(ev.targetId, ev.amount, category, ev.x, ev.y);
       }
       const isYujiM1Hit = ev.kind === "m1" && ev.sourceCharacter === "punho-indomavel" && !ev.sourceBlackFlash;

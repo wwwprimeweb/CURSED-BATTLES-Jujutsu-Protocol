@@ -5,6 +5,7 @@ import { GenericVisualSystem } from "../animations/genericVisualSystem.js";
 import { DomainVisualSystem } from "../animations/domainVisualSystem.js";
 import { drawGojoM1Slash } from "../animations/gojoEffects.js";
 import { SmokeEffect } from "../animations/smokeEffect.js";
+import { BloodEffect } from "../animations/bloodEffect.js";
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
@@ -41,6 +42,8 @@ export class Renderer {
     this.domainVisual = new DomainVisualSystem();
     this.smokeFx = new SmokeEffect();
     this.smokeFx.load();
+    this.bloodEffect = new BloodEffect();
+    this.bloodEffect.load();
     this.map = null;
     this.camera = {
       x: 0,
@@ -717,6 +720,7 @@ export class Renderer {
     this.hakariVisual.update(dt);
     this.domainVisual.update(dt);
     this.smokeFx.update(dt);
+    this.bloodEffect.update(dt, this.interpolationRef?.players);
     if (this.domainVisual._needsZoomReset) {
       this.domainVisual._needsZoomReset = false;
       this.startZoom(1, 400);
@@ -2769,6 +2773,7 @@ export class Renderer {
       this.drawDissolveEffects();
       this.drawM1PunchEffects();
       this.smokeFx.render(this.ctx, this.camera);
+      this.bloodEffect.render(this.ctx, this.camera);
       this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);
       this.yutaVisual.renderEffects(this.ctx, this.camera);

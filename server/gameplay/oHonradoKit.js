@@ -4,7 +4,7 @@ const O_HONRADO = {
   m1: {
     name: "Cursed Jab Combo",
     damage: 22,
-    range: 100,
+    range: 125,
     cooldown: 0.4,
     animDuration: 0.4,
     stepDurations: [0.25, 0.36, 0.31],

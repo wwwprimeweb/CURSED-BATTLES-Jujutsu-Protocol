@@ -1173,6 +1173,9 @@ class GameServer {
     const coneAngle = isYutaSlash ? (kit.m1.coneAngle || 1.4) : 0;
 
     let coneThreshold = 0.2;
+    if (player.character === "o-honrado") {
+      coneThreshold = 0.1;
+    }
     if (player.character === "punho-indomavel") {
       const step = (player.comboStep - 1) % 4;
       slashRange = (kit.m1.stepRanges || [])[step] ?? kit.m1.range;

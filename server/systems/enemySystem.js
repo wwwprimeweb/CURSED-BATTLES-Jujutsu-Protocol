@@ -56,6 +56,8 @@ class EnemySystem {
             target: player,
             amount: zone.dps * dt,
             kind: "acid",
+            fromX: zone.x,
+            fromY: zone.y,
           });
         }
       });

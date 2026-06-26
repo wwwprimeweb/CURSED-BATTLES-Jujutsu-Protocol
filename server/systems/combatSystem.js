@@ -110,6 +110,8 @@ class CombatSystem {
       type: "hit",
       x: target.x,
       y: target.y,
+      fromX: Number.isFinite(fromX) ? fromX : (source ? source.x : target.x),
+      fromY: Number.isFinite(fromY) ? fromY : (source ? source.y : target.y),
       kind,
       amount: Math.round(finalDamage),
       targetKind: target.kind,
