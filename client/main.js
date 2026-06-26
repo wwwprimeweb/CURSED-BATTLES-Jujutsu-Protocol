@@ -693,9 +693,7 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6d94", count: 26, speed: 300, life: 0.5, size: 3.2 });
       hud.pushNotice("Boss apareceu", "danger", "perigo no centro da arena");
     } else if (ev.type === "telegraph") {
-      if (ev.radius < 250 && ev.enemyType !== "fleshmaw" && ev.enemyType !== "staring_beast") {
-        renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 70, color: "rgba(255,140,180,0.5)", ttl: 0.45 });
-      }
+      // desativado
     } else if (ev.type === "bossSlamTelegraph") {
       renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 120, color: "rgba(255,110,140,0.58)", ttl: ev.delay || 0.85 });
     } else if (ev.type === "bossSlamImpact") {

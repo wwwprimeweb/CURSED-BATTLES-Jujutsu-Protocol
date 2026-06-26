@@ -79,6 +79,8 @@ export class Renderer {
     this.dashTweens = new Map();
     this._movePuffTimers = new Map();
     this._wasMoving = new Map();
+    this._enemyMovePuffTimers = new Map();
+    this._enemyWasMoving = new Map();
     this.markers = [];
     this.redExplosions = [];
     this.blueExplosions = [];
@@ -105,7 +107,7 @@ export class Renderer {
     this.acidPuddles = [];
 
     this.monsterSprites = {};
-    this.spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 3.25, staring_beast: 3.5 };
+    this.spriteScale = { crawler_nest: 4.5, crawler_baby: 3.6, fleshmaw: 4.0, staring_beast: 3.5 };
     this.dissolveEffects = [];
     this.enemyFacing = new Map();
     this.enemyHpVisuals = new Map();
@@ -705,6 +707,77 @@ export class Renderer {
         ex + ndx * dist, ey + ndy * 2 + 10,
         Math.floor(Math.random() * 3),
         0.7 + Math.random() * 0.2,
+        angle,
+        0.25,
+      );
+    });
+  }
+
+  _getEnemySmokeParams(e) {
+    const ss = this.spriteScale[e.type] || 2;
+    const speed = Math.sqrt(e.vx * e.vx + e.vy * e.vy);
+    const spriteH = 18 * 2.5 * ss;
+    const sprite = this.monsterSprites[e.type];
+    const aspect = sprite ? sprite.naturalWidth / sprite.naturalHeight : 1;
+    const spriteW = spriteH * aspect;
+    const sizeFactor = Math.sqrt(spriteH * spriteW) / 45;
+    const puffScale = 0.30 * Math.pow(sizeFactor, 0.7);
+    return {
+      interval: Math.max(350, Math.min(600, speed * 2)),
+      threshold: 10,
+      puffScale,
+      burstScale: 0.40 * Math.pow(sizeFactor, 0.7),
+      dist: spriteW < 160 ? spriteW * 0.30 : spriteW / 2 - 32 * puffScale,
+      height: spriteH * 0.18,
+      dirYOffset: spriteH * 0.06,
+    };
+  }
+
+  _updateEnemyMovementSmoke(dt) {
+    const interp = this.interpolationRef;
+    if (!interp) return;
+    const now = performance.now();
+
+    interp.enemies.forEach((entry) => {
+      const e = entry.raw;
+      if (!e.alive || e.frozen || e.stunned) return;
+
+      const dx = entry.tx - entry.x;
+      const dy = entry.ty - entry.y;
+      const moveSpeed = Math.sqrt(dx * dx + dy * dy);
+      const rawSpeed = Math.sqrt(e.vx * e.vx + e.vy * e.vy);
+
+      const cfg = this._getEnemySmokeParams(e);
+      const ndx = moveSpeed > 1 ? -dx / moveSpeed : 0;
+      const ndy = moveSpeed > 1 ? -dy / moveSpeed : 0;
+      const angle = moveSpeed > 1 ? Math.atan2(dy, dx) : 0;
+
+      const isMoving = rawSpeed > cfg.threshold;
+      const wasMoving = this._enemyWasMoving.get(e.id) || false;
+
+      if (isMoving && !wasMoving && rawSpeed > 1) {
+        this.smokeFx.spawnBurst(
+          entry.x + ndx * cfg.dist,
+          entry.y + ndy * cfg.dirYOffset + cfg.height,
+          0, cfg.burstScale, angle, 0.3,
+        );
+      }
+      this._enemyWasMoving.set(e.id, isMoving);
+
+      if (!isMoving || moveSpeed <= 1) {
+        this._enemyMovePuffTimers.delete(e.id);
+        return;
+      }
+
+      const last = this._enemyMovePuffTimers.get(e.id) || 0;
+      if (now - last < cfg.interval) return;
+      this._enemyMovePuffTimers.set(e.id, now);
+
+      this.smokeFx.spawnBurst(
+        entry.x + ndx * cfg.dist,
+        entry.y + ndy * cfg.dirYOffset + cfg.height,
+        Math.floor(Math.random() * 3),
+        cfg.puffScale + Math.random() * 0.15,
         angle,
         0.25,
       );
@@ -2748,6 +2821,7 @@ export class Renderer {
     this._lastRenderTime = now;
     this.interpolationRef = interpolation || this.interpolationRef;
     this._updateMovementSmoke(this._renderDt);
+    this._updateEnemyMovementSmoke(this._renderDt);
     if (typeof window._diagRender === 'undefined') {
       window._diagRender = 0;
     }
@@ -2776,10 +2850,10 @@ export class Renderer {
       this._players = interpolation.players;
       this._enemies = interpolation.enemies;
       this.particles.render(this.ctx, this.camera, "back");
+      this.smokeFx.render(this.ctx, this.camera);
       this.drawEnemies(interpolation.enemies, interpolation.domains);
       this.drawDissolveEffects();
       this.drawM1PunchEffects();
-      this.smokeFx.render(this.ctx, this.camera);
       this.bloodEffect.render(this.ctx, this.camera);
       this.hitImpact.render(this.ctx, this.camera);
       this.drawPlayers(interpolation.players, youId, localPred);
