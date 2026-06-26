@@ -17,6 +17,10 @@ export class ParticleSystem {
         shape: "circle",
         rotation: 0,
         spin: 0,
+        gravity: 0,
+        seed: 0,
+        damping: 0.92,
+        layer: "front",
       });
     }
   }
@@ -35,6 +39,10 @@ export class ParticleSystem {
       p.maxLife = life;
       p.size = size * (0.7 + Math.random() * 0.7);
       p.color = color;
+      p.gravity = 0;
+      p.seed = 0;
+      p.damping = 0.92;
+      p.layer = "front";
       this.active.push(p);
     }
   }
@@ -60,6 +68,38 @@ export class ParticleSystem {
       p.spin = 0;
       p.borderColor = borderColor || null;
       p.borderWidth = borderWidth || 0;
+      p.gravity = 0;
+      p.seed = 0;
+      p.damping = 0.92;
+      p.layer = "front";
+      this.active.push(p);
+    }
+  }
+
+  spawnSplatter({ x, y, dirX, dirY, count = 8, speed = 200, life = 0.35, size = 3, gravity = 0.1, spread = 0.6, damping = 0.96, colors } = {}) {
+    if (!colors) colors = ["#9933FF", "#7B2DBF", "#4A1A7A", "#8833DD"];
+    for (let i = 0; i < count; i += 1) {
+      if (this.pool.length === 0) return;
+      const p = this.pool.pop();
+      const angle = Math.atan2(dirY, dirX) + (Math.random() - 0.5) * spread;
+      const s = speed * (0.5 + Math.random());
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * s;
+      p.vy = Math.sin(angle) * s;
+      p.life = life * (0.7 + Math.random() * 0.3);
+      p.maxLife = p.life;
+      p.size = size * (0.6 + Math.random() * 0.8);
+      p.color = colors[Math.floor(Math.random() * colors.length)];
+      p.shape = "splatter";
+      p.rotation = Math.random() * Math.PI * 2;
+      p.spin = (Math.random() - 0.5) * 6;
+      p.borderColor = null;
+      p.borderWidth = 0;
+      p.gravity = gravity;
+      p.seed = Math.random() * 1000;
+      p.damping = damping;
+      p.layer = "back";
       this.active.push(p);
     }
   }
@@ -83,6 +123,10 @@ export class ParticleSystem {
       p.shape = "star";
       p.rotation = Math.random() * Math.PI * 2;
       p.spin = (Math.random() - 0.5) * 2.0;
+      p.gravity = 0;
+      p.seed = 0;
+      p.damping = 0.92;
+      p.layer = "front";
       this.active.push(p);
     }
   }
@@ -102,6 +146,10 @@ export class ParticleSystem {
       p.maxLife = life;
       p.size = 1.3 + Math.random() * 2.4;
       p.color = color;
+      p.gravity = 0;
+      p.seed = 0;
+      p.damping = 0.92;
+      p.layer = "front";
       this.active.push(p);
     }
   }
@@ -119,7 +167,10 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.rotation += (p.spin || 0) * dt;
-      const damp = Math.pow(0.92, dt * 60);
+      if (p.gravity) {
+        p.vy += p.gravity * 60 * dt;
+      }
+      const damp = Math.pow(p.damping || 0.92, dt * 60);
       p.vx *= damp;
       p.vy *= damp;
     }
@@ -131,10 +182,11 @@ export class ParticleSystem {
     }
   }
 
-  render(ctx, camera) {
+  render(ctx, camera, layerFilter) {
     const zoom = camera.zoom;
     for (let i = 0; i < this.active.length; i += 1) {
       const p = this.active[i];
+      if (layerFilter && p.layer !== layerFilter) continue;
       const t = p.life / p.maxLife;
       const alpha = Math.max(0.08, t);
       const sx = (p.x - camera.x) * zoom + ctx.canvas.width * 0.5;
@@ -169,6 +221,24 @@ export class ParticleSystem {
           if (k === 0) ctx.moveTo(ox, oy);
           else ctx.lineTo(ox, oy);
           ctx.lineTo(ix, iy);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else if (p.shape === "splatter") {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.translate(sx, sy);
+        ctx.rotate(p.rotation || 0);
+        const steps = 14;
+        const baseR = r;
+        ctx.beginPath();
+        for (let k = 0; k < steps; k += 1) {
+          const a = (k / steps) * Math.PI * 2;
+          const wobble = 1 + Math.sin(a * 3 + p.seed) * 0.2 + Math.sin(a * 5 + p.seed * 1.7) * 0.1;
+          const rr = baseR * wobble;
+          const px = Math.cos(a) * rr;
+          const py = Math.sin(a) * rr;
+          if (k === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
         }
         ctx.closePath();
         ctx.fill();

@@ -6,6 +6,7 @@ import { DomainVisualSystem } from "../animations/domainVisualSystem.js";
 import { drawGojoM1Slash } from "../animations/gojoEffects.js";
 import { SmokeEffect } from "../animations/smokeEffect.js";
 import { BloodEffect } from "../animations/bloodEffect.js";
+import { HitImpactEffect } from "../animations/hitImpact.js";
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
@@ -44,6 +45,8 @@ export class Renderer {
     this.smokeFx.load();
     this.bloodEffect = new BloodEffect();
     this.bloodEffect.load();
+    this.hitImpact = new HitImpactEffect();
+    this.hitImpact.load();
     this.map = null;
     this.camera = {
       x: 0,
@@ -721,6 +724,7 @@ export class Renderer {
     this.domainVisual.update(dt);
     this.smokeFx.update(dt);
     this.bloodEffect.update(dt, this.interpolationRef?.players);
+    this.hitImpact.update(dt);
     if (this.domainVisual._needsZoomReset) {
       this.domainVisual._needsZoomReset = false;
       this.startZoom(1, 400);
@@ -971,6 +975,7 @@ export class Renderer {
     this.yutaVisual.effects.katanaSlashes = [];
     this.yutaVisual.effects.rikas = new Map();
     this.domainVisual.shattering = [];
+    this.hitImpact.clear();
   }
 
   drawMarkers() {
@@ -2769,11 +2774,13 @@ export class Renderer {
       this.renderPurpleExplosions(this.ctx, this.camera);
       this._players = interpolation.players;
       this._enemies = interpolation.enemies;
+      this.particles.render(this.ctx, this.camera, "back");
       this.drawEnemies(interpolation.enemies, interpolation.domains);
       this.drawDissolveEffects();
       this.drawM1PunchEffects();
       this.smokeFx.render(this.ctx, this.camera);
       this.bloodEffect.render(this.ctx, this.camera);
+      this.hitImpact.render(this.ctx, this.camera);
       this.drawPlayers(interpolation.players, youId, localPred);
       this.gojoVisual.renderEffects(this.ctx, this.camera);
       this.yutaVisual.renderEffects(this.ctx, this.camera);
@@ -2782,7 +2789,7 @@ export class Renderer {
       this.megumiVisual.renderEffects(this.ctx, this.camera);
       this.hakariVisual.renderEffects(this.ctx, this.camera);
       this.drawM1PunchEffects();
-      this.particles.render(this.ctx, this.camera);
+      this.particles.render(this.ctx, this.camera, "front");
       this.drawDamageNumbers();
       this.ctx.save();
       this.drawDomainPrivacy(interpolation.domains, you, localPred, this.canvas.clientWidth, this.canvas.clientHeight);

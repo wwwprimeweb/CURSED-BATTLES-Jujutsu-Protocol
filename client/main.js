@@ -281,6 +281,36 @@ function handleEvents(events) {
           const dirY = ev.y - ev.fromY;
           renderer.bloodEffect.spawnBurst(ev.x, ev.y, dirX, dirY, ev.amount, ev.targetId);
         }
+        if (ev.targetKind === "enemy" && ev.sourceKind === "player") {
+          renderer.hitImpact.spawn(ev.x, ev.y, ev.fromX, ev.fromY);
+          const dx = ev.x - ev.fromX;
+          const dy = ev.y - ev.fromY;
+          const len = Math.hypot(dx, dy) || 1;
+          const nx = dx / len;
+          const ny = dy / len;
+          const splatterCount = Math.min(6 + Math.floor(ev.amount * 0.1), 22);
+          particles.spawnSplatter({
+            x: ev.x + nx * 16, y: ev.y + ny * 16,
+            dirX: nx, dirY: ny,
+            count: splatterCount,
+            speed: 150 + Math.min(ev.amount * 2, 350),
+            size: 1.5 + Math.min(ev.amount * 0.02, 4),
+            life: 0.2 + Math.min(ev.amount * 0.003, 0.5),
+            gravity: 0.06,
+            spread: Math.PI * 0.2,
+          });
+          particles.spawnSplatter({
+            x: ev.x + nx * 14, y: ev.y + ny * 14,
+            dirX: nx, dirY: ny,
+            count: Math.floor(splatterCount * 0.6),
+            speed: 200 + Math.min(ev.amount * 2, 400),
+            size: 1 + Math.min(ev.amount * 0.015, 2.5),
+            life: 0.15 + Math.min(ev.amount * 0.002, 0.35),
+            gravity: 0.08,
+            spread: Math.PI * 0.3,
+            colors: ["#1A0033", "#000000", "#0A0018"],
+          });
+        }
         renderer.spawnDamageNumber(ev.targetId, ev.amount, category, ev.x, ev.y);
       }
       const isYujiM1Hit = ev.kind === "m1" && ev.sourceCharacter === "punho-indomavel" && !ev.sourceBlackFlash;
