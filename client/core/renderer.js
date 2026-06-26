@@ -8,6 +8,7 @@ import { SmokeEffect } from "../animations/smokeEffect.js";
 import { BloodEffect } from "../animations/bloodEffect.js";
 import { HitImpactEffect } from "../animations/hitImpact.js";
 
+
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }

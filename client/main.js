@@ -326,7 +326,6 @@ function handleEvents(events) {
         } else {
           particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 10, speed: 260, life: 0.25, size: 3 });
           particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff66b2", count: 14, speed: 200, life: 0.28, size: 2.5 });
-          renderer.yutaVisual && renderer.yutaVisual.triggerHit(ev.x, ev.y, 1.2);
         }
       }
       if (isYujiM1Hit) {
