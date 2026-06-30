@@ -379,9 +379,32 @@ function handleEvents(events) {
       else if (grade === "special") renderer.triggerScreenShake(5, 0.25);
       audio.play("kill");
     } else if (ev.type === "skillBlue") {
+      if (ev.ownerId && (ev.dirX !== undefined || ev.dirY !== undefined)) {
+        const dirX = ev.dirX !== undefined ? ev.dirX : 1;
+        const dirY = ev.dirY !== undefined ? ev.dirY : 0;
+        const facing = dirX < 0 ? -1 : 1;
+        renderer.playerFacing.set(ev.ownerId, facing);
+      }
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66c6ff", count: 12, speed: 180, life: 0.24, size: 2.4 });
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#a0d0ff", count: 8, speed: 100, life: 0.35, size: 3.5 });
       audio.play("skillBlue");
+      audio.ensureBlueHumBuffer();
+      audio.playBuffer("blueHum", 0.15, true);
+    } else if (ev.type === "redChargeStart") {
+      if (ev.ownerId) {
+        const facing = ev.dirX < 0 ? -1 : 1;
+        renderer.playerFacing.set(ev.ownerId, facing);
+        renderer.addRedCharge(ev.ownerId, ev.dirX, ev.dirY);
+        particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff2040", count: 8, speed: 80, life: 0.5, size: 2 });
+        audio.play("skillRed");
+      }
     } else if (ev.type === "skillRed") {
+      if (ev.ownerId && (ev.dirX !== undefined || ev.dirY !== undefined)) {
+        const dirX = ev.dirX !== undefined ? ev.dirX : 1;
+        const dirY = ev.dirY !== undefined ? ev.dirY : 0;
+        const facing = dirX < 0 ? -1 : 1;
+        renderer.playerFacing.set(ev.ownerId, facing);
+      }
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6f8f", count: 12, speed: 210, life: 0.22, size: 2.7 });
       audio.play("skillRed");
     } else if (ev.type === "skillPurple") {
@@ -411,7 +434,6 @@ function handleEvents(events) {
       const dirY = ev.dirY !== undefined ? ev.dirY : 0;
       const oppX = ev.x - dirX * 60;
       const oppY = ev.y - dirY * 60;
-      particles.spawnLine({ x: oppX, y: oppY, dirX: -dirX, dirY: -dirY, color: "#b6e2ff", count: 12, life: 0.4 });
     } else if (ev.type === "teleportStart") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 6, speed: 100, life: 0.15, size: 1.2 });
       renderer.gojoVisual.addTeleport(ev.x, ev.y);
@@ -681,14 +703,29 @@ function handleEvents(events) {
     } else if (ev.type === "trainApproach") {
       audio.play("trainApproach");
     } else if (ev.type === "blueExplosion") {
-      renderer.addBlueExplosion({ x: ev.x, y: ev.y, radius: ev.radius || 200 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#66ccff", count: 30, speed: 250, life: 0.4, size: 3 });
-      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 15, speed: 150, life: 0.3, size: 2 });
+      let ex = ev.x, ey = ev.y;
+      if (ev.projectileId && interpolation) {
+        interpolation.projectiles.forEach((entry) => {
+          if (entry.raw.id === ev.projectileId) {
+            ex = entry.x; ey = entry.y;
+          }
+        });
+      }
+      renderer.addBlueExplosion({ x: ex, y: ey, radius: ev.radius || 200 });
+      particles.spawnBurst({ x: ex, y: ey, color: "#66ccff", count: 30, speed: 250, life: 0.4, size: 3 });
+      particles.spawnBurst({ x: ex, y: ey, color: "#ffffff", count: 15, speed: 150, life: 0.3, size: 2 });
+      audio.stopBuffer("blueHum");
+      audio.play("blueExplosion");
+    } else if (ev.type === "redHit") {
+      particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff4d6d", count: 10, speed: 200, life: 0.2, size: 2 });
+      audio.play("redExplosion");
     } else if (ev.type === "redExplosion") {
       renderer.addRedExplosion({ x: ev.x, y: ev.y, radius: ev.radius || 110 });
+      renderer.clearRedCharge(ev.ownerId);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff4d6d", count: 25, speed: 350, life: 0.3, size: 2.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 15, speed: 200, life: 0.2, size: 2 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#2a0000", count: 10, speed: 250, life: 0.25, size: 3 });
+      audio.play("redExplosion");
     } else if (ev.type === "bossSpawn") {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6d94", count: 26, speed: 300, life: 0.5, size: 3.2 });
       hud.pushNotice("Boss apareceu", "danger", "perigo no centro da arena");

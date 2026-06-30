@@ -1,5 +1,5 @@
 import { CharacterSprite } from "./characterSprite.js";
-import { drawDeathPose, drawHitReaction, drawDodgeEffect } from "./gojoEffects.js";
+import { drawDeathPose, drawHitReaction } from "./gojoEffects.js";
 
 export class GenericVisualSystem {
   constructor(character) {
@@ -48,16 +48,6 @@ export class GenericVisualSystem {
     if (animState === "domain_prepare") {
       this.sprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
       return;
-    }
-
-    if (animState === "dodge" && p.dodgeStartTime) {
-      const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
-      const dodgeProgress = Math.min(1, dodgeAge / 0.2);
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.scale(zoom, zoom);
-      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress, zoom);
-      ctx.restore();
     }
 
     if (animState === "hit" && p.hitTime) {

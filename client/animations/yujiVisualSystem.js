@@ -1,6 +1,6 @@
 import { SpriteAnimator } from "./spriteAnimator.js";
 import { YUJI_ANIMATIONS, YUJI_SPRITE_CONFIG, YUJI_SHEET_PATH } from "./yujiSprites.js";
-import { drawHitReaction, drawDodgeEffect, drawDeathPose } from "./gojoEffects.js";
+import { drawHitReaction, drawDeathPose } from "./gojoEffects.js";
 
 const IMPACT_SHEET_PATH = "/assets/sprites/punho-indomavel_shinjuku/impact_sheet.png";
 const IMPACT_FRAME_W = 132;
@@ -195,16 +195,6 @@ export class YujiVisualSystem {
     };
 
     const animState = state || p.animState || "idle";
-
-    if (animState === "dodge" && p.dodgeStartTime) {
-      const dodgeAge = (Date.now() - p.dodgeStartTime) / 1000;
-      const dodgeProgress = Math.min(1, dodgeAge / 0.2);
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.scale(zoom, zoom);
-      drawDodgeEffect(ctx, 0, 0, facing, dodgeProgress, zoom);
-      ctx.restore();
-    }
 
     if (animState === "hit" && p.hitTime) {
       const hitAge = (Date.now() - p.hitTime) / 1000;

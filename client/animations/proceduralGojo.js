@@ -394,12 +394,16 @@ export class GojoSkillEffects {
     this.teleports = [];
     this.domains = [];
     this.afterimages = [];
-    this.blueImg = new Image();
-    this.blueImg.src = "/assets/habilit/blue.png";
+    this.blueCastFrames = [];
+    for (let i = 880; i <= 895; i++) {
+      const img = new Image();
+      img.src = `/assets/sprites/TC_Gojo_Satoru/0_${i}.png`;
+      this.blueCastFrames.push(img);
+    }
   }
 
   addBlue(x, y, vx, vy) {
-    this.projectiles.push({ type: "blue", x, y, vx, vy, life: 3.5, maxLife: 3.5, radius: 22 });
+    this.projectiles.push({ type: "blue", x, y, vx, vy, life: 3.5, maxLife: 3.5, radius: 22, formTime: 0.3, formDur: 0.3 });
   }
 
   addRed(x, y, vx, vy) {
@@ -432,6 +436,7 @@ export class GojoSkillEffects {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.life -= dt;
+      if (p.formTime > 0) p.formTime -= dt;
       if (p.life <= 0) this.projectiles.splice(i, 1);
     }
 
@@ -608,19 +613,46 @@ export class GojoSkillEffects {
       ctx.save();
       ctx.globalAlpha = t;
       if (p.type === "blue") {
-        const size = p.radius * 2 * 1.4 * z;
-        if (this.blueImg.complete && this.blueImg.naturalWidth > 0) {
-          ctx.shadowColor = C.blueGlow;
+        const baseRadius = p.radius * 1.6 * z;
+        
+        ctx.translate(s.x, s.y);
+        
+        const totalFrames = 16;
+        const fps = 10;
+        const frameIndex = Math.floor((p.maxLife - p.life) * fps) % totalFrames;
+        const frameImg = this.blueCastFrames[frameIndex];
+        
+        const angle = Math.atan2(p.vy, p.vx);
+        ctx.rotate(angle);
+
+        const size = baseRadius * 4;
+
+        // Glow radial atrás do sprite
+        const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 2.5);
+        glowGrad.addColorStop(0, "rgba(0, 180, 255, 0.5)");
+        glowGrad.addColorStop(0.3, "rgba(0, 100, 255, 0.25)");
+        glowGrad.addColorStop(0.7, "rgba(0, 40, 150, 0.08)");
+        glowGrad.addColorStop(1, "rgba(0, 0, 50, 0)");
+        ctx.fillStyle = glowGrad;
+        ctx.shadowColor = "#0088ff";
+        ctx.shadowBlur = 40 * z;
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+          ctx.shadowColor = "#4cb4ff";
           ctx.shadowBlur = 25 * z;
-          ctx.drawImage(this.blueImg, s.x - size / 2, s.y - size / 2, size, size);
+          ctx.drawImage(frameImg, -size / 2, -size / 2, size, size);
         } else {
           ctx.fillStyle = "#4cb4ff";
-          ctx.shadowColor = C.blueGlow;
+          ctx.shadowColor = "#4cb4ff";
           ctx.shadowBlur = 25 * z;
           ctx.beginPath();
-          ctx.arc(s.x, s.y, p.radius * 1.4 * z, 0, Math.PI * 2);
+          ctx.arc(0, 0, baseRadius, 0, Math.PI * 2);
           ctx.fill();
         }
+
       } else if (p.type === "red") {
         const angle = Math.atan2(p.vy, p.vx);
         const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, p.radius * z);

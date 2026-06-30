@@ -1,5 +1,5 @@
-﻿import { SpriteAnimator } from "./spriteAnimator.js";
-import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH } from "./gojoSprites.js";
+import { SpriteAnimator } from "./spriteAnimator.js";
+import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH, mapServerStateToAnim } from "./gojoSprites.js";
 import { GojoSkillEffects } from "./proceduralGojo.js";
 import { drawHitReaction, drawGojoM1Slash } from "./gojoEffects.js";
 
@@ -34,6 +34,10 @@ export class GojoVisualSystem {
     this.domainPrepTime = 0;
     this._wasDomainPrep = false;
     this.domainPrepTimings = [0.2, 0.2, 0.3, 0.25, 0.6];
+    this.gojoCastSprite = new Image();
+    this.gojoCastSprite.src = "/assets/sprites/o-honrado_manga/1000_15.png";
+    this.gojoRedChargeSprite = new Image();
+    this.gojoRedChargeSprite.src = "/assets/sprites/o-honrado_manga/1000_9.png";
   }
 
   update(dt) {
@@ -114,7 +118,7 @@ export class GojoVisualSystem {
       x: (worldX - camera.x) * zoom + ctx.canvas.width * 0.5,
       y: (worldY - camera.y) * zoom + ctx.canvas.height * 0.5,
     };
-    let animState = state || p.animState || "idle";
+    let animState = state || mapServerStateToAnim(p.animState || "idle");
     const spriteScale = zoom;
 
     if (animState !== "domain_prepare") {
@@ -126,6 +130,21 @@ export class GojoVisualSystem {
         const targetSize = 105 * spriteScale;
         this.drawSprite(ctx, this.dashImage, pos.x, pos.y - 50 * zoom, facing, targetSize);
       }
+      if (p.alive) {
+        ctx.fillStyle = "#dce9ff";
+        ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
+        ctx.textAlign = "center";
+        ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+      }
+      return;
+    }
+
+    if (animState === "skill_blue") {
+      const targetSize = 90 * spriteScale;
+      if (this.gojoCastSprite.complete && this.gojoCastSprite.naturalWidth > 0) {
+        this.drawSprite(ctx, this.gojoCastSprite, pos.x, pos.y - 48 * zoom, facing, targetSize);
+      }
+      
       if (p.alive) {
         ctx.fillStyle = "#dce9ff";
         ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
@@ -179,6 +198,20 @@ export class GojoVisualSystem {
       pos.y += Math.sin(this.time * 40) * 2 * zoom;
     }
 
+    if (animState === "skill_red") {
+      const targetSize = 90 * spriteScale;
+      if (this.gojoRedChargeSprite.complete && this.gojoRedChargeSprite.naturalWidth > 0) {
+        this.drawSprite(ctx, this.gojoRedChargeSprite, pos.x, pos.y - 48 * zoom, facing, targetSize);
+      }
+      if (p.alive) {
+        ctx.fillStyle = "#dce9ff";
+        ctx.font = `600 ${Math.round(14 * zoom)}px Rajdhani`;
+        ctx.textAlign = "center";
+        ctx.fillText(p.name || "o-honrado", pos.x, pos.y - (65 * 1.7 + 10) * zoom);
+      }
+      return;
+    }
+
     this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
 
     if (!p.alive) return;
@@ -220,6 +253,77 @@ export class GojoVisualSystem {
     ctx.drawImage(img, x - drawW / 2, y - drawH / 2, drawW, drawH);
     ctx.restore();
   }
+
+  drawBlueForming(ctx, x, y, progress, spriteScale, zoom) {
+    const p = 1 - Math.pow(1 - progress, 3);
+    const time = Date.now() * 0.005;
+    const maxSize = 50 * spriteScale * zoom;
+    const size = maxSize * p;
+
+    ctx.save();
+    
+    // Suction lines pulling into the center
+    ctx.globalCompositeOperation = "screen";
+    for(let i=0; i<12; i++) {
+        const angle = (i / 12) * Math.PI * 2 + time * 0.5;
+        const pullDist = maxSize * 2.5 * (1 - p) + (Math.sin(time + i) * 10 * zoom);
+        const px = x + Math.cos(angle) * pullDist;
+        const py = y + Math.sin(angle) * pullDist;
+        
+        ctx.fillStyle = `rgba(0, 229, 255, ${(1 - p) * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = `rgba(0, 229, 255, ${(1 - p) * 0.4})`;
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(x + Math.cos(angle) * pullDist * 0.5, y + Math.sin(angle) * pullDist * 0.5);
+        ctx.stroke();
+    }
+
+    // Core sphere
+    const glowR = size * 1.5;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+    grad.addColorStop(0, `rgba(200, 255, 255, ${p})`);
+    grad.addColorStop(0.3, `rgba(0, 229, 255, ${p * 0.9})`);
+    grad.addColorStop(0.6, `rgba(0, 100, 255, ${p * 0.5})`);
+    grad.addColorStop(1, "rgba(0, 0, 50, 0)");
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, glowR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dark swirling center forming
+    ctx.shadowColor = "#00e5ff";
+    ctx.shadowBlur = 15 * p * zoom;
+    ctx.fillStyle = `rgba(0, 40, 150, ${p * 0.9})`;
+    ctx.beginPath();
+    const pts = 12;
+    const r = size * 0.6;
+    for (let i = 0; i <= pts; i++) {
+      const a = (i / pts) * Math.PI * 2 + time * 0.8;
+      const wob = 1 + Math.sin(a * 4 - time) * 0.15;
+      const px = x + Math.cos(a) * r * wob;
+      const py = y + Math.sin(a) * r * wob;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    
+    // Core intense dot
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(255, 255, 255, ${p})`;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
 
   renderEffects(ctx, camera) {
     this.effects.render(ctx, camera);

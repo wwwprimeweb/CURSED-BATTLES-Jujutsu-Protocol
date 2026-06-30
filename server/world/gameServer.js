@@ -677,6 +677,13 @@ class GameServer {
     if (!player.cast) {
       return;
     }
+    if (player.cast.type === "red" && player.cast.timer > 0) {
+      const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+      if (aim.len > 0.001) {
+        player.cast.dirX = aim.x;
+        player.cast.dirY = aim.y;
+      }
+    }
     player.cast.timer -= dt;
     if (player.cast.timer > 0) {
       return;
@@ -1354,6 +1361,8 @@ class GameServer {
       x: p.x,
       y: p.y,
       ownerId: player.id,
+      dirX: cast.dirX,
+      dirY: cast.dirY,
     });
   }
 
@@ -1364,10 +1373,18 @@ class GameServer {
     const aim = normalize(player.aimX - player.x, player.aimY - player.y);
     player.cast = {
       type: "red",
-      timer: O_HONRADO.red.startup,
+      timer: O_HONRADO.red.chargeTime,
       dirX: aim.x,
       dirY: aim.y,
     };
+    this.emitEventNear(player.x, player.y, {
+      type: "redChargeStart",
+      ownerId: player.id,
+      x: player.x + aim.x * 30,
+      y: player.y + aim.y * 30,
+      dirX: aim.x,
+      dirY: aim.y,
+    });
     return true;
   }
 
@@ -1387,6 +1404,7 @@ class GameServer {
       damage: O_HONRADO.red.damage * player.modifiers.redDamageMul,
       knockback: O_HONRADO.red.knockback * player.modifiers.redKnockbackMul,
       color: "#ff4d6d",
+      penetration: true,
       meta: {
         explosionRadius: O_HONRADO.red.explosionRadius * player.modifiers.redExplosionMul,
       },
@@ -1401,6 +1419,8 @@ class GameServer {
       x: projectile.x,
       y: projectile.y,
       ownerId: player.id,
+      dirX: cast.dirX,
+      dirY: cast.dirY,
     });
   }
 
@@ -1664,6 +1684,7 @@ class GameServer {
             type: "redExplosion",
             x: projectile.x,
             y: projectile.y,
+            ownerId: projectile.ownerId,
             radius: projectile.meta ? projectile.meta.explosionRadius : O_HONRADO.red.explosionRadius,
           });
         } else if (projectile.type === "blue") {
@@ -1675,6 +1696,11 @@ class GameServer {
 
       if (projectile.type === "blue") {
         this.updateBlueProjectile(projectile, dt);
+        return;
+      }
+
+      if (projectile.type === "red") {
+        this.updateRedProjectile(projectile, dt);
         return;
       }
 
@@ -1732,6 +1758,100 @@ class GameServer {
       projectile.tickTimer -= projectile.tickRate;
       this.applyBluePulse(projectile);
     }
+  }
+
+  updateRedProjectile(projectile, dt) {
+    if (projectile.sureHit && projectile.homingStrength > 0) {
+      const target = this.findNearestEnemyInDomain(projectile.ownerId, projectile.x, projectile.y);
+      if (target) {
+        const dir = normalize(target.x - projectile.x, target.y - projectile.y);
+        if (dir.len > 0.001) {
+          const currentAngle = Math.atan2(projectile.vy, projectile.vx);
+          const targetAngle = Math.atan2(dir.y, dir.x);
+          let diff = targetAngle - currentAngle;
+          diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+          const maxRot = projectile.homingStrength * dt;
+          const rot = Math.sign(diff) * Math.min(Math.abs(diff), maxRot);
+          const c = Math.cos(rot);
+          const s = Math.sin(rot);
+          const nvx = projectile.vx * c - projectile.vy * s;
+          const nvy = projectile.vx * s + projectile.vy * c;
+          projectile.vx = nvx;
+          projectile.vy = nvy;
+        }
+      }
+    }
+
+    const baseSpeed = projectile.speed;
+    const passiveFactor = this.getPassiveProjectileFactor(projectile);
+    const domainFactor = this.domainSystem.getProjectileSlow(projectile);
+    const speed = baseSpeed * passiveFactor * domainFactor;
+
+    projectile.x += projectile.vx * speed * dt;
+    projectile.y += projectile.vy * speed * dt;
+
+    if (
+      projectile.x < -40 || projectile.y < -40 ||
+      projectile.x > this.map.width + 40 || projectile.y > this.map.height + 40
+    ) {
+      this.projectiles.delete(projectile.id);
+      return;
+    }
+
+    if (this.handleProjectileDomainBarrier(projectile, projectile.prevX, projectile.prevY, projectile.x, projectile.y)) {
+      return;
+    }
+
+    if (this.isCollidingAnyObstacle(projectile.x, projectile.y, projectile.radius)) {
+      this.projectiles.delete(projectile.id);
+      return;
+    }
+
+    if (this.checkBlueRedReaction(projectile)) {
+      this.projectiles.delete(projectile.id);
+      return;
+    }
+
+    const owner = this.players.get(projectile.ownerId) || null;
+    this.players.forEach((player) => {
+      if (!player.alive || player.id === projectile.ownerId) return;
+      if (projectile.hitTargets.has(player.id)) return;
+      const d = distance(player.x, player.y, projectile.x, projectile.y);
+      if (d <= projectile.radius + player.radius) {
+        projectile.hitTargets.add(player.id);
+        this.combat.applyDamage({
+          target: player,
+          source: owner,
+          amount: projectile.damage,
+          kind: "redExplosion",
+          knockback: projectile.knockback,
+          fromX: projectile.x,
+          fromY: projectile.y,
+        });
+      }
+    });
+    this.enemies.forEach((enemy) => {
+      if (!enemy.alive) return;
+      if (projectile.hitTargets.has(enemy.id)) return;
+      const d = distance(enemy.x, enemy.y, projectile.x, projectile.y);
+      if (d <= projectile.radius + enemy.radius) {
+        projectile.hitTargets.add(enemy.id);
+        this.combat.applyDamage({
+          target: enemy,
+          source: owner,
+          amount: projectile.damage,
+          kind: "redExplosion",
+          knockback: projectile.knockback * 1.1,
+          fromX: projectile.x,
+          fromY: projectile.y,
+        });
+        this.emitEventNear(projectile.x, projectile.y, {
+          type: "redHit",
+          x: projectile.x,
+          y: projectile.y,
+        });
+      }
+    });
   }
 
   applyBluePulse(projectile) {
@@ -1813,6 +1933,7 @@ class GameServer {
       x: projectile.x,
       y: projectile.y,
       radius,
+      projectileId: projectile.id,
     });
   }
 
@@ -2599,7 +2720,7 @@ class GameServer {
           targetY: nearestEnemy.y,
         };
       } else {
-        const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+const aim = normalize(input.aimX - player.x, input.aimY - player.y);
         const dashDist = kit.rika.dashDistance;
         player.cast = {
           type: "rikaImpulse",
@@ -3526,6 +3647,7 @@ class GameServer {
         width: p.width,
         length: p.length,
         color: p.color,
+        pullRadius: p.pullRadius,
         life: Math.round((p.lifetime - p.age) * 100) / 100,
         traveled: Math.round(p.traveled * 10) / 10,
         vx: Math.round(p.vx * 1000) / 1000,

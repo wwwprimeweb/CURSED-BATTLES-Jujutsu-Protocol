@@ -37,6 +37,9 @@ export function mapServerStateToAnim(serverState) {
     walk: "walk",
     run: "run",
     m1: "m1_1",
+    m1_1: "m1_1",
+    m1_2: "m1_2",
+    m1_3: "m1_3",
     dodge: "dodge",
     hit: "hit",
     death: "death",
@@ -45,7 +48,7 @@ export function mapServerStateToAnim(serverState) {
     skill3: "skill_purple",
     teleport: "teleport",
     domain: "domain",
-    domain_prepare: "domain",
+    domain_prepare: "domain_prepare",
   };
   return map[serverState] || "idle";
 }

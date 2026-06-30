@@ -76,16 +76,18 @@ export class AudioSystem {
     }
   }
 
-  playBuffer(key, volume = 0.5) {
+  playBuffer(key, volume = 0.5, loop = false) {
     if (!this.enabled || !this.ctx || !this.buffers[key]) return;
 
     if (this._activeSources[key]) {
       try { this._activeSources[key].stop(); } catch (_) {}
+      delete this._activeSources[key];
     }
 
     const source = this.ctx.createBufferSource();
     const gain = this.ctx.createGain();
     source.buffer = this.buffers[key];
+    source.loop = loop;
     gain.gain.value = volume * this._sfxVol;
     source.connect(gain);
     gain.connect(this.masterGain);
@@ -96,6 +98,13 @@ export class AudioSystem {
     };
 
     try { source.start(0); } catch (_) {}
+  }
+
+  stopBuffer(key) {
+    if (this._activeSources[key]) {
+      try { this._activeSources[key].stop(); } catch (_) {}
+      delete this._activeSources[key];
+    }
   }
 
   tone(freq, duration = 0.08, type = "sine", gain = 0.35) {
@@ -111,7 +120,24 @@ export class AudioSystem {
     g.connect(this.masterGain);
 
     const now = this.ctx.currentTime;
-    g.gain.exponentialRampToValueAtTime(gain * this._sfxVol, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain * this._sfxVol), now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  sweep(freqStart, freqEnd, duration = 0.3, type = "sine", gain = 0.2) {
+    if (!this.enabled || !this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freqStart, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), this.ctx.currentTime + duration);
+    g.gain.value = 0.0001;
+    osc.connect(g);
+    g.connect(this.masterGain);
+    const now = this.ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain * this._sfxVol), now + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     osc.start(now);
     osc.stop(now + duration + 0.02);
@@ -133,6 +159,38 @@ export class AudioSystem {
     source.connect(g);
     g.connect(this.masterGain);
     source.start(0);
+  }
+
+  ensureBlueHumBuffer() {
+    if (this.buffers["blueHum"] || !this.ctx) return;
+    const sr = this.ctx.sampleRate;
+    const duration = 2;
+    const len = Math.floor(sr * duration);
+    const buffer = this.ctx.createBuffer(1, len, sr);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < len; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const dt = 1 / sr;
+    const rc = 1 / (2 * Math.PI * 180);
+    const alpha = dt / (rc + dt);
+    let prev = 0;
+    for (let i = 0; i < len; i++) {
+      prev += alpha * (data[i] - prev);
+      data[i] = prev;
+    }
+
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      const fadeIn = Math.min(1, t / 0.4);
+      const fadeOut = Math.min(1, (duration - t) / 0.3);
+      const tremolo = 1 + 0.3 * Math.sin(2 * Math.PI * 2.5 * t);
+      data[i] *= fadeIn * fadeOut * tremolo * 0.5;
+    }
+
+    this.buffers["blueHum"] = buffer;
   }
 
   syntheticClick(gain = 0.1) {
@@ -196,7 +254,7 @@ export class AudioSystem {
     osc.frequency.setValueAtTime(pitch, now);
     osc.frequency.exponentialRampToValueAtTime(pitch * 1.6, now + 0.06);
     oscGain.gain.setValueAtTime(0.0001, now);
-    oscGain.gain.exponentialRampToValueAtTime(gain * this._sfxVol, now + 0.006);
+    oscGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain * this._sfxVol), now + 0.006);
     oscGain.gain.setValueAtTime(gain * 0.7 * this._sfxVol, now + 0.03);
     oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
     osc.connect(oscGain);
@@ -419,8 +477,16 @@ export class AudioSystem {
       case "skillBlue":
         this.tone(280, 0.09, "sine", 0.18);
         break;
+      case "blueExplosion":
+        this.noise(0.12, 0.06, 3);
+        this.sweep(120, 40, 0.3, "sine", 0.18);
+        break;
       case "skillRed":
         this.tone(150, 0.08, "square", 0.2);
+        break;
+      case "redExplosion":
+        this.noise(0.1, 0.08, 2.5);
+        this.sweep(200, 50, 0.25, "sawtooth", 0.2);
         break;
       case "skillPurple":
         this.tone(120, 0.2, "sawtooth", 0.18);
