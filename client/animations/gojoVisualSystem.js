@@ -1,5 +1,5 @@
 import { SpriteAnimator } from "./spriteAnimator.js";
-import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH, mapServerStateToAnim } from "./gojoSprites.js";
+import { GOJO_ANIMATIONS, SPRITE_CONFIG, GOJO_MANGA_SPRITE_PATH, GOJO_TELEPORT_ANIMATIONS, GOJO_TELEPORT_SPRITE_CONFIG, GOJO_TELEPORT_SHEET_PATH, mapServerStateToAnim } from "./gojoSprites.js";
 import { GojoSkillEffects } from "./proceduralGojo.js";
 import { drawHitReaction, drawGojoM1Slash } from "./gojoEffects.js";
 
@@ -15,6 +15,15 @@ export class GojoVisualSystem {
       animations: GOJO_ANIMATIONS,
     });
     this.effects = new GojoSkillEffects();
+    this.teleportAnimator = new SpriteAnimator({
+      sheetPath: GOJO_TELEPORT_SHEET_PATH,
+      cellWidth: GOJO_TELEPORT_SPRITE_CONFIG.cellWidth,
+      cellHeight: GOJO_TELEPORT_SPRITE_CONFIG.cellHeight,
+      pivotX: GOJO_TELEPORT_SPRITE_CONFIG.pivotX,
+      pivotY: GOJO_TELEPORT_SPRITE_CONFIG.pivotY,
+      renderScale: GOJO_TELEPORT_SPRITE_CONFIG.renderScale,
+      animations: GOJO_TELEPORT_ANIMATIONS,
+    });
     this.hitFlashes = new Map();
     this.dodgeEffects = new Map();
     this.m1Slashes = [];
@@ -43,6 +52,7 @@ export class GojoVisualSystem {
   update(dt) {
     this.time += dt;
     this.gojoSprite.update(dt);
+    this.teleportAnimator.update(dt);
     this.effects.update(dt);
 
     this.domainPrepTime += dt;
@@ -121,6 +131,15 @@ export class GojoVisualSystem {
     let animState = state || mapServerStateToAnim(p.animState || "idle");
     const spriteScale = zoom;
 
+    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    if (speed > 20 && p.animState !== "idle" && p.animState !== "death" && p.animState !== "hit" && p.animState !== "walk") {
+      if (p.animState === "run") {
+        pos.y += Math.sin(this.time * 10) * 2.5 * zoom;
+      } else {
+        pos.y += Math.sin(this.time * 40) * 2 * zoom;
+      }
+    }
+
     if (animState !== "domain_prepare") {
       this._wasDomainPrep = false;
     }
@@ -188,16 +207,6 @@ export class GojoVisualSystem {
       return;
     }
 
-    if (animState === "run") {
-      pos.y += Math.sin(this.time * 10) * 2.5 * zoom;
-    }
-
-    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-    const movingM1 = speed > 20 && animState && animState.startsWith("m1_");
-    if (movingM1) {
-      pos.y += Math.sin(this.time * 40) * 2 * zoom;
-    }
-
     if (animState === "skill_red") {
       const targetSize = 90 * spriteScale;
       if (this.gojoRedChargeSprite.complete && this.gojoRedChargeSprite.naturalWidth > 0) {
@@ -212,7 +221,15 @@ export class GojoVisualSystem {
       return;
     }
 
-    this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
+    if (animState === "teleport") {
+      const tp = this.teleportAnimator.players.get(entry.id);
+      if (tp && tp.done) {
+        this.teleportAnimator.resetPlayer(entry.id);
+      }
+      this.teleportAnimator.renderTinted(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id, "#ffffff");
+    } else {
+      this.gojoSprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale, entry.id);
+    }
 
     if (!p.alive) return;
 

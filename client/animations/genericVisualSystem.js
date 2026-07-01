@@ -45,6 +45,11 @@ export class GenericVisualSystem {
     const animState = state || p.animState || "idle";
     const spriteScale = zoom;
 
+    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    if (speed > 20 && animState !== "idle" && animState !== "death" && animState !== "domain_prepare") {
+      pos.y += Math.sin(this.time * 40) * 2 * zoom;
+    }
+
     if (animState === "domain_prepare") {
       this.sprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);
       return;
@@ -69,12 +74,6 @@ export class GenericVisualSystem {
       drawDeathPose(ctx, 0, 0, progress, this.time);
       ctx.restore();
       return;
-    }
-
-    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-    const movingM1 = speed > 20 && animState && animState.startsWith("m1_");
-    if (movingM1) {
-      pos.y += Math.sin(this.time * 40) * 2 * zoom;
     }
 
     this.sprite.render(ctx, pos.x, pos.y, animState, facing, spriteScale);

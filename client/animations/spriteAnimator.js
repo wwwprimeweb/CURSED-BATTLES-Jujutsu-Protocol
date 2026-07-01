@@ -82,6 +82,47 @@ export class SpriteAnimator {
     ctx.restore();
   }
 
+  renderTinted(ctx, x, y, state, facing = 1, scale = 1, playerId = "default", _color = "#ffffff") {
+    if (!this.loaded) return;
+
+    const anim = this.config.animations[state] || this.config.animations.idle;
+    if (!anim) return;
+
+    const player = this.getOrCreate(playerId);
+    const renderScale = scale * (this.config.renderScale || 1);
+
+    if (player.currentState !== state) {
+      player.currentState = state;
+      player.frame = 0;
+      player.time = 0;
+      player.done = false;
+    }
+
+    const frameIdx = Math.floor(player.frame) % anim.frames;
+    const sx = frameIdx * this.config.cellWidth;
+    const sy = anim.row * this.config.cellHeight;
+    const sw = this.config.cellWidth;
+    const sh = this.config.cellHeight;
+
+    const effectivePivotX = this.config.pivotX - (this.config.offsetX || 0);
+    const dx = x - effectivePivotX * renderScale;
+    const bobY = (state === "walk" || state === "run") ? Math.sin(this.walkTime * 40) * 2 * renderScale : 0;
+    const dy = y - this.config.pivotY * renderScale + bobY;
+    const dw = sw * renderScale;
+    const dh = sh * renderScale;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (facing < 0) {
+      ctx.translate(x, y);
+      ctx.scale(-1, 1);
+      ctx.translate(-x, -y);
+    }
+    ctx.filter = "brightness(0) invert(1)";
+    ctx.drawImage(this.image, sx, sy, sw, sh, dx, dy, dw, dh);
+    ctx.restore();
+  }
+
   resetPlayer(playerId) {
     const p = this.players.get(playerId);
     if (p) {

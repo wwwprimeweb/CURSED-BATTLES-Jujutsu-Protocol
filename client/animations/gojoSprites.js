@@ -31,6 +31,18 @@ export const SPRITE_CONFIG = {
 
 export const GOJO_MANGA_SPRITE_PATH = "/assets/sprites/o-honrado_manga_spritesheet.png";
 
+export const GOJO_TELEPORT_ANIMATIONS = {
+  teleport: { row: 0, frames: 6, speed: 20, loop: false },
+};
+export const GOJO_TELEPORT_SPRITE_CONFIG = {
+  cellWidth: 119,
+  cellHeight: 273,
+  pivotX: 28,
+  pivotY: 271,
+  renderScale: 0.78,
+};
+export const GOJO_TELEPORT_SHEET_PATH = "/assets/sprites/o-honrado_teleport.png";
+
 export function mapServerStateToAnim(serverState) {
   const map = {
     idle: "idle",

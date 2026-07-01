@@ -400,6 +400,14 @@ export class GojoSkillEffects {
       img.src = `/assets/sprites/TC_Gojo_Satoru/0_${i}.png`;
       this.blueCastFrames.push(img);
     }
+    this.redCastFrames = [];
+    for (let i = 843; i <= 867; i++) {
+      const img = new Image();
+      img.src = `/assets/sprites/TC_Gojo_Satoru/0_${i}.png`;
+      this.redCastFrames.push(img);
+    }
+    this.teleportSheet = new Image();
+    this.teleportSheet.src = "/assets/sprites/o-honrado_teleport.png";
   }
 
   addBlue(x, y, vx, vy) {
@@ -492,25 +500,25 @@ export class GojoSkillEffects {
       const prog = 1 - t.life / t.maxLife;
       ctx.save();
 
-      const appear = Math.min(1, prog / 0.25);
-      const fade = prog > 0.6 ? 1 - (prog - 0.6) / 0.4 : 1;
-      const alpha = appear * fade;
-      const open = prog < 0.5 ? prog / 0.5 : (1 - (prog - 0.5) / 0.5);
-      const spread = open * 8 * z;
+      const fadeIn = Math.min(1, prog / 0.1);
+      const fadeOut = prog > 0.7 ? 1 - (prog - 0.7) / 0.3 : 1;
+      ctx.globalAlpha = Math.min(fadeIn, fadeOut);
 
-      ctx.shadowColor = "#ffffff";
-      ctx.shadowBlur = 12 * z;
-      ctx.globalAlpha = alpha * 0.65;
-      ctx.strokeStyle = "rgba(255,255,255,0.85)";
-      ctx.lineWidth = 1.5 * z;
+      const frameIndex = Math.min(Math.floor(prog * 6), 5);
+      const cellW = 119;
+      const cellH = 273;
+      const pivotX = 28;
+      const pivotY = 271;
+      const rs = 0.78 * z;
+      const dx = s.x - pivotX * rs;
+      const dy = s.y - pivotY * rs;
+      const dw = cellW * rs;
+      const dh = cellH * rs;
 
-      const height = 30 * z;
-      for (let i = 0; i < 3; i++) {
-        const ox = (i - 1) * spread;
-        ctx.beginPath();
-        ctx.moveTo(s.x + ox, s.y - height);
-        ctx.lineTo(s.x + ox, s.y + height);
-        ctx.stroke();
+      if (this.teleportSheet.complete && this.teleportSheet.naturalWidth > 0) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.filter = "brightness(0) invert(1)";
+        ctx.drawImage(this.teleportSheet, frameIndex * cellW, 0, cellW, cellH, dx, dy, dw, dh);
       }
 
       ctx.restore();
@@ -654,23 +662,40 @@ export class GojoSkillEffects {
         }
 
       } else if (p.type === "red") {
+        ctx.save();
+        ctx.translate(s.x, s.y);
+
         const angle = Math.atan2(p.vy, p.vx);
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, p.radius * z);
-        grad.addColorStop(0, "rgba(255,220,220,1)");
-        grad.addColorStop(0.4, "rgba(255,80,100,0.9)");
-        grad.addColorStop(1, "rgba(200,20,60,0)");
-        ctx.fillStyle = grad;
-        ctx.shadowColor = "#ff4060";
-        ctx.shadowBlur = 30 * z;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, p.radius * z, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,200,200,0.9)";
-        ctx.lineWidth = 2 * z;
-        ctx.beginPath();
-        ctx.moveTo(s.x - Math.cos(angle) * p.radius * 2 * z, s.y - Math.sin(angle) * p.radius * 2 * z);
-        ctx.lineTo(s.x + Math.cos(angle) * p.radius * 0.5 * z, s.y + Math.sin(angle) * p.radius * 0.5 * z);
-        ctx.stroke();
+        ctx.rotate(angle);
+
+        const baseRadius = p.radius * 1.6 * z;
+        const size = baseRadius * 4;
+        const totalFrames = 25;
+        const fps = 10;
+        const frameIndex = Math.floor((p.maxLife - p.life) * fps) % totalFrames;
+        const frameImg = this.redCastFrames[frameIndex];
+
+        ctx.shadowColor = "#ff2040";
+        ctx.shadowBlur = 40 * z;
+
+        if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+          const pivotX = 128 / frameImg.naturalWidth;
+          const pivotY = 115 / frameImg.naturalHeight;
+          ctx.drawImage(frameImg, -size * pivotX, -size * pivotY, size, size);
+        } else {
+          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.radius * z);
+          grad.addColorStop(0, "rgba(255,220,220,1)");
+          grad.addColorStop(0.4, "rgba(255,80,100,0.9)");
+          grad.addColorStop(1, "rgba(200,20,60,0)");
+          ctx.fillStyle = grad;
+          ctx.shadowColor = "#ff4060";
+          ctx.shadowBlur = 30 * z;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.radius * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
       }
       ctx.restore();
     }

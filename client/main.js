@@ -408,23 +408,26 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ff6f8f", count: 12, speed: 210, life: 0.22, size: 2.7 });
       audio.play("skillRed");
     } else if (ev.type === "skillPurple") {
+      if (ev.ownerId) renderer.purpleCharges.delete(ev.ownerId);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#bb8dff", count: 30, speed: 320, life: 0.4, size: 3.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 15, speed: 200, life: 0.3, size: 2.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#e0c0ff", count: 20, speed: 250, life: 0.35, size: 2 });
-      renderer.addMarker({ x: ev.x, y: ev.y, radius: ev.radius || 120, color: "rgba(200,130,255,0.6)", ttl: 0.5 });
       audio.play("skillPurple");
     } else if (ev.type === "spatialCollapse") {
-      renderer.triggerPurpleExplosion(ev);
+      renderer.triggerBlueRedComboExplosion(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#bb8dff", count: 40, speed: 400, life: 0.6, size: 4 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 20, speed: 200, life: 0.4, size: 2 });
-      audio.play("skillPurple");
+      audio.stopBuffer("blueHum");
+      audio.play("blueRedComboExplosion");
     } else if (ev.type === "purpleCharge") {
-      renderer.addMarker({ x: ev.x, y: ev.y, radius: 78, color: "rgba(195,142,255,0.45)", ttl: ev.delay || 0.55 });
+      renderer.startPurpleCharge(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#dbc1ff", count: 10, speed: 110, life: 0.2, size: 1.9 });
     } else if (ev.type === "blueRedReaction") {
-      renderer.startPurpleCharge(ev);
+      renderer.startBlueRedCombo(ev);
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#c080ff", count: 25, speed: 250, life: 0.5, size: 3.5 });
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 12, speed: 180, life: 0.3, size: 2 });
+      audio.stopBuffer("blueHum");
+      audio.play("blueRedComboCharge");
     } else if (ev.type === "dodge") {
       const entry = interpolation.players.get(ev.playerId);
       const sx = entry ? entry.x : ev.x;
@@ -451,6 +454,9 @@ function handleEvents(events) {
       particles.spawnBurst({ x: ev.x, y: ev.y, color: "#ffffff", count: 14, speed: 220, life: 0.3, size: 2 });
       renderer.triggerScreenShake(7, 0.3);
     } else if (ev.type === "divergentFistStart") {
+      if (ev.playerId && ev.dirX !== undefined) {
+        renderer.playerFacing.set(ev.playerId, ev.dirX < 0 ? -1 : 1);
+      }
       playSoundIfNear(ev, "divergentFistStart");
     } else if (ev.type === "flyingKneeStart") {
       particles.spawnLine({ x: ev.x, y: ev.y, dirX: ev.dirX, dirY: ev.dirY, color: "#ffaa44", count: 15, life: 0.3 });

@@ -491,6 +491,17 @@ export class AudioSystem {
       case "skillPurple":
         this.tone(120, 0.2, "sawtooth", 0.18);
         break;
+      case "blueRedComboCharge":
+        this.syntheticChime(0.12, 520, 0.45);
+        this.sweep(160, 420, 0.5, "sine", 0.12);
+        this.tone(90, 0.35, "sawtooth", 0.08);
+        break;
+      case "blueRedComboExplosion":
+        this.noise(0.18, 0.11, 2.6);
+        this.sweep(260, 45, 0.38, "sawtooth", 0.22);
+        this.tone(70, 0.22, "square", 0.16);
+        this.tone(180, 0.12, "triangle", 0.1);
+        break;
       case "yujiM1Start":
         this.syntheticWhoosh(0.09, true);
         this.tone(260, 0.045, "triangle", 0.08);

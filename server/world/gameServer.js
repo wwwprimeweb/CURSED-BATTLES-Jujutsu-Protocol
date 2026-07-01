@@ -1440,12 +1440,18 @@ class GameServer {
       x: player.x,
       y: player.y,
       ownerId: player.id,
+      dirX: aim.x,
+      dirY: aim.y,
+      width: O_HONRADO.purple.width * player.modifiers.purpleWidthMul,
       delay: O_HONRADO.purple.charge,
     });
     return true;
   }
 
   firePurple(player, cast) {
+    const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+    const dirX = aim.len > 0.001 ? aim.x : cast.dirX;
+    const dirY = aim.len > 0.001 ? aim.y : cast.dirY;
     const beam = createProjectile({
       id: `pr${this.nextProjectileId++}`,
       type: "purple",
@@ -1453,8 +1459,8 @@ class GameServer {
       ownerKind: "player",
       x: player.x,
       y: player.y,
-      vx: cast.dirX,
-      vy: cast.dirY,
+      vx: dirX,
+      vy: dirY,
       speed: O_HONRADO.purple.speed,
       radius: 0,
       lifetime: O_HONRADO.purple.length / O_HONRADO.purple.speed + 0.08,
@@ -1478,8 +1484,8 @@ class GameServer {
       x: player.x,
       y: player.y,
       ownerId: player.id,
-      dirX: cast.dirX,
-      dirY: cast.dirY,
+      dirX,
+      dirY,
       width: beam.width,
       length: beam.length,
     });
@@ -1680,13 +1686,7 @@ class GameServer {
 
       if (projectile.age >= projectile.lifetime) {
         if (projectile.type === "red") {
-          this.emitEventNear(projectile.x, projectile.y, {
-            type: "redExplosion",
-            x: projectile.x,
-            y: projectile.y,
-            ownerId: projectile.ownerId,
-            radius: projectile.meta ? projectile.meta.explosionRadius : O_HONRADO.red.explosionRadius,
-          });
+          this.explodeRed(projectile);
         } else if (projectile.type === "blue") {
           this.triggerBlueExplosion(projectile);
         }
@@ -1794,6 +1794,7 @@ class GameServer {
       projectile.x < -40 || projectile.y < -40 ||
       projectile.x > this.map.width + 40 || projectile.y > this.map.height + 40
     ) {
+      this.explodeRed(projectile);
       this.projectiles.delete(projectile.id);
       return;
     }
@@ -1803,6 +1804,7 @@ class GameServer {
     }
 
     if (this.isCollidingAnyObstacle(projectile.x, projectile.y, projectile.radius)) {
+      this.explodeRed(projectile);
       this.projectiles.delete(projectile.id);
       return;
     }
@@ -2203,6 +2205,7 @@ class GameServer {
       type: "spatialCollapse",
       x,
       y,
+      ownerId,
       radius: O_HONRADO.collapse.radius,
     });
   }
@@ -2720,7 +2723,10 @@ class GameServer {
           targetY: nearestEnemy.y,
         };
       } else {
-const aim = normalize(input.aimX - player.x, input.aimY - player.y);
+        const aim = normalize(player.aimX - player.x, player.aimY - player.y);
+        if (Math.abs(aim.x) < 0.001 && Math.abs(aim.y) < 0.001) {
+          aim.x = 1;
+        }
         const dashDist = kit.rika.dashDistance;
         player.cast = {
           type: "rikaImpulse",

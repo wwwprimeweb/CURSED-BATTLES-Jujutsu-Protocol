@@ -87,6 +87,8 @@ export class Renderer {
     this._blueBirthTimes = new Map();
     this.purpleCharges = new Map();
     this.purpleExplosions = [];
+    this.blueRedComboCharges = new Map();
+    this.blueRedComboExplosions = [];
     this.interpolationRef = null;
     this.hollowPurpleImg = new Image();
     this.hollowPurpleImg.src = "/assets/habilit%20hollow%20purple";
@@ -96,6 +98,20 @@ export class Renderer {
       img.src = `/assets/sprites/TC_Gojo_Satoru/0_${i}.png`;
       this.blueProjectileFrames.push(img);
     }
+    this.redProjectileFrames = [];
+    for (let i = 843; i <= 867; i++) {
+      const img = new Image();
+      img.src = `/assets/sprites/TC_Gojo_Satoru/0_${i}.png`;
+      this.redProjectileFrames.push(img);
+    }
+    this.purpleProjectileSheet = new Image();
+    this.purpleProjectileSheet.src = "/assets/sprites/o-honrado_purple.png";
+    this.purpleLightningSheet = new Image();
+    this.purpleLightningSheet.src = "/assets/sprites/o-honrado_purple_lightning.png";
+    this.blueRedComboSheet = new Image();
+    this.blueRedComboSheet.src = "/assets/sprites/o-honrado_blue_red_combo.png";
+    this.blueRedComboExplosionSheet = new Image();
+    this.blueRedComboExplosionSheet.src = "/assets/sprites/o-honrado_blue_red_combo_explosion.png";
     this.redImg = new Image();
     this.redImg.src = "/assets/habilit/red.png";
     this.redCharges = new Map();
@@ -508,8 +524,11 @@ export class Renderer {
     this.purpleCharges.set(ev.ownerId, {
       x: ev.x,
       y: ev.y,
+      dirX: ev.dirX || 1,
+      dirY: ev.dirY || 0,
+      width: ev.width || 151,
       startTime: performance.now(),
-      duration: 3.5,
+      duration: ev.delay || 3.5,
     });
   }
 
@@ -524,39 +543,244 @@ export class Renderer {
     });
   }
 
-  renderPurpleCharges(ctx, camera) {
+  startBlueRedCombo(ev) {
+    this.blueRedComboCharges.set(ev.ownerId || `${ev.x},${ev.y}`, {
+      x: ev.x,
+      y: ev.y,
+      startTime: performance.now(),
+      duration: ev.delay || 3.5,
+    });
+  }
+
+  triggerBlueRedComboExplosion(ev) {
+    if (ev.ownerId) this.blueRedComboCharges.delete(ev.ownerId);
+    this.blueRedComboExplosions.push({
+      x: ev.x,
+      y: ev.y,
+      startTime: performance.now(),
+      duration: 0.6,
+      radius: ev.radius || 210,
+    });
+  }
+
+  renderBlueRedCombos(ctx, camera) {
+    if (!this.blueRedComboSheet.complete || this.blueRedComboSheet.naturalWidth <= 0) return;
     const now = performance.now();
-    const time = now * 0.001;
-    const z = this.camera.zoom;
-    this.purpleCharges.forEach((charge) => {
-      const progress = Math.min(1, (now - charge.startTime) / (charge.duration * 1000));
-      const easeScale = 1 - Math.pow(1 - progress, 2);
-      const imgScale = 0.15 + easeScale * 0.95;
-      const baseSize = 240 * z;
-      const imgSize = baseSize * imgScale;
-      const pulse = 1 + Math.sin(time * 3 + charge.x) * 0.04;
-      const p = worldToScreen(camera, this.canvas, charge.x, charge.y);
+    const z = camera.zoom;
+    const cellW = 388;
+    const cellH = 388;
+
+    for (const [id, combo] of this.blueRedComboCharges) {
+      const elapsed = (now - combo.startTime) / 1000;
+      if (elapsed >= combo.duration) {
+        this.blueRedComboCharges.delete(id);
+        continue;
+      }
+
+      const p = worldToScreen(camera, this.canvas, combo.x, combo.y);
+      const frame = Math.floor(elapsed * 18) % 16;
+      const progress = Math.min(1, elapsed / combo.duration);
+      const pulse = 1 + Math.sin(now * 0.008 + progress * 5) * 0.05;
+      const size = 220 * z * pulse;
+      const alpha = Math.min(1, elapsed / 0.18) * (0.82 + Math.sin(now * 0.01) * 0.08);
 
       ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.globalCompositeOperation = "lighter";
+      ctx.imageSmoothingEnabled = false;
+      ctx.shadowColor = "#caa0ff";
+      ctx.shadowBlur = 45 * z;
+      ctx.drawImage(this.blueRedComboSheet, frame * cellW, 0, cellW, cellH, p.x - size / 2, p.y - size / 2, size, size);
+      ctx.restore();
+    }
+  }
 
-      ctx.globalAlpha = 0.4 + easeScale * 0.6;
+  renderBlueRedComboExplosions(ctx, camera) {
+    if (!this.blueRedComboExplosionSheet.complete || this.blueRedComboExplosionSheet.naturalWidth <= 0) return;
+    const now = performance.now();
+    const z = camera.zoom;
+    const cellW = 862;
+    const cellH = 848;
 
-      if (this.hollowPurpleImg.complete && this.hollowPurpleImg.naturalWidth > 0) {
-        ctx.drawImage(this.hollowPurpleImg, p.x - imgSize / 2, p.y - imgSize / 2, imgSize * pulse, imgSize * pulse);
+    for (let i = this.blueRedComboExplosions.length - 1; i >= 0; i--) {
+      const exp = this.blueRedComboExplosions[i];
+      const t = (now - exp.startTime) / (exp.duration * 1000);
+      if (t >= 1) {
+        this.blueRedComboExplosions.splice(i, 1);
+        continue;
+      }
+
+      const p = worldToScreen(camera, this.canvas, exp.x, exp.y);
+      const frame = Math.min(5, Math.floor(t * 6));
+      const alpha = t < 0.12 ? t / 0.12 : 1 - Math.max(0, (t - 0.82) / 0.18);
+      const pulse = 1 + Math.sin(now * 0.012 + i) * 0.03;
+      const size = Math.max(260 * z, exp.radius * 3.1 * z) * pulse;
+      const drawH = size * (cellH / cellW);
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.globalCompositeOperation = "lighter";
+      ctx.imageSmoothingEnabled = false;
+      ctx.shadowColor = "#e0c0ff";
+      ctx.shadowBlur = 70 * z;
+      ctx.drawImage(this.blueRedComboExplosionSheet, frame * cellW, 0, cellW, cellH, p.x - size / 2, p.y - drawH / 2, size, drawH);
+      ctx.restore();
+    }
+  }
+
+  renderPurpleCharges(ctx, camera) {
+    const now = performance.now();
+    const z = this.camera.zoom;
+    this.purpleCharges.forEach((charge, ownerId) => {
+      const entry = this.interpolationRef?.players?.get(ownerId);
+      const player = entry?.raw;
+      const wx = entry ? entry.x : charge.x;
+      const wy = entry ? entry.y : charge.y;
+      const aimX = player ? player.aimX - wx : charge.dirX;
+      const aimY = player ? player.aimY - wy : charge.dirY;
+      const aimLen = Math.hypot(aimX, aimY);
+      const dirX = aimLen > 0.001 ? aimX / aimLen : charge.dirX;
+      const dirY = aimLen > 0.001 ? aimY / aimLen : charge.dirY;
+      const sideX = -dirY;
+      const sideY = dirX;
+      const p = worldToScreen(camera, this.canvas, wx, wy);
+      const progress = Math.min(1, (now - charge.startTime) / (charge.duration * 1000));
+      const bob = Math.sin(now * 0.004 + ownerId.length) * 5 * z;
+      const centerX = p.x + dirX * 72 * z;
+      const centerY = p.y + dirY * 72 * z - 42 * z;
+      const blueSideX = centerX + sideX * 48 * z;
+      const blueSideY = centerY + sideY * 48 * z + bob;
+      const redSideX = centerX - sideX * 48 * z;
+      const redSideY = centerY - sideY * 48 * z - bob;
+      const mergeStart = 0.78;
+      const holdStart = 0.9;
+      const mergeT = progress <= mergeStart ? 0 : Math.min(1, (progress - mergeStart) / (holdStart - mergeStart));
+      const smoothMerge = mergeT * mergeT * (3 - 2 * mergeT);
+      const blueX = blueSideX + (centerX - blueSideX) * smoothMerge;
+      const blueY = blueSideY + (centerY - blueSideY) * smoothMerge;
+      const redX = redSideX + (centerX - redSideX) * smoothMerge;
+      const redY = redSideY + (centerY - redSideY) * smoothMerge;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+
+      if (progress < holdStart) {
+        const blueAppear = Math.min(1, progress / 0.22);
+        const redAppear = Math.max(0, Math.min(1, (progress - 0.22) / 0.22));
+        const blueFrame = Math.floor((now / 1000) * 12) % this.blueProjectileFrames.length;
+        const redFrame = Math.floor((now / 1000) * 12) % this.redProjectileFrames.length;
+        const prepOrbSize = 92 * 2.3 * z;
+        const prepLightSize = prepOrbSize * 0.78;
+
+        this._drawFloatingFrame(ctx, this.blueProjectileFrames[blueFrame], blueX, blueY, prepOrbSize * blueAppear, "#66ccff", blueAppear, prepLightSize * blueAppear, 502, 496, 1);
+        this._drawFloatingFrame(ctx, this.redProjectileFrames[redFrame], redX, redY, prepOrbSize * redAppear, "#ff2040", redAppear, prepLightSize * redAppear, 128, 115, 0.6);
+
+        if (mergeT > 0) {
+          ctx.strokeStyle = `rgba(235,220,255,${0.45 * mergeT})`;
+          ctx.lineWidth = 4 * z;
+          ctx.shadowColor = "#d9b8ff";
+          ctx.shadowBlur = 25 * z;
+          ctx.beginPath();
+          ctx.moveTo(blueX, blueY);
+          ctx.lineTo(centerX, centerY);
+          ctx.lineTo(redX, redY);
+          ctx.stroke();
+        }
       } else {
-        const fallbackGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, imgSize * 0.5);
-        fallbackGrad.addColorStop(0, `rgba(255,255,255,${0.6 * easeScale})`);
-        fallbackGrad.addColorStop(0.3, `rgba(200,130,255,${0.5 * easeScale})`);
-        fallbackGrad.addColorStop(0.7, `rgba(120,40,200,${0.3 * easeScale})`);
-        fallbackGrad.addColorStop(1, `rgba(60,10,150,0)`);
-        ctx.fillStyle = fallbackGrad;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, imgSize * 0.5 * pulse, 0, Math.PI * 2);
-        ctx.fill();
+        const holdT = (progress - holdStart) / (1 - holdStart);
+        const pulse = 1 + Math.sin(now * 0.012) * 0.03 + holdT * 0.04;
+        const angle = Math.atan2(dirY, dirX);
+        const r = Math.max(32 * z, charge.width * 0.68 * z);
+        const purpleSize = r * 2.15 * pulse;
+        this._drawPurpleFrame(ctx, centerX, centerY, purpleSize, angle, 1);
+        this._drawPurpleLightningBurst(ctx, centerX, centerY, purpleSize * 0.8, angle, 0.28, 3);
       }
 
       ctx.restore();
     });
+  }
+
+  _drawFloatingFrame(ctx, img, x, y, size, glow, alpha = 1, lightSize = size, pivotX = null, pivotY = null, lightAlphaMul = 1) {
+    if (!img || !img.complete || img.naturalWidth <= 0 || size <= 1 || alpha <= 0) return;
+    const aspect = img.naturalWidth / img.naturalHeight;
+    const drawW = aspect >= 1 ? size : size * aspect;
+    const drawH = aspect >= 1 ? size / aspect : size;
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.imageSmoothingEnabled = false;
+    if (lightSize > 1) {
+      const r = parseInt(glow.slice(1, 3), 16);
+      const g = parseInt(glow.slice(3, 5), 16);
+      const b = parseInt(glow.slice(5, 7), 16);
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, lightSize * 0.5);
+      grad.addColorStop(0, `rgba(255,255,255,${0.45 * lightAlphaMul})`);
+      grad.addColorStop(0.35, `rgba(${r},${g},${b},${0.53 * lightAlphaMul})`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, lightSize * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const px = Number.isFinite(pivotX) ? pivotX / img.naturalWidth : 0.5;
+    const py = Number.isFinite(pivotY) ? pivotY / img.naturalHeight : 0.5;
+    ctx.drawImage(img, x - drawW * px, y - drawH * py, drawW, drawH);
+    ctx.restore();
+  }
+
+  _drawPurpleFrame(ctx, x, y, size, rotation = 0, alpha = 1) {
+    if (!this.purpleProjectileSheet.complete || this.purpleProjectileSheet.naturalWidth <= 0 || size <= 1) return;
+    const cellW = 294;
+    const cellH = 295;
+    const frame = Math.floor((performance.now() / 1000) * 18) % 12;
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.shadowColor = "#c080ff";
+    ctx.shadowBlur = 55;
+    ctx.drawImage(this.purpleProjectileSheet, frame * cellW, 0, cellW, cellH, -size / 2, -size / 2, size, size);
+    ctx.restore();
+  }
+
+  _drawPurpleLightning(ctx, x, y, size, rotation = 0, alpha = 1, frameOffset = 0) {
+    if (!this.purpleLightningSheet.complete || this.purpleLightningSheet.naturalWidth <= 0 || size <= 1) return;
+    const cellW = 832;
+    const cellH = 632;
+    const frame = (Math.floor((performance.now() / 1000) * 22) + frameOffset) % 12;
+    const drawW = size;
+    const drawH = size * (cellH / cellW);
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.globalCompositeOperation = "lighter";
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.shadowColor = "#d9a8ff";
+    ctx.shadowBlur = 35;
+    ctx.drawImage(this.purpleLightningSheet, frame * cellW, 0, cellW, cellH, -drawW / 2, -drawH / 2, drawW, drawH);
+    ctx.restore();
+  }
+
+  _drawPurpleLightningBurst(ctx, x, y, size, rotation = 0, alpha = 1, count = 4) {
+    const bolts = [
+      { frame: 0, angle: -0.9, dist: 0.18, scale: 0.75, rot: -0.45 },
+      { frame: 3, angle: 0.4, dist: 0.28, scale: 0.62, rot: 0.25 },
+      { frame: 6, angle: 1.7, dist: 0.22, scale: 0.68, rot: 0.75 },
+      { frame: 8, angle: 2.8, dist: 0.32, scale: 0.55, rot: -0.9 },
+      { frame: 10, angle: -2.2, dist: 0.2, scale: 0.6, rot: 1.1 },
+    ];
+    const now = performance.now();
+    for (let i = 0; i < Math.min(count, bolts.length); i++) {
+      const bolt = bolts[i];
+      const wobble = Math.sin(now * 0.006 + i * 1.9) * 0.08;
+      const angle = rotation + bolt.angle + wobble;
+      const dist = size * bolt.dist;
+      const ox = Math.cos(angle) * dist;
+      const oy = Math.sin(angle) * dist;
+      const flicker = 0.9 + Math.sin(now * 0.011 + i * 1.7) * 0.1;
+      this._drawPurpleLightning(ctx, x + ox, y + oy, size * bolt.scale * flicker, rotation + bolt.rot + wobble, alpha * 0.78, bolt.frame);
+    }
   }
 
   pruneRedCharges(projectiles) {
@@ -602,17 +826,27 @@ export class Renderer {
       ctx.shadowColor = "#ff2040";
       ctx.shadowBlur = 60 * smooth * zoom;
 
-      if (this.redImg.complete && this.redImg.naturalWidth > 0 && orbSize > 2) {
-        ctx.drawImage(this.redImg, orbX - orbSize, orbY - orbSize, orbSize * 2, orbSize * 2);
-      } else if (orbSize > 2) {
-        const grad = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbSize);
-        grad.addColorStop(0, "rgba(255,255,255,0.9)");
-        grad.addColorStop(0.3, "rgba(255,100,130,0.7)");
-        grad.addColorStop(1, "rgba(200,20,60,0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(orbX, orbY, orbSize, 0, Math.PI * 2);
-        ctx.fill();
+      if (orbSize > 2) {
+        const totalFrames = 25;
+        const fps = 10;
+        const frameIndex = Math.floor((now / 1000) * fps) % totalFrames;
+        const frameImg = this.redProjectileFrames[frameIndex];
+        if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+          const pivotX = 128 / frameImg.naturalWidth;
+          const pivotY = 115 / frameImg.naturalHeight;
+          ctx.drawImage(frameImg, orbX - orbSize * 2 * pivotX, orbY - orbSize * 2 * pivotY, orbSize * 2, orbSize * 2);
+        } else if (this.redImg.complete && this.redImg.naturalWidth > 0) {
+          ctx.drawImage(this.redImg, orbX - orbSize, orbY - orbSize, orbSize * 2, orbSize * 2);
+        } else {
+          const grad = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbSize);
+          grad.addColorStop(0, "rgba(255,255,255,0.9)");
+          grad.addColorStop(0.3, "rgba(255,100,130,0.7)");
+          grad.addColorStop(1, "rgba(200,20,60,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(orbX, orbY, orbSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       ctx.restore();
@@ -747,7 +981,7 @@ export class Renderer {
       const ex = entry.x;
       const ey = entry.y;
       const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-      const isMoving = speed > 20 && (p.animState === "walk" || p.animState === "run" || (p.animState && p.animState.startsWith("m1_")));
+      const isMoving = speed > 20 && (p.animState === "walk" || p.animState === "run" || (p.animState && (p.animState.startsWith("m1_") || p.animState.startsWith("skill"))));
 
       const dx = entry.tx - ex;
       const dy = entry.ty - ey;
@@ -1096,6 +1330,8 @@ export class Renderer {
     this.redExplosions = [];
     this.blueExplosions = [];
     this.purpleExplosions = [];
+    this.blueRedComboCharges.clear();
+    this.blueRedComboExplosions = [];
     this.blackFlashes = [];
     this.crawlerExplosions = [];
     this.acidPuddles = [];
@@ -1153,89 +1389,72 @@ export class Renderer {
       const e = this.redExplosions[i];
       const p = worldToScreen(this.camera, this.canvas, e.x, e.y);
       const t = e.life / e.ttl;
-      const s = e.seed;
       const z = this.camera.zoom;
 
       ctx.save();
 
-      const coreSize = e.radius * 0.25 * (1 - t * 0.5) * z;
-      const coreGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, coreSize);
-      coreGrad.addColorStop(0, `rgba(255,255,255,${t * 0.95})`);
-      coreGrad.addColorStop(0.3, `rgba(255,200,200,${t * 0.6})`);
-      coreGrad.addColorStop(0.7, `rgba(255,50,80,${t * 0.3})`);
-      coreGrad.addColorStop(1, "rgba(255,0,50,0)");
+      const time = Date.now() * 0.005;
+      const expandProg = 1 - t;
+      const maxSize = e.radius * 1.25 * z;
+      const currentSize = maxSize * Math.pow(expandProg, 0.4);
+
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.translate(p.x, p.y);
+
+      for (let j = 0; j < 16; j++) {
+        const angle = (j / 16) * Math.PI * 2 + time * 0.4;
+        const pushDist = maxSize * 1.8 * expandProg + (Math.sin(time + j) * 15 * z);
+        const dx = Math.cos(angle) * pushDist;
+        const dy = Math.sin(angle) * pushDist;
+
+        ctx.fillStyle = `rgba(200, 20, 30, ${t})`;
+        ctx.beginPath();
+        ctx.arc(dx, dy, 3.5 * z, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = `rgba(200, 30, 30, ${t * 0.6})`;
+        ctx.lineWidth = 2.5 * z;
+        ctx.beginPath();
+        ctx.moveTo(dx, dy);
+        const startX = Math.cos(angle) * (pushDist * 0.3);
+        const startY = Math.sin(angle) * (pushDist * 0.3);
+        ctx.lineTo(startX, startY);
+        ctx.stroke();
+      }
+
       ctx.shadowColor = "#ff2040";
-      ctx.shadowBlur = 40 * t * z;
-      ctx.fillStyle = coreGrad;
+      ctx.shadowBlur = 30 * z;
+      ctx.lineWidth = 14 * t * z;
+      ctx.strokeStyle = `rgba(200, 10, 20, ${t * 0.9})`;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, coreSize, 0, Math.PI * 2);
+      ctx.arc(0, 0, currentSize, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.lineWidth = 4 * t * z;
+      ctx.strokeStyle = `rgba(255, 60, 60, ${t})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, currentSize * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, currentSize);
+      grad.addColorStop(0, `rgba(200, 30, 30, ${t})`);
+      grad.addColorStop(0.3, `rgba(200, 10, 20, ${t * 0.8})`);
+      grad.addColorStop(0.7, `rgba(140, 0, 5, ${t * 0.4})`);
+      grad.addColorStop(1, "rgba(60, 0, 0, 0)");
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, currentSize, 0, Math.PI * 2);
       ctx.fill();
+
       ctx.shadowBlur = 0;
-
-      const shockwaveRadius = e.radius * (0.3 + (1 - t) * 0.7) * z;
-      ctx.strokeStyle = `rgba(255,80,110,${t * 0.4})`;
-      ctx.lineWidth = 3 * t * z;
+      ctx.fillStyle = `rgba(255, 60, 60, ${Math.pow(t, 2)})`;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, shockwaveRadius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255,200,220,${t * 0.2})`;
-      ctx.lineWidth = 1.5 * t * z;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, shockwaveRadius * 1.15, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.arc(0, 0, currentSize * 0.1, 0, Math.PI * 2);
+      ctx.fill();
 
-      const fragCount = 8 + Math.floor(t * 4);
-      for (let f = 0; f < fragCount; f++) {
-        const angle = (f / fragCount) * Math.PI * 2 + Math.sin(s + f * 1.7) * 0.3 + (1 - t) * 0.5;
-        const fragDist = e.radius * (0.2 + (1 - t) * 0.8) * (0.6 + Math.sin(s + f * 2.3) * 0.4) * z;
-        const fx = p.x + Math.cos(angle) * fragDist;
-        const fy = p.y + Math.sin(angle) * fragDist;
-        const fragSize = 4 * (0.3 + t * 0.7) * (0.5 + Math.sin(s + f * 1.1) * 0.5) * z;
-        const fragAngle = angle + t * 2 + f;
-        const darkVal = Math.floor(20 + (1 - t) * 40);
-        ctx.fillStyle = `rgba(${200 - (1 - t) * 150},${darkVal},${darkVal * 0.5},${t * 0.8})`;
-        ctx.save();
-        ctx.translate(fx, fy);
-        ctx.rotate(fragAngle);
-        ctx.fillRect(-fragSize * 0.5, -fragSize * 0.5, fragSize, fragSize);
-        ctx.restore();
-        const rimX = fx + Math.cos(angle) * fragSize * 0.3;
-        const rimY = fy + Math.sin(angle) * fragSize * 0.3;
-        ctx.strokeStyle = `rgba(255,100,130,${t * 0.5})`;
-        ctx.lineWidth = 1 * z;
-        ctx.beginPath();
-        ctx.moveTo(rimX - fragSize * 0.2, rimY - fragSize * 0.2);
-        ctx.lineTo(rimX + fragSize * 0.2, rimY + fragSize * 0.2);
-        ctx.stroke();
-      }
-
-      const lineCount = 5 + Math.floor(t * 3);
-      for (let l = 0; l < lineCount; l++) {
-        const angle = (l / lineCount) * Math.PI * 2 + (1 - t) * 0.8 + Math.sin(s + l * 1.3) * 0.2;
-        const len = e.radius * (0.4 + (1 - t) * 0.8) * (0.7 + Math.sin(s + l * 2.1) * 0.3) * z;
-        const lx = Math.cos(angle) * len;
-        const ly = Math.sin(angle) * len;
-        ctx.strokeStyle = `rgba(255,255,255,${t * 0.3 * (1 - l / lineCount)})`;
-      ctx.lineWidth = 1.5 * t * z;
-        ctx.beginPath();
-        ctx.moveTo(p.x + lx * 0.1, p.y + ly * 0.1);
-        ctx.lineTo(p.x + lx, p.y + ly);
-        ctx.stroke();
-      }
-
-      for (let l = 0; l < 3; l++) {
-        const angle = (l / 3) * Math.PI * 2 + (1 - t) * 1.2 + Math.sin(s + l * 1.7) * 0.3;
-        const len = e.radius * (0.3 + (1 - t) * 0.6) * (0.5 + Math.sin(s + l * 2.5) * 0.5) * z;
-        const lx = Math.cos(angle) * len;
-        const ly = Math.sin(angle) * len;
-        ctx.strokeStyle = `rgba(0,0,0,${t * 0.4})`;
-        ctx.lineWidth = 2 * t * z;
-        ctx.beginPath();
-        ctx.moveTo(p.x + lx * 0.2, p.y + ly * 0.2);
-        ctx.lineTo(p.x + lx, p.y + ly);
-        ctx.stroke();
-      }
-
+      ctx.restore();
       ctx.restore();
     }
   }
@@ -1793,6 +2012,29 @@ export class Renderer {
       const screen = worldToScreen(this.camera, this.canvas, entry.x, entry.y);
 
       if (p.type === "purple") {
+        {
+          const r = Math.max(32 * zoom, p.width * 0.68 * zoom);
+          const px = screen.x;
+          const py = screen.y;
+          const angle = Math.atan2(p.vy, p.vx);
+          const pulse = 1 + Math.sin(now * 0.01) * 0.04;
+
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          const aura = ctx.createRadialGradient(px, py, 0, px, py, r * 1.35);
+          aura.addColorStop(0, "rgba(255,255,255,0.55)");
+          aura.addColorStop(0.35, "rgba(210,120,255,0.38)");
+          aura.addColorStop(1, "rgba(80,20,180,0)");
+          ctx.fillStyle = aura;
+          ctx.beginPath();
+          ctx.arc(px, py, r * 1.35, 0, Math.PI * 2);
+          ctx.fill();
+          const purpleSize = r * 2.15 * pulse;
+          this._drawPurpleFrame(ctx, px, py, purpleSize, angle, 1);
+          this._drawPurpleLightningBurst(ctx, px, py, purpleSize * 0.9, angle, 0.42, 4);
+          ctx.restore();
+          return;
+        }
         const sphereR = Math.max(10 * zoom, p.width * 0.55 * zoom);
         const px = screen.x;
         const py = screen.y;
@@ -1991,7 +2233,6 @@ export class Renderer {
         const r = Math.max(8 * zoom, p.radius * zoom);
         const px = screen.x;
         const py = screen.y;
-        const pulse = 1 + Math.sin(now * 0.004 + 1) * 0.04;
 
         const dx = screen.x - prev.x;
         const dy = screen.y - prev.y;
@@ -2015,78 +2256,31 @@ export class Renderer {
         }
 
         ctx.save();
-        const spriteSize = r * 2 * 2.2 * 0.7;
+        ctx.translate(px, py);
+        if (trailLen > 1) {
+          ctx.rotate(Math.atan2(dy, dx));
+        }
+
+        const size = r * 2 * 2.2;
+        const totalFrames = 25;
+        const fps = 10;
+        const frameIndex = Math.floor((now / 1000) * fps) % totalFrames;
+        const frameImg = this.redProjectileFrames[frameIndex];
+
         ctx.shadowColor = "#ff2040";
         ctx.shadowBlur = 70 * zoom;
-        ctx.drawImage(this.redImg, screen.x - spriteSize / 2, screen.y - spriteSize / 2, spriteSize, spriteSize);
-        ctx.shadowColor = "#ff6080";
-        ctx.shadowBlur = 20 * zoom;
-        ctx.drawImage(this.redImg, screen.x - spriteSize / 2, screen.y - spriteSize / 2, spriteSize, spriteSize);
+
+        if (frameImg && frameImg.complete && frameImg.naturalWidth > 0) {
+          const pivotX = 128 / frameImg.naturalWidth;
+          const pivotY = 115 / frameImg.naturalHeight;
+          ctx.drawImage(frameImg, -size * pivotX, -size * pivotY, size, size);
+        } else {
+          ctx.fillStyle = "#ff4060";
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.shadowBlur = 0;
-
-        for (let vein = 0; vein < 4; vein++) {
-          const vAngle = (vein / 4) * Math.PI * 2 + now * 0.0015 + vein * 0.3;
-          const dots = 4 + (vein * 3) % 4;
-          for (let d = 0; d < dots; d++) {
-            const t = (d + 1) / (dots + 1);
-            const spread = 0.35 + Math.sin(vein * 2.7 + d * 1.3) * 0.25;
-            const a = vAngle + Math.sin(t * 7 + vein * 4 + now * 0.003) * spread;
-            const dist = r * (0.1 + t * 0.8);
-            const dx2 = px + Math.cos(a) * dist;
-            const dy2 = py + Math.sin(a) * dist;
-            const sz = (1.2 + Math.sin(vein * 1.7 + d * 2.3 + now * 0.004) * 1 + 1) * zoom;
-            const alpha = 0.35 + Math.sin(vein * 2.1 + d * 1.1 + now * 0.003) * 0.2 + 0.25;
-            ctx.fillStyle = `rgba(255,210,220,${alpha})`;
-            ctx.beginPath();
-            ctx.arc(dx2, dy2, sz, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        for (let i = 0; i < 25; i++) {
-          const angle = i * 2.399 + Math.sin(now * 0.003 + i * 0.5) * 0.3;
-          const dist = r * (0.05 + (Math.sin(i * 3.7 + now * 0.002) * 0.5 + 0.5) * 0.85);
-          const sx = px + Math.cos(angle) * dist;
-          const sy = py + Math.sin(angle) * dist;
-          const sz = (0.6 + Math.sin(i * 1.9 + now * 0.005) * 0.5 + 0.6) * zoom;
-          const alpha = 0.25 + Math.sin(i * 2.3 + now * 0.004) * 0.15 + 0.2;
-          ctx.fillStyle = `rgba(255,245,245,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy, sz, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        for (let i = 0; i < 10; i++) {
-          const angle = now * 0.005 + i * (Math.PI * 2 / 15) + Math.sin(now * 0.003 + i * 0.6) * 0.5;
-          const dist = r * (0.6 + Math.sin(now * 0.006 + i * 1.1) * 0.5 + 0.5);
-          const sx2 = px + Math.cos(angle) * dist;
-          const sy2 = py + Math.sin(angle) * dist;
-          const sz = (1.5 + Math.abs(Math.sin(now * 0.008 + i * 0.7)) * 2.5) * zoom;
-          const alpha = 0.4 + Math.sin(now * 0.005 + i * 1.2) * 0.3;
-          ctx.fillStyle = `rgba(255,180,200,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(sx2, sy2, sz, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2 + now * 0.003;
-          const dist = r * (0.88 + Math.sin(now * 0.004 + i * 1.3) * 0.12);
-          const ex = px + Math.cos(angle) * dist;
-          const ey = py + Math.sin(angle) * dist;
-          const arcAngle = angle + Math.PI * 0.5;
-          const arcLen = r * (0.15 + Math.sin(now * 0.005 + i * 0.7) * 0.1 + 0.12);
-          for (let s = 0; s < 2; s++) {
-            const st = (s + 1) / 4;
-            const ax = ex + Math.cos(arcAngle) * arcLen * st + Math.sin(now * 0.006 + i + s) * 4 * zoom;
-            const ay = ey + Math.sin(arcAngle) * arcLen * st + Math.cos(now * 0.006 + i + s) * 4 * zoom;
-            const alpha = (0.3 - st * 0.15) * (0.6 + Math.sin(now * 0.007 + i * 1.1) * 0.3);
-            ctx.fillStyle = `rgba(255,170,190,${alpha})`;
-            ctx.beginPath();
-            ctx.arc(ax, ay, 1.2 * zoom, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
 
         ctx.restore();
       } else {
@@ -2604,7 +2798,8 @@ export class Renderer {
 
       const isSkillAnim = p.animState && (
         p.animState === "skill1" || p.animState === "skill2" || p.animState === "skill3" ||
-        p.animState === "skill_blue" || p.animState === "skill_red" || p.animState === "skill_purple"
+        p.animState === "skill_blue" || p.animState === "skill_red" || p.animState === "skill_purple" ||
+        (chara === "punho-indomavel" && p.animState === "q")
       );
 
       if (isSkillAnim) {
@@ -3018,7 +3213,9 @@ export class Renderer {
       this.drawProjectiles(interpolation.projectiles);
       this.pruneRedCharges(interpolation.projectiles);
       this.renderRedCharges(this.ctx, interpolation);
+      this.renderBlueRedCombos(this.ctx, this.camera);
       this.renderPurpleCharges(this.ctx, this.camera);
+      this.renderBlueRedComboExplosions(this.ctx, this.camera);
       this.renderPurpleExplosions(this.ctx, this.camera);
       this._players = interpolation.players;
       this._enemies = interpolation.enemies;

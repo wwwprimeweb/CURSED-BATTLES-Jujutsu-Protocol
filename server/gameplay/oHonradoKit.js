@@ -45,7 +45,7 @@ const O_HONRADO = {
     damage: 700,
     radius: 210,
     delay: 3.5,
-    knockback: 230,
+    knockback: 460,
   },
   purple: {
     energy: 80,
@@ -54,7 +54,7 @@ const O_HONRADO = {
     width: 151,
     length: 2340,
     speed: 900,
-    charge: 0.55,
+    charge: 1.6,
   },
   teleport: {
     energy: 45,
